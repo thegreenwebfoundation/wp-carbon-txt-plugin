@@ -20,10 +20,12 @@ class Renderer {
 	 * @return string
 	 */
 	public static function render() {
-		$settings = Settings::normalize( get_option( OPTION_NAME, array() ) );
+		// The stored option is normalized on read by Settings.
+		$settings    = get_option( OPTION_NAME, array() );
+		$disclosures = isset( $settings['disclosures'] ) ? (array) $settings['disclosures'] : array();
 
 		$entries = array();
-		foreach ( $settings['disclosures'] as $disclosure ) {
+		foreach ( $disclosures as $disclosure ) {
 			$url = isset( $disclosure['url'] ) ? trim( (string) $disclosure['url'] ) : '';
 			if ( '' === $url ) {
 				continue;

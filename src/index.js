@@ -1,10 +1,11 @@
 /**
  * Carbon.txt settings screen.
  */
-import { createRoot, useState } from '@wordpress/element';
+import { createRoot, useState, useRef } from '@wordpress/element';
 import { useEntityProp, store as coreStore } from '@wordpress/core-data';
 import { useSelect, useDispatch } from '@wordpress/data';
-import { __ } from '@wordpress/i18n';
+import { useDebounce } from '@wordpress/compose';
+import { __, sprintf } from '@wordpress/i18n';
 import {
 	Card,
 	CardBody,
@@ -18,14 +19,17 @@ import {
 	Button,
 	Notice,
 	ExternalLink,
+	/* eslint-disable @wordpress/no-unsafe-wp-apis -- Long-stable components; revisit when they graduate. */
 	__experimentalToggleGroupControl as ToggleGroupControl,
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 	__experimentalHeading as Heading,
 	__experimentalText as Text,
 	__experimentalVStack as VStack,
+	/* eslint-enable @wordpress/no-unsafe-wp-apis */
 } from '@wordpress/components';
 
-const { optionName, docTypes, carbonTxtUrl, carbonTxtVersion } = window.wpCarbonTxt;
+const { optionName, docTypes, carbonTxtUrl, carbonTxtVersion } =
+	window.wpCarbonTxt;
 
 const DOC_TYPE_LABELS = {
 	'web-page': __( 'Web page', 'wp-carbon-txt-plugin' ),
@@ -54,7 +58,9 @@ const tomlString = ( value ) =>
  */
 const tomlDate = ( value ) => {
 	const trimmed = String( value ).trim();
-	return /^\d{4}-\d{2}-\d{2}$/.test( trimmed ) ? trimmed : tomlString( trimmed );
+	return /^\d{4}-\d{2}-\d{2}$/.test( trimmed )
+		? trimmed
+		: tomlString( trimmed );
 };
 
 /**
@@ -94,7 +100,9 @@ const renderCarbonTxt = ( disclosures ) => {
 	} else {
 		out +=
 			'disclosures = [\n' +
-			entries.map( ( d ) => '    ' + renderDisclosure( d ) + ',' ).join( '\n' ) +
+			entries
+				.map( ( d ) => '    ' + renderDisclosure( d ) + ',' )
+				.join( '\n' ) +
 			'\n]\n';
 	}
 	return out;
@@ -107,6 +115,7 @@ const renderCarbonTxt = ( disclosures ) => {
  */
 function PagePicker( { value, onChange } ) {
 	const [ search, setSearch ] = useState( '' );
+	const debouncedSetSearch = useDebounce( setSearch, 250 );
 
 	const pages = useSelect(
 		( select ) =>
@@ -134,7 +143,7 @@ function PagePicker( { value, onChange } ) {
 			) }
 			value={ value }
 			options={ options }
-			onFilterValueChange={ setSearch }
+			onFilterValueChange={ debouncedSetSearch }
 			onChange={ ( next ) => onChange( next || '' ) }
 			__next40pxDefaultSize
 		/>
@@ -153,8 +162,11 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 		<Card>
 			<CardHeader>
 				<Heading level={ 3 }>
-					{ /* translators: %d: disclosure number. */ }
-					{ __( 'Disclosure', 'wp-carbon-txt-plugin' ) + ' ' + ( index + 1 ) }
+					{ sprintf(
+						/* translators: %d: disclosure number. */
+						__( 'Disclosure %d', 'wp-carbon-txt-plugin' ),
+						index + 1
+					) }
 				</Heading>
 				<Button
 					isDestructive
@@ -167,6 +179,15 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 			</CardHeader>
 			<CardBody>
 				<VStack spacing={ 4 }>
+					{ ! ( disclosure.url && disclosure.url.trim() ) && (
+						<Notice status="warning" isDismissible={ false }>
+							{ __(
+								'This disclosure needs a URL to be included in your carbon.txt.',
+								'wp-carbon-txt-plugin'
+							) }
+						</Notice>
+					) }
+
 					<SelectControl
 						label={ __( 'Document type', 'wp-carbon-txt-plugin' ) }
 						value={ disclosure.doc_type || docTypes[ 0 ] }
@@ -189,17 +210,26 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 					>
 						<ToggleGroupControlOption
 							value="url"
-							label={ __( 'Enter a URL', 'wp-carbon-txt-plugin' ) }
+							label={ __(
+								'Enter a URL',
+								'wp-carbon-txt-plugin'
+							) }
 						/>
 						<ToggleGroupControlOption
 							value="page"
-							label={ __( 'Select a page', 'wp-carbon-txt-plugin' ) }
+							label={ __(
+								'Select a page',
+								'wp-carbon-txt-plugin'
+							) }
 						/>
 					</ToggleGroupControl>
 
 					{ 'url' === mode ? (
 						<TextControl
-							label={ __( 'Disclosure URL', 'wp-carbon-txt-plugin' ) }
+							label={ __(
+								'Disclosure URL',
+								'wp-carbon-txt-plugin'
+							) }
 							type="url"
 							placeholder="https://example.com/sustainability"
 							value={ disclosure.url || '' }
@@ -215,7 +245,10 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 					) }
 
 					<TextControl
-						label={ __( 'Title (optional)', 'wp-carbon-txt-plugin' ) }
+						label={ __(
+							'Title (optional)',
+							'wp-carbon-txt-plugin'
+						) }
 						value={ disclosure.title || '' }
 						onChange={ ( title ) => onChange( { title } ) }
 						__next40pxDefaultSize
@@ -223,10 +256,15 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 					/>
 
 					<TextControl
-						label={ __( 'Valid until (optional)', 'wp-carbon-txt-plugin' ) }
+						label={ __(
+							'Valid until (optional)',
+							'wp-carbon-txt-plugin'
+						) }
 						type="date"
 						value={ disclosure.valid_until || '' }
-						onChange={ ( valid_until ) => onChange( { valid_until } ) }
+						onChange={ ( valid_until ) =>
+							onChange( { valid_until } )
+						}
 						__next40pxDefaultSize
 						__nextHasNoMarginBottom
 					/>
@@ -240,43 +278,79 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
  * Main settings app.
  */
 function App() {
-	const [ settings, setSettings ] = useEntityProp( 'root', 'site', optionName );
+	const [ settings, setSettings ] = useEntityProp(
+		'root',
+		'site',
+		optionName
+	);
 	const [ notice, setNotice ] = useState( null );
 
 	const { saveEditedEntityRecord } = useDispatch( coreStore );
 	const isSaving = useSelect(
-		( select ) => select( coreStore ).isSavingEntityRecord( 'root', 'site' ),
+		( select ) =>
+			select( coreStore ).isSavingEntityRecord( 'root', 'site' ),
 		[]
 	);
 
 	const disclosures = settings?.disclosures || [];
+
+	// Stable React keys for the rows, kept outside the saved data so the
+	// REST schema (additionalProperties: false) never sees them.
+	const rowIdsRef = useRef( { next: 1, list: [] } );
+	const rowIds = rowIdsRef.current.list;
+	while ( rowIds.length < disclosures.length ) {
+		rowIds.push( rowIdsRef.current.next++ );
+	}
+	rowIds.length = disclosures.length;
 
 	const setDisclosures = ( next ) =>
 		setSettings( { ...( settings || {} ), disclosures: next } );
 
 	const updateDisclosure = ( index, changes ) =>
 		setDisclosures(
-			disclosures.map( ( d, i ) => ( i === index ? { ...d, ...changes } : d ) )
+			disclosures.map( ( d, i ) =>
+				i === index ? { ...d, ...changes } : d
+			)
 		);
 
 	const addDisclosure = () =>
-		setDisclosures( [ ...disclosures, { doc_type: docTypes[ 0 ], url: '' } ] );
+		setDisclosures( [
+			...disclosures,
+			{ doc_type: docTypes[ 0 ], url: '' },
+		] );
 
-	const removeDisclosure = ( index ) =>
+	const removeDisclosure = ( index ) => {
+		rowIds.splice( index, 1 );
 		setDisclosures( disclosures.filter( ( _, i ) => i !== index ) );
+	};
 
 	const save = async () => {
 		setNotice( null );
-		await saveEditedEntityRecord( 'root', 'site' );
-		setNotice( {
-			status: 'success',
-			text: __( 'Saved. Your carbon.txt is up to date.', 'wp-carbon-txt-plugin' ),
-		} );
+		const saved = await saveEditedEntityRecord( 'root', 'site' );
+		setNotice(
+			saved
+				? {
+						status: 'success',
+						text: __(
+							'Saved. Your carbon.txt is up to date.',
+							'wp-carbon-txt-plugin'
+						),
+				  }
+				: {
+						status: 'error',
+						text: __(
+							'Saving failed. Please try again.',
+							'wp-carbon-txt-plugin'
+						),
+				  }
+		);
 	};
 
 	return (
 		<>
-			<Heading level={ 1 }>{ __( 'Carbon.txt', 'wp-carbon-txt-plugin' ) }</Heading>
+			<Heading level={ 1 }>
+				{ __( 'Carbon.txt', 'wp-carbon-txt-plugin' ) }
+			</Heading>
 			<Text>
 				{ __(
 					'Publish organisational sustainability disclosures at your site’s carbon.txt file.',
@@ -286,7 +360,10 @@ function App() {
 
 			{ notice && (
 				<div style={ { margin: '16px 0' } }>
-					<Notice status={ notice.status } onRemove={ () => setNotice( null ) }>
+					<Notice
+						status={ notice.status }
+						onRemove={ () => setNotice( null ) }
+					>
 						{ notice.text }
 					</Notice>
 				</div>
@@ -295,20 +372,41 @@ function App() {
 			<Flex align="flex-start" gap={ 6 } style={ { marginTop: 16 } }>
 				<FlexBlock>
 					<VStack spacing={ 4 }>
+						{ ! disclosures.length && (
+							<Card>
+								<CardBody>
+									<Text>
+										{ __(
+											'No disclosures yet. Add your first sustainability document to publish it in your carbon.txt.',
+											'wp-carbon-txt-plugin'
+										) }
+									</Text>
+								</CardBody>
+							</Card>
+						) }
+
 						{ disclosures.map( ( disclosure, index ) => (
 							<DisclosureRow
-								key={ index }
+								key={ rowIds[ index ] }
 								disclosure={ disclosure }
 								index={ index }
-								onChange={ ( changes ) => updateDisclosure( index, changes ) }
+								onChange={ ( changes ) =>
+									updateDisclosure( index, changes )
+								}
 								onRemove={ () => removeDisclosure( index ) }
 							/>
 						) ) }
 
 						<Flex justify="space-between">
 							<FlexItem>
-								<Button variant="secondary" onClick={ addDisclosure }>
-									{ __( 'Add disclosure', 'wp-carbon-txt-plugin' ) }
+								<Button
+									variant="secondary"
+									onClick={ addDisclosure }
+								>
+									{ __(
+										'Add disclosure',
+										'wp-carbon-txt-plugin'
+									) }
 								</Button>
 							</FlexItem>
 							<FlexItem>
@@ -332,7 +430,10 @@ function App() {
 								{ __( 'Preview', 'wp-carbon-txt-plugin' ) }
 							</Heading>
 							<ExternalLink href={ carbonTxtUrl }>
-								{ __( 'View live file', 'wp-carbon-txt-plugin' ) }
+								{ __(
+									'View live file',
+									'wp-carbon-txt-plugin'
+								) }
 							</ExternalLink>
 						</CardHeader>
 						<CardBody>

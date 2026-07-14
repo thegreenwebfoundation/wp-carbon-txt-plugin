@@ -45,6 +45,8 @@ class Settings {
 	 */
 	public static function init() {
 		add_action( 'init', array( __CLASS__, 'register' ) );
+		// Ensure reads always return the canonical shape (upgrades legacy data).
+		add_filter( 'option_' . OPTION_NAME, array( __CLASS__, 'normalize' ) );
 		// Clear the cached file whenever the setting changes.
 		add_action( 'update_option_' . OPTION_NAME, array( __CLASS__, 'flush_cache' ) );
 		add_action( 'add_option_' . OPTION_NAME, array( __CLASS__, 'flush_cache' ) );

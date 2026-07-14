@@ -25,6 +25,7 @@ class Endpoint {
 	public static function init() {
 		add_action( 'init', array( __CLASS__, 'add_rewrite_rule' ) );
 		add_filter( 'query_vars', array( __CLASS__, 'register_query_var' ) );
+		add_action( 'parse_request', array( __CLASS__, 'match_plain_request' ) );
 		add_action( 'template_redirect', array( __CLASS__, 'maybe_serve' ) );
 	}
 
@@ -47,6 +48,28 @@ class Endpoint {
 	}
 
 	/**
+	 * Match /carbon.txt directly from the request path, so the file is
+	 * served even when rewrite rules are unavailable (plain permalinks).
+	 *
+	 * @param \WP $wp Current WordPress environment instance.
+	 */
+	public static function match_plain_request( $wp ) {
+		if ( isset( $wp->query_vars[ self::QUERY_VAR ] ) || empty( $_SERVER['REQUEST_URI'] ) ) {
+			return;
+		}
+
+		$request_path = (string) wp_parse_url(
+			sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ),
+			PHP_URL_PATH
+		);
+		$home_path    = (string) wp_parse_url( home_url(), PHP_URL_PATH );
+
+		if ( untrailingslashit( $request_path ) === trailingslashit( $home_path ) . 'carbon.txt' ) {
+			$wp->query_vars[ self::QUERY_VAR ] = '1';
+		}
+	}
+
+	/**
 	 * Output the carbon.txt file when the endpoint is requested.
 	 */
 	public static function maybe_serve() {
@@ -63,6 +86,7 @@ class Endpoint {
 		status_header( 200 );
 		header( 'Content-Type: text/plain; charset=utf-8' );
 		header( 'X-Content-Type-Options: nosniff' );
+		header( 'Cache-Control: public, max-age=3600' );
 
 		echo $body; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Plain-text TOML file, values sanitized on save.
 		exit;

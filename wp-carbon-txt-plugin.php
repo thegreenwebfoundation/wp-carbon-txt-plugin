@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       WP Carbon.txt
- * Description:        Publish a carbon.txt file with your organisational sustainability disclosures.
+ * Description:       Publish a carbon.txt file with your organisational sustainability disclosures.
  * Version:           0.1.0
  * Requires at least: 6.6
  * Requires PHP:      7.4
@@ -17,7 +17,6 @@ namespace WpCarbonTxt;
 
 defined( 'ABSPATH' ) || exit;
 
-const VERSION      = '0.1.0';
 const OPTION_NAME  = 'wp_carbon_txt_settings';
 const CACHE_KEY    = 'wp_carbon_txt_rendered';
 const CARBON_TXT_VERSION = '0.5';
