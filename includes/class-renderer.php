@@ -65,9 +65,6 @@ class Renderer {
 		$pairs[] = 'doc_type = ' . self::toml_string( $doc_type );
 		$pairs[] = 'url = ' . self::toml_string( $url );
 
-		if ( ! empty( $disclosure['domain'] ) ) {
-			$pairs[] = 'domain = ' . self::toml_string( $disclosure['domain'] );
-		}
 		if ( ! empty( $disclosure['title'] ) ) {
 			$pairs[] = 'title = ' . self::toml_string( $disclosure['title'] );
 		}

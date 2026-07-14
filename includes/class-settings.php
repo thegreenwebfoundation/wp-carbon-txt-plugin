@@ -79,7 +79,6 @@ class Settings {
 											'format' => 'uri',
 										),
 										'title'       => array( 'type' => 'string' ),
-										'domain'      => array( 'type' => 'string' ),
 										'valid_until' => array( 'type' => 'string' ),
 									),
 									'additionalProperties' => false,
@@ -161,11 +160,6 @@ class Settings {
 			$title = isset( $disclosure['title'] ) ? sanitize_text_field( $disclosure['title'] ) : '';
 			if ( '' !== $title ) {
 				$entry['title'] = $title;
-			}
-
-			$domain = isset( $disclosure['domain'] ) ? sanitize_text_field( $disclosure['domain'] ) : '';
-			if ( '' !== $domain ) {
-				$entry['domain'] = $domain;
 			}
 
 			$valid_until = isset( $disclosure['valid_until'] ) ? sanitize_text_field( $disclosure['valid_until'] ) : '';

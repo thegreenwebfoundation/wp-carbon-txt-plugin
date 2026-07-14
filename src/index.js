@@ -68,9 +68,6 @@ const renderDisclosure = ( disclosure ) => {
 		`doc_type = ${ tomlString( disclosure.doc_type || 'web-page' ) }`,
 		`url = ${ tomlString( disclosure.url ) }`,
 	];
-	if ( disclosure.domain ) {
-		pairs.push( `domain = ${ tomlString( disclosure.domain ) }` );
-	}
 	if ( disclosure.title ) {
 		pairs.push( `title = ${ tomlString( disclosure.title ) }` );
 	}
@@ -221,19 +218,6 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 						label={ __( 'Title (optional)', 'wp-carbon-txt-plugin' ) }
 						value={ disclosure.title || '' }
 						onChange={ ( title ) => onChange( { title } ) }
-						__next40pxDefaultSize
-						__nextHasNoMarginBottom
-					/>
-
-					<TextControl
-						label={ __( 'Domain (optional)', 'wp-carbon-txt-plugin' ) }
-						help={ __(
-							'The domain this document applies to, if different from your site.',
-							'wp-carbon-txt-plugin'
-						) }
-						placeholder="example.com"
-						value={ disclosure.domain || '' }
-						onChange={ ( domain ) => onChange( { domain } ) }
 						__next40pxDefaultSize
 						__nextHasNoMarginBottom
 					/>
