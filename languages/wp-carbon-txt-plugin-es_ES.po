@@ -1,0 +1,136 @@
+# Copyright (C) 2026 Nahuai Badiola
+# This file is distributed under the GPL-2.0-or-later.
+msgid ""
+msgstr ""
+"Project-Id-Version: WP Carbon.txt 0.1.0\n"
+"Report-Msgid-Bugs-To: https://codeberg.org/nahuai/wp-carbon-txt-plugin/issues\n"
+"Last-Translator: Nahuai Badiola\n"
+"Language-Team: Español\n"
+"Language: es_ES\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: wp-carbon-txt-plugin\n"
+
+#. Description of the plugin
+#: wp-carbon-txt-plugin.php
+msgid "Publish a carbon.txt file with your organisational sustainability disclosures."
+msgstr "Publica un archivo carbon.txt con las divulgaciones de sostenibilidad de tu organización."
+
+#: includes/class-admin.php:35
+#: includes/class-admin.php:36
+#: src/index.js:352
+msgid "Carbon.txt"
+msgstr "Carbon.txt"
+
+#: src/index.js:35
+msgid "Web page"
+msgstr "Página web"
+
+#: src/index.js:36
+msgid "Annual report"
+msgstr "Informe anual"
+
+#: src/index.js:37
+msgid "Sustainability page"
+msgstr "Página de sostenibilidad"
+
+#: src/index.js:38
+msgid "Certificate"
+msgstr "Certificado"
+
+#: src/index.js:39
+msgid "CSRD report"
+msgstr "Informe CSRD"
+
+#: src/index.js:40
+msgid "AI model card"
+msgstr "Ficha de modelo de IA"
+
+#: src/index.js:41
+msgid "Other"
+msgstr "Otro"
+
+#: src/index.js:139
+msgid "Select a published page"
+msgstr "Selecciona una página publicada"
+
+#: src/index.js:140
+msgid "Search your pages by title. Its permalink is used as the disclosure URL."
+msgstr "Busca tus páginas por título. Su enlace permanente se usa como URL de la divulgación."
+
+#. translators: %d: disclosure number.
+#: src/index.js:167
+#, js-format
+msgid "Disclosure %d"
+msgstr "Divulgación %d"
+
+#: src/index.js:177
+msgid "Remove"
+msgstr "Eliminar"
+
+#: src/index.js:184
+msgid "This disclosure needs a URL to be included in your carbon.txt."
+msgstr "Esta divulgación necesita una URL para incluirse en tu carbon.txt."
+
+#: src/index.js:192
+msgid "Document type"
+msgstr "Tipo de documento"
+
+#: src/index.js:204
+msgid "URL source"
+msgstr "Origen de la URL"
+
+#: src/index.js:213
+msgid "Enter a URL"
+msgstr "Introducir una URL"
+
+#: src/index.js:220
+msgid "Select a page"
+msgstr "Seleccionar una página"
+
+#: src/index.js:229
+msgid "Disclosure URL"
+msgstr "URL de la divulgación"
+
+#: src/index.js:248
+msgid "Title (optional)"
+msgstr "Título (opcional)"
+
+#: src/index.js:259
+msgid "Valid until (optional)"
+msgstr "Válido hasta (opcional)"
+
+#: src/index.js:334
+msgid "Saved. Your carbon.txt is up to date."
+msgstr "Guardado. Tu carbon.txt está actualizado."
+
+#: src/index.js:341
+msgid "Saving failed. Please try again."
+msgstr "Error al guardar. Inténtalo de nuevo."
+
+#: src/index.js:355
+msgid "Publish organisational sustainability disclosures at your site’s carbon.txt file."
+msgstr "Publica las divulgaciones de sostenibilidad de tu organización en el archivo carbon.txt de tu sitio."
+
+#: src/index.js:379
+msgid "No disclosures yet. Add your first sustainability document to publish it in your carbon.txt."
+msgstr "Aún no hay divulgaciones. Añade tu primer documento de sostenibilidad para publicarlo en tu carbon.txt."
+
+#: src/index.js:406
+msgid "Add disclosure"
+msgstr "Añadir divulgación"
+
+#: src/index.js:419
+msgid "Save"
+msgstr "Guardar"
+
+#: src/index.js:430
+msgid "Preview"
+msgstr "Vista previa"
+
+#: src/index.js:433
+msgid "View live file"
+msgstr "Ver archivo en vivo"

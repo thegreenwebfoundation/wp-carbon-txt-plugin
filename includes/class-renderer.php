@@ -10,7 +10,7 @@ namespace WpCarbonTxt;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * carbon.txt renderer.
+ * Carbon.txt renderer.
  */
 class Renderer {
 

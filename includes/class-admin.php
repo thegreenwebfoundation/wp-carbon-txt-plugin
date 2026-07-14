@@ -76,15 +76,19 @@ class Admin {
 		// Load the core component styles our UI relies on.
 		wp_enqueue_style( 'wp-components' );
 
-		wp_set_script_translations( 'wp-carbon-txt-admin', 'wp-carbon-txt-plugin' );
+		wp_set_script_translations(
+			'wp-carbon-txt-admin',
+			'wp-carbon-txt-plugin',
+			plugin_dir_path( __DIR__ ) . 'languages'
+		);
 
 		wp_add_inline_script(
 			'wp-carbon-txt-admin',
 			'window.wpCarbonTxt = ' . wp_json_encode(
 				array(
-					'optionName'     => OPTION_NAME,
-					'docTypes'       => Settings::doc_types(),
-					'carbonTxtUrl'   => home_url( '/carbon.txt' ),
+					'optionName'       => OPTION_NAME,
+					'docTypes'         => Settings::doc_types(),
+					'carbonTxtUrl'     => home_url( '/carbon.txt' ),
 					'carbonTxtVersion' => CARBON_TXT_VERSION,
 				)
 			) . ';',

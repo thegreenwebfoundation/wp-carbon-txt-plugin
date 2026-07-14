@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<ruleset name="WP Carbon.txt">
+	<description>Coding standards for the WP Carbon.txt plugin.</description>
+
+	<file>.</file>
+
+	<exclude-pattern>/build/</exclude-pattern>
+	<exclude-pattern>/node_modules/</exclude-pattern>
+	<exclude-pattern>/vendor/</exclude-pattern>
+
+	<arg name="extensions" value="php"/>
+	<arg name="colors"/>
+	<arg value="sp"/>
+
+	<rule ref="WordPress">
+		<!-- The Yoda-condition rule is not enforced; expressions read left to right. -->
+		<exclude name="WordPress.PHP.YodaConditions"/>
+	</rule>
+
+	<config name="minimum_supported_wp_version" value="6.6"/>
+	<config name="testVersion" value="7.4-"/>
+	<rule ref="PHPCompatibilityWP"/>
+
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="wp-carbon-txt-plugin"/>
+			</property>
+		</properties>
+	</rule>
+
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="wp_carbon_txt"/>
+				<element value="WpCarbonTxt"/>
+			</property>
+		</properties>
+	</rule>
+</ruleset>
