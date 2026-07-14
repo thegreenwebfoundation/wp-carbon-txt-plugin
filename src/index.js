@@ -11,6 +11,7 @@ import {
 	CardHeader,
 	Flex,
 	FlexBlock,
+	FlexItem,
 	SelectControl,
 	TextControl,
 	ComboboxControl,
@@ -21,6 +22,7 @@ import {
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 	__experimentalHeading as Heading,
 	__experimentalText as Text,
+	__experimentalVStack as VStack,
 } from '@wordpress/components';
 
 const { optionName, docTypes, carbonTxtUrl, carbonTxtVersion } = window.wpCarbonTxt;
@@ -45,19 +47,58 @@ const tomlString = ( value ) =>
 	'"' + String( value ).replace( /\\/g, '\\\\' ).replace( /"/g, '\\"' ) + '"';
 
 /**
+ * Encode a date as a native TOML local date when it is a plain YYYY-MM-DD.
+ *
+ * @param {string} value Value.
+ * @return {string} TOML date or quoted string.
+ */
+const tomlDate = ( value ) => {
+	const trimmed = String( value ).trim();
+	return /^\d{4}-\d{2}-\d{2}$/.test( trimmed ) ? trimmed : tomlString( trimmed );
+};
+
+/**
+ * Render a single disclosure as a TOML inline table.
+ *
+ * @param {Object} disclosure Disclosure data.
+ * @return {string} Inline table.
+ */
+const renderDisclosure = ( disclosure ) => {
+	const pairs = [
+		`doc_type = ${ tomlString( disclosure.doc_type || 'web-page' ) }`,
+		`url = ${ tomlString( disclosure.url ) }`,
+	];
+	if ( disclosure.domain ) {
+		pairs.push( `domain = ${ tomlString( disclosure.domain ) }` );
+	}
+	if ( disclosure.title ) {
+		pairs.push( `title = ${ tomlString( disclosure.title ) }` );
+	}
+	if ( disclosure.valid_until ) {
+		pairs.push( `valid_until = ${ tomlDate( disclosure.valid_until ) }` );
+	}
+	return `{ ${ pairs.join( ', ' ) } }`;
+};
+
+/**
  * Mirror of the PHP renderer for the live preview.
  *
- * @param {{doc_type:string,url:string}} settings Setting value.
+ * @param {Array} disclosures Disclosure list.
  * @return {string} carbon.txt body.
  */
-const renderCarbonTxt = ( { doc_type: docType, url } ) => {
+const renderCarbonTxt = ( disclosures ) => {
+	const entries = disclosures.filter(
+		( disclosure ) => disclosure.url && disclosure.url.trim()
+	);
+
 	let out = `version = "${ carbonTxtVersion }"\n\n[org]\n`;
-	if ( ! url ) {
+	if ( ! entries.length ) {
 		out += 'disclosures = []\n';
 	} else {
-		out += `disclosures = [\n    { doc_type = ${ tomlString(
-			docType
-		) }, url = ${ tomlString( url ) } },\n]\n`;
+		out +=
+			'disclosures = [\n' +
+			entries.map( ( d ) => '    ' + renderDisclosure( d ) + ',' ).join( '\n' ) +
+			'\n]\n';
 	}
 	return out;
 };
@@ -104,24 +145,141 @@ function PagePicker( { value, onChange } ) {
 }
 
 /**
+ * A single editable disclosure.
+ *
+ * @param {{disclosure:Object,index:number,onChange:Function,onRemove:Function}} props Props.
+ */
+function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
+	const [ mode, setMode ] = useState( 'url' );
+
+	return (
+		<Card>
+			<CardHeader>
+				<Heading level={ 3 }>
+					{ /* translators: %d: disclosure number. */ }
+					{ __( 'Disclosure', 'wp-carbon-txt-plugin' ) + ' ' + ( index + 1 ) }
+				</Heading>
+				<Button
+					isDestructive
+					variant="tertiary"
+					onClick={ onRemove }
+					size="small"
+				>
+					{ __( 'Remove', 'wp-carbon-txt-plugin' ) }
+				</Button>
+			</CardHeader>
+			<CardBody>
+				<VStack spacing={ 4 }>
+					<SelectControl
+						label={ __( 'Document type', 'wp-carbon-txt-plugin' ) }
+						value={ disclosure.doc_type || docTypes[ 0 ] }
+						options={ docTypes.map( ( type ) => ( {
+							value: type,
+							label: DOC_TYPE_LABELS[ type ] || type,
+						} ) ) }
+						onChange={ ( doc_type ) => onChange( { doc_type } ) }
+						__next40pxDefaultSize
+						__nextHasNoMarginBottom
+					/>
+
+					<ToggleGroupControl
+						label={ __( 'URL source', 'wp-carbon-txt-plugin' ) }
+						value={ mode }
+						onChange={ setMode }
+						isBlock
+						__next40pxDefaultSize
+						__nextHasNoMarginBottom
+					>
+						<ToggleGroupControlOption
+							value="url"
+							label={ __( 'Enter a URL', 'wp-carbon-txt-plugin' ) }
+						/>
+						<ToggleGroupControlOption
+							value="page"
+							label={ __( 'Select a page', 'wp-carbon-txt-plugin' ) }
+						/>
+					</ToggleGroupControl>
+
+					{ 'url' === mode ? (
+						<TextControl
+							label={ __( 'Disclosure URL', 'wp-carbon-txt-plugin' ) }
+							type="url"
+							placeholder="https://example.com/sustainability"
+							value={ disclosure.url || '' }
+							onChange={ ( url ) => onChange( { url } ) }
+							__next40pxDefaultSize
+							__nextHasNoMarginBottom
+						/>
+					) : (
+						<PagePicker
+							value={ disclosure.url || '' }
+							onChange={ ( url ) => onChange( { url } ) }
+						/>
+					) }
+
+					<TextControl
+						label={ __( 'Title (optional)', 'wp-carbon-txt-plugin' ) }
+						value={ disclosure.title || '' }
+						onChange={ ( title ) => onChange( { title } ) }
+						__next40pxDefaultSize
+						__nextHasNoMarginBottom
+					/>
+
+					<TextControl
+						label={ __( 'Domain (optional)', 'wp-carbon-txt-plugin' ) }
+						help={ __(
+							'The domain this document applies to, if different from your site.',
+							'wp-carbon-txt-plugin'
+						) }
+						placeholder="example.com"
+						value={ disclosure.domain || '' }
+						onChange={ ( domain ) => onChange( { domain } ) }
+						__next40pxDefaultSize
+						__nextHasNoMarginBottom
+					/>
+
+					<TextControl
+						label={ __( 'Valid until (optional)', 'wp-carbon-txt-plugin' ) }
+						type="date"
+						value={ disclosure.valid_until || '' }
+						onChange={ ( valid_until ) => onChange( { valid_until } ) }
+						__next40pxDefaultSize
+						__nextHasNoMarginBottom
+					/>
+				</VStack>
+			</CardBody>
+		</Card>
+	);
+}
+
+/**
  * Main settings app.
  */
 function App() {
 	const [ settings, setSettings ] = useEntityProp( 'root', 'site', optionName );
-	const [ mode, setMode ] = useState( 'url' );
 	const [ notice, setNotice ] = useState( null );
 
 	const { saveEditedEntityRecord } = useDispatch( coreStore );
 	const isSaving = useSelect(
-		( select ) =>
-			select( coreStore ).isSavingEntityRecord( 'root', 'site' ),
+		( select ) => select( coreStore ).isSavingEntityRecord( 'root', 'site' ),
 		[]
 	);
 
-	// The setting can be undefined during the initial load.
-	const value = settings || { doc_type: docTypes[ 0 ], url: '' };
+	const disclosures = settings?.disclosures || [];
 
-	const update = ( changes ) => setSettings( { ...value, ...changes } );
+	const setDisclosures = ( next ) =>
+		setSettings( { ...( settings || {} ), disclosures: next } );
+
+	const updateDisclosure = ( index, changes ) =>
+		setDisclosures(
+			disclosures.map( ( d, i ) => ( i === index ? { ...d, ...changes } : d ) )
+		);
+
+	const addDisclosure = () =>
+		setDisclosures( [ ...disclosures, { doc_type: docTypes[ 0 ], url: '' } ] );
+
+	const removeDisclosure = ( index ) =>
+		setDisclosures( disclosures.filter( ( _, i ) => i !== index ) );
 
 	const save = async () => {
 		setNotice( null );
@@ -137,17 +295,14 @@ function App() {
 			<Heading level={ 1 }>{ __( 'Carbon.txt', 'wp-carbon-txt-plugin' ) }</Heading>
 			<Text>
 				{ __(
-					'Publish an organisational sustainability disclosure at your site’s carbon.txt file.',
+					'Publish organisational sustainability disclosures at your site’s carbon.txt file.',
 					'wp-carbon-txt-plugin'
 				) }
 			</Text>
 
 			{ notice && (
 				<div style={ { margin: '16px 0' } }>
-					<Notice
-						status={ notice.status }
-						onRemove={ () => setNotice( null ) }
-					>
+					<Notice status={ notice.status } onRemove={ () => setNotice( null ) }>
 						{ notice.text }
 					</Notice>
 				</div>
@@ -155,63 +310,24 @@ function App() {
 
 			<Flex align="flex-start" gap={ 6 } style={ { marginTop: 16 } }>
 				<FlexBlock>
-					<Card>
-						<CardHeader>
-							<Heading level={ 2 }>
-								{ __( 'Disclosure', 'wp-carbon-txt-plugin' ) }
-							</Heading>
-						</CardHeader>
-						<CardBody>
-							<SelectControl
-								label={ __( 'Document type', 'wp-carbon-txt-plugin' ) }
-								value={ value.doc_type }
-								options={ docTypes.map( ( type ) => ( {
-									value: type,
-									label: DOC_TYPE_LABELS[ type ] || type,
-								} ) ) }
-								onChange={ ( doc_type ) => update( { doc_type } ) }
-								__next40pxDefaultSize
-								__nextHasNoMarginBottom
+					<VStack spacing={ 4 }>
+						{ disclosures.map( ( disclosure, index ) => (
+							<DisclosureRow
+								key={ index }
+								disclosure={ disclosure }
+								index={ index }
+								onChange={ ( changes ) => updateDisclosure( index, changes ) }
+								onRemove={ () => removeDisclosure( index ) }
 							/>
+						) ) }
 
-							<div style={ { margin: '16px 0' } }>
-								<ToggleGroupControl
-									label={ __( 'URL source', 'wp-carbon-txt-plugin' ) }
-									value={ mode }
-									onChange={ setMode }
-									isBlock
-									__next40pxDefaultSize
-									__nextHasNoMarginBottom
-								>
-									<ToggleGroupControlOption
-										value="url"
-										label={ __( 'Enter a URL', 'wp-carbon-txt-plugin' ) }
-									/>
-									<ToggleGroupControlOption
-										value="page"
-										label={ __( 'Select a page', 'wp-carbon-txt-plugin' ) }
-									/>
-								</ToggleGroupControl>
-							</div>
-
-							{ 'url' === mode ? (
-								<TextControl
-									label={ __( 'Disclosure URL', 'wp-carbon-txt-plugin' ) }
-									type="url"
-									placeholder="https://example.com/sustainability"
-									value={ value.url }
-									onChange={ ( url ) => update( { url } ) }
-									__next40pxDefaultSize
-									__nextHasNoMarginBottom
-								/>
-							) : (
-								<PagePicker
-									value={ value.url }
-									onChange={ ( url ) => update( { url } ) }
-								/>
-							) }
-
-							<div style={ { marginTop: 24 } }>
+						<Flex justify="space-between">
+							<FlexItem>
+								<Button variant="secondary" onClick={ addDisclosure }>
+									{ __( 'Add disclosure', 'wp-carbon-txt-plugin' ) }
+								</Button>
+							</FlexItem>
+							<FlexItem>
 								<Button
 									variant="primary"
 									onClick={ save }
@@ -220,9 +336,9 @@ function App() {
 								>
 									{ __( 'Save', 'wp-carbon-txt-plugin' ) }
 								</Button>
-							</div>
-						</CardBody>
-					</Card>
+							</FlexItem>
+						</Flex>
+					</VStack>
 				</FlexBlock>
 
 				<FlexBlock>
@@ -247,7 +363,7 @@ function App() {
 									lineHeight: 1.6,
 								} }
 							>
-								{ renderCarbonTxt( value ) }
+								{ renderCarbonTxt( disclosures ) }
 							</pre>
 						</CardBody>
 					</Card>

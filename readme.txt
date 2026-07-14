@@ -15,10 +15,10 @@ Publish a carbon.txt file with your organisational sustainability disclosures.
 WP Carbon.txt lets you publish a carbon.txt file at your site root
 (https://your-site.com/carbon.txt) following the carbon.txt v0.5 syntax.
 
-In this first version you can declare a single organisational disclosure:
+You can declare one or more organisational disclosures. For each one,
 choose a document type and point to it either by pasting a URL or by
-selecting an existing published page. A live preview shows the exact file
-that will be served.
+selecting an existing published page, plus optional title, domain and
+valid-until date. A live preview shows the exact file that will be served.
 
 The file is generated on request from your saved settings and cached, so
 there is no physical file to manage and it survives deploys.
@@ -32,4 +32,5 @@ Source lives in `src/`. Build the admin app with:
 == Changelog ==
 
 = 0.1.0 =
-* Initial release: single organisational disclosure (document type + URL or page), live preview, /carbon.txt endpoint.
+* Multiple organisational disclosures, each with a document type, a URL or page, and optional title, domain and valid-until date.
+* Live preview and /carbon.txt endpoint.

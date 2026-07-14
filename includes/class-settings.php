@@ -34,13 +34,10 @@ class Settings {
 	/**
 	 * Default setting value.
 	 *
-	 * @return array{doc_type:string,url:string}
+	 * @return array{disclosures:array}
 	 */
 	public static function defaults() {
-		return array(
-			'doc_type' => 'web-page',
-			'url'      => '',
-		);
+		return array( 'disclosures' => array() );
 	}
 
 	/**
@@ -62,19 +59,31 @@ class Settings {
 			'options',
 			OPTION_NAME,
 			array(
-				'type'         => 'object',
-				'default'      => self::defaults(),
-				'show_in_rest' => array(
+				'type'              => 'object',
+				'default'           => self::defaults(),
+				'show_in_rest'      => array(
 					'schema' => array(
 						'type'                 => 'object',
 						'properties'           => array(
-							'doc_type' => array(
-								'type' => 'string',
-								'enum' => self::doc_types(),
-							),
-							'url'      => array(
-								'type'   => 'string',
-								'format' => 'uri',
+							'disclosures' => array(
+								'type'  => 'array',
+								'items' => array(
+									'type'                 => 'object',
+									'properties'           => array(
+										'doc_type'    => array(
+											'type' => 'string',
+											'enum' => self::doc_types(),
+										),
+										'url'         => array(
+											'type'   => 'string',
+											'format' => 'uri',
+										),
+										'title'       => array( 'type' => 'string' ),
+										'domain'      => array( 'type' => 'string' ),
+										'valid_until' => array( 'type' => 'string' ),
+									),
+									'additionalProperties' => false,
+								),
 							),
 						),
 						'additionalProperties' => false,
@@ -86,29 +95,88 @@ class Settings {
 	}
 
 	/**
-	 * Sanitize the setting before it is stored.
+	 * Coerce any stored/legacy value into the canonical shape.
+	 *
+	 * Handles the v0.1.0 single-disclosure shape ({ doc_type, url }).
 	 *
 	 * @param mixed $value Raw value.
-	 * @return array{doc_type:string,url:string}
+	 * @return array{disclosures:array}
+	 */
+	public static function normalize( $value ) {
+		if ( ! is_array( $value ) ) {
+			return self::defaults();
+		}
+
+		if ( isset( $value['disclosures'] ) && is_array( $value['disclosures'] ) ) {
+			return array( 'disclosures' => array_values( $value['disclosures'] ) );
+		}
+
+		// Legacy single-disclosure shape.
+		if ( isset( $value['url'] ) || isset( $value['doc_type'] ) ) {
+			return array(
+				'disclosures' => array(
+					array(
+						'doc_type' => isset( $value['doc_type'] ) ? $value['doc_type'] : 'web-page',
+						'url'      => isset( $value['url'] ) ? $value['url'] : '',
+					),
+				),
+			);
+		}
+
+		return self::defaults();
+	}
+
+	/**
+	 * Sanitize the setting before it is stored.
+	 *
+	 * Drops rows without a URL and omits empty optional fields.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return array{disclosures:array}
 	 */
 	public static function sanitize( $value ) {
-		$defaults = self::defaults();
+		$value = self::normalize( $value );
+		$clean = array();
 
-		if ( ! is_array( $value ) ) {
-			return $defaults;
+		foreach ( $value['disclosures'] as $disclosure ) {
+			if ( ! is_array( $disclosure ) ) {
+				continue;
+			}
+
+			$url = isset( $disclosure['url'] ) ? esc_url_raw( trim( (string) $disclosure['url'] ) ) : '';
+			if ( '' === $url ) {
+				continue;
+			}
+
+			$doc_type = isset( $disclosure['doc_type'] ) ? sanitize_text_field( $disclosure['doc_type'] ) : 'web-page';
+			if ( ! in_array( $doc_type, self::doc_types(), true ) ) {
+				$doc_type = 'web-page';
+			}
+
+			$entry = array(
+				'doc_type' => $doc_type,
+				'url'      => $url,
+			);
+
+			$title = isset( $disclosure['title'] ) ? sanitize_text_field( $disclosure['title'] ) : '';
+			if ( '' !== $title ) {
+				$entry['title'] = $title;
+			}
+
+			$domain = isset( $disclosure['domain'] ) ? sanitize_text_field( $disclosure['domain'] ) : '';
+			if ( '' !== $domain ) {
+				$entry['domain'] = $domain;
+			}
+
+			$valid_until = isset( $disclosure['valid_until'] ) ? sanitize_text_field( $disclosure['valid_until'] ) : '';
+			if ( '' !== $valid_until ) {
+				$entry['valid_until'] = $valid_until;
+			}
+
+			$clean[] = $entry;
 		}
 
-		$doc_type = isset( $value['doc_type'] ) ? sanitize_text_field( $value['doc_type'] ) : $defaults['doc_type'];
-		if ( ! in_array( $doc_type, self::doc_types(), true ) ) {
-			$doc_type = $defaults['doc_type'];
-		}
-
-		$url = isset( $value['url'] ) ? esc_url_raw( trim( (string) $value['url'] ) ) : '';
-
-		return array(
-			'doc_type' => $doc_type,
-			'url'      => $url,
-		);
+		return array( 'disclosures' => $clean );
 	}
 
 	/**
