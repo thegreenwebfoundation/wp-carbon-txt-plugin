@@ -77,8 +77,8 @@ without depending on a source-path hash.
 
 This plugin is developed in the open and contributions are welcome. Please
 open an issue or pull request on
-[Codeberg](https://codeberg.org/nahuai/wp-carbon-txt-plugin). Run the linters
-above before submitting.
+[GitHub](https://github.com/thegreenwebfoundation/wp-carbon-txt-plugin). Run
+the linters above before submitting.
 
 ## License
 

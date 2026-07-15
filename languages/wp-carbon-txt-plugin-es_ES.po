@@ -3,7 +3,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: WP Carbon.txt 0.1.0\n"
-"Report-Msgid-Bugs-To: https://codeberg.org/nahuai/wp-carbon-txt-plugin/issues\n"
+"Report-Msgid-Bugs-To: https://github.com/thegreenwebfoundation/wp-carbon-txt-plugin/issues\n"
 "Last-Translator: Nahuai Badiola\n"
 "Language-Team: Español\n"
 "Language: es_ES\n"
