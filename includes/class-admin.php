@@ -89,13 +89,10 @@ class Admin {
 	 * @return string[]
 	 */
 	public static function add_action_links( $links ) {
-		array_unshift(
-			$links,
-			sprintf(
-				'<a href="%s">%s</a>',
-				esc_url( self::settings_url() ),
-				esc_html__( 'Settings', 'wp-carbon-txt-plugin' )
-			)
+		$links[] = sprintf(
+			'<a href="%s">%s</a>',
+			esc_url( self::settings_url() ),
+			esc_html__( 'Settings', 'wp-carbon-txt-plugin' )
 		);
 
 		return $links;
