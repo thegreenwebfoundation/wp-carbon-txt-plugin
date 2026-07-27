@@ -3,7 +3,7 @@
  */
 import { createRoot, useState, useRef } from '@wordpress/element';
 import { useEntityProp, store as coreStore } from '@wordpress/core-data';
-import { useSelect, useDispatch } from '@wordpress/data';
+import { useSelect, useDispatch, select as dataSelect } from '@wordpress/data';
 import { useDebounce } from '@wordpress/compose';
 import apiFetch from '@wordpress/api-fetch';
 import { __, sprintf } from '@wordpress/i18n';
@@ -164,6 +164,7 @@ function PagePicker( { value, onChange } ) {
  * @param {Object}   props                 Props.
  * @param {Object}   props.fileInfo        Existing-file summary from the server.
  * @param {Function} props.onImport        Called to import parsed disclosures.
+ * @param {boolean}  props.canImport       Whether the import action is still offered.
  * @param {boolean}  props.canQuarantine   Whether renaming the file is currently offered.
  * @param {Function} props.onQuarantine    Called to rename the file aside.
  * @param {boolean}  props.isQuarantining  Whether a rename request is in flight.
@@ -172,6 +173,7 @@ function PagePicker( { value, onChange } ) {
 function ExistingFileNotice( {
 	fileInfo,
 	onImport,
+	canImport,
 	canQuarantine,
 	onQuarantine,
 	isQuarantining,
@@ -184,7 +186,14 @@ function ExistingFileNotice( {
 	}
 
 	return (
-		<Notice status="warning" isDismissible={ false }>
+		<Notice
+			status="warning"
+			isDismissible={ false }
+			spokenMessage={ __(
+				'An existing carbon.txt file was found on your server.',
+				'wp-carbon-txt-plugin'
+			) }
+		>
 			<VStack spacing={ 2 }>
 				<Text>
 					{ __(
@@ -200,7 +209,7 @@ function ExistingFileNotice( {
 					) }
 				</Text>
 
-				{ fileInfo.disclosures.length > 0 && (
+				{ canImport && fileInfo.disclosures.length > 0 && (
 					<Button variant="secondary" onClick={ onImport }>
 						{ sprintf(
 							/* translators: %d: number of disclosures found in the existing file. */
@@ -423,6 +432,7 @@ function App() {
 	const [ notice, setNotice ] = useState( null );
 	const [ fileInfo, setFileInfo ] = useState( initialExistingFile );
 	const [ hasSavedOnce, setHasSavedOnce ] = useState( false );
+	const [ hasImported, setHasImported ] = useState( false );
 	const [ isQuarantining, setIsQuarantining ] = useState( false );
 	const [ quarantineError, setQuarantineError ] = useState( null );
 
@@ -465,32 +475,49 @@ function App() {
 		setDisclosures( disclosures.filter( ( _, i ) => i !== index ) );
 	};
 
-	const importFromExistingFile = () =>
+	const importFromExistingFile = () => {
 		setDisclosures( [ ...disclosures, ...fileInfo.disclosures ] );
+		setHasImported( true );
+	};
 
 	const save = async () => {
 		setNotice( null );
 		const saved = await saveEditedEntityRecord( 'root', 'site' );
+
 		if ( saved ) {
 			setHasSavedOnce( true );
+			setNotice( {
+				status: 'success',
+				text: __(
+					'Saved. Your carbon.txt is up to date.',
+					'wp-carbon-txt-plugin'
+				),
+			} );
+			return;
 		}
-		setNotice(
-			saved
-				? {
-						status: 'success',
-						text: __(
-							'Saved. Your carbon.txt is up to date.',
-							'wp-carbon-txt-plugin'
-						),
-				  }
-				: {
-						status: 'error',
-						text: __(
-							'Saving failed. Please try again.',
-							'wp-carbon-txt-plugin'
-						),
-				  }
+
+		// Read the store directly rather than via useSelect: we need the
+		// value as of right now, not the one from the render that created
+		// this closure.
+		const lastError = dataSelect( coreStore ).getLastEntitySaveError(
+			'root',
+			'site',
+			undefined
 		);
+
+		setNotice( {
+			status: 'error',
+			text: lastError?.message
+				? sprintf(
+						/* translators: %s: error message returned by the server. */
+						__( 'Saving failed: %s', 'wp-carbon-txt-plugin' ),
+						lastError.message
+				  )
+				: __(
+						'Saving failed. Please try again.',
+						'wp-carbon-txt-plugin'
+				  ),
+		} );
 	};
 
 	const quarantineExistingFile = async () => {
@@ -544,6 +571,7 @@ function App() {
 					<ExistingFileNotice
 						fileInfo={ fileInfo }
 						onImport={ importFromExistingFile }
+						canImport={ ! hasImported }
 						canQuarantine={ hasSavedOnce }
 						onQuarantine={ quarantineExistingFile }
 						isQuarantining={ isQuarantining }

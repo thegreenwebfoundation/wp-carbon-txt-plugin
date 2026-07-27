@@ -66,7 +66,17 @@ class Importer {
 			);
 		}
 
-		$backup_path = $path . '.' . time() . '.bak';
+		// A plain date reads better than a full timestamp, but if
+		// quarantine() has already run today the destination would
+		// collide — rename() silently overwrites, which would destroy
+		// that earlier backup. Disambiguate rather than risk that.
+		$date        = wp_date( 'Y-m-d' );
+		$backup_path = $path . '.' . $date . '.bak';
+		$suffix      = 2;
+		while ( file_exists( $backup_path ) ) {
+			$backup_path = $path . '.' . $date . '-' . $suffix . '.bak';
+			++$suffix;
+		}
 
 		if ( ! rename( $path, $backup_path ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- WP_Filesystem's direct method behaves identically here; using it properly would mean also building an FTP-credentials flow for the case it doesn't, which this scoped action doesn't warrant.
 			return new \WP_Error(
@@ -271,8 +281,17 @@ class Importer {
 			return null;
 		}
 
+		// The imported file's doc_type isn't guaranteed to match our enum
+		// (a different tool or version may use different values); fall
+		// back rather than let an invalid value reach the REST schema,
+		// which would reject the whole save.
+		$doc_type = isset( $pairs['doc_type'] ) ? $pairs['doc_type'] : 'web-page';
+		if ( ! in_array( $doc_type, Settings::doc_types(), true ) ) {
+			$doc_type = 'web-page';
+		}
+
 		$entry = array(
-			'doc_type' => isset( $pairs['doc_type'] ) ? $pairs['doc_type'] : 'web-page',
+			'doc_type' => $doc_type,
 			'url'      => $pairs['url'],
 		);
 
