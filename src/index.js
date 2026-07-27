@@ -207,6 +207,78 @@ function PagePicker( { value, pageId, onChange } ) {
 }
 
 /**
+ * Media library file picker, built on the classic wp.media() frame rather
+ * than @wordpress/block-editor's <MediaUpload>, so this plugin doesn't need
+ * that package as a dependency just for one modal. Remembers the selected
+ * attachment by ID (via `onChange`'s `attachment_id`) the same way
+ * PagePicker remembers a page.
+ *
+ * @param {Object}   props              Props.
+ * @param {string}   props.value        Current URL (shown when no attachment title is available).
+ * @param {?number}  props.attachmentId ID of the previously selected attachment, if any.
+ * @param {Function} props.onChange     Called with { url, attachment_id }.
+ */
+function MediaPicker( { value, attachmentId, onChange } ) {
+	const selectedAttachment = useSelect(
+		( select ) =>
+			attachmentId
+				? select( coreStore ).getEntityRecord(
+						'postType',
+						'attachment',
+						attachmentId
+				  )
+				: null,
+		[ attachmentId ]
+	);
+
+	const openMediaLibrary = () => {
+		const frame = wp.media( {
+			title: __( 'Select a file', 'wp-carbon-txt-plugin' ),
+			button: { text: __( 'Use this file', 'wp-carbon-txt-plugin' ) },
+			multiple: false,
+		} );
+
+		frame.on( 'select', () => {
+			const attachment = frame
+				.state()
+				.get( 'selection' )
+				.first()
+				.toJSON();
+
+			onChange( {
+				url: attachment.url,
+				attachment_id: attachment.id,
+			} );
+		} );
+
+		frame.open();
+	};
+
+	const label = selectedAttachment
+		? selectedAttachment.title?.rendered || value
+		: value;
+
+	return (
+		<VStack spacing={ 2 }>
+			<Text>
+				{ label
+					? sprintf(
+							/* translators: %s: selected file name or URL. */
+							__( 'Selected file: %s', 'wp-carbon-txt-plugin' ),
+							label
+					  )
+					: __( 'No file selected yet.', 'wp-carbon-txt-plugin' ) }
+			</Text>
+			<Button variant="secondary" onClick={ openMediaLibrary }>
+				{ value
+					? __( 'Choose a different file', 'wp-carbon-txt-plugin' )
+					: __( 'Choose a file', 'wp-carbon-txt-plugin' ) }
+			</Button>
+		</VStack>
+	);
+}
+
+/**
  * Warns about a carbon.txt file already on the server, and offers to
  * import any disclosures we could parse out of it, or to rename it aside
  * once the plugin's own settings have been saved.
@@ -347,12 +419,29 @@ function ExistingFileNotice( {
 }
 
 /**
+ * The URL-source mode a disclosure was last edited in, inferred from
+ * which internal id field (if any) is set.
+ *
+ * @param {Object} disclosure Disclosure data.
+ * @return {string} One of 'url', 'page', or 'media'.
+ */
+const modeFor = ( disclosure ) => {
+	if ( disclosure.page_id ) {
+		return 'page';
+	}
+	if ( disclosure.attachment_id ) {
+		return 'media';
+	}
+	return 'url';
+};
+
+/**
  * A single editable disclosure.
  *
  * @param {{disclosure:Object,index:number,onChange:Function,onRemove:Function}} props Props.
  */
 function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
-	const [ mode, setMode ] = useState( disclosure.page_id ? 'page' : 'url' );
+	const [ mode, setMode ] = useState( modeFor( disclosure ) );
 
 	return (
 		<Card>
@@ -378,7 +467,7 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 					{ ! ( disclosure.url && disclosure.url.trim() ) && (
 						<Notice status="warning" isDismissible={ false }>
 							{ __(
-								'This disclosure needs a URL to be included in your carbon.txt.',
+								'This disclosure needs a URL, page, or file to be included in your carbon.txt.',
 								'wp-carbon-txt-plugin'
 							) }
 						</Notice>
@@ -418,9 +507,16 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 								'wp-carbon-txt-plugin'
 							) }
 						/>
+						<ToggleGroupControlOption
+							value="media"
+							label={ __(
+								'Choose a file',
+								'wp-carbon-txt-plugin'
+							) }
+						/>
 					</ToggleGroupControl>
 
-					{ 'url' === mode ? (
+					{ 'url' === mode && (
 						<TextControl
 							label={ __(
 								'Disclosure URL',
@@ -430,16 +526,37 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 							placeholder="https://example.com/sustainability"
 							value={ disclosure.url || '' }
 							onChange={ ( url ) =>
-								onChange( { url, page_id: undefined } )
+								onChange( {
+									url,
+									page_id: undefined,
+									attachment_id: undefined,
+								} )
 							}
 							__next40pxDefaultSize
 							__nextHasNoMarginBottom
 						/>
-					) : (
+					) }
+
+					{ 'page' === mode && (
 						<PagePicker
 							value={ disclosure.url || '' }
 							pageId={ disclosure.page_id }
-							onChange={ onChange }
+							onChange={ ( changes ) =>
+								onChange( {
+									...changes,
+									attachment_id: undefined,
+								} )
+							}
+						/>
+					) }
+
+					{ 'media' === mode && (
+						<MediaPicker
+							value={ disclosure.url || '' }
+							attachmentId={ disclosure.attachment_id }
+							onChange={ ( changes ) =>
+								onChange( { ...changes, page_id: undefined } )
+							}
 						/>
 					) }
 

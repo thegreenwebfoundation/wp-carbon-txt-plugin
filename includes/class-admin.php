@@ -163,6 +163,10 @@ class Admin {
 			return;
 		}
 
+		// Registers the classic media modal's scripts, used by the file
+		// picker without needing @wordpress/block-editor as a dependency.
+		wp_enqueue_media();
+
 		$asset_file = __DIR__ . '/../build/index.asset.php';
 		if ( ! file_exists( $asset_file ) ) {
 			return;
