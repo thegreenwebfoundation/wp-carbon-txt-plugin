@@ -49,6 +49,37 @@ class Importer {
 	}
 
 	/**
+	 * Rename the existing file out of the way, so the web server stops
+	 * serving it at /carbon.txt. The original is kept as a timestamped
+	 * backup in the same directory rather than deleted, so nothing is lost.
+	 *
+	 * @return string|\WP_Error The backup path on success.
+	 */
+	public static function quarantine() {
+		$path = self::file_path();
+
+		if ( ! file_exists( $path ) ) {
+			return new \WP_Error(
+				'wp_carbon_txt_no_file',
+				__( 'No existing carbon.txt file was found to rename.', 'wp-carbon-txt-plugin' ),
+				array( 'status' => 404 )
+			);
+		}
+
+		$backup_path = $path . '.' . time() . '.bak';
+
+		if ( ! rename( $path, $backup_path ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- WP_Filesystem's direct method behaves identically here; using it properly would mean also building an FTP-credentials flow for the case it doesn't, which this scoped action doesn't warrant.
+			return new \WP_Error(
+				'wp_carbon_txt_rename_failed',
+				__( 'Could not rename the existing file. Check your server file permissions.', 'wp-carbon-txt-plugin' ),
+				array( 'status' => 500 )
+			);
+		}
+
+		return $backup_path;
+	}
+
+	/**
 	 * Summarize the existing file for the settings screen: whether it
 	 * exists, the path checked, any disclosures we could parse out of it,
 	 * and (only when nothing could be parsed) its raw contents to review.
