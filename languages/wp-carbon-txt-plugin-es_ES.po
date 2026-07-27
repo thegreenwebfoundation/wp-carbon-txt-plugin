@@ -19,118 +19,205 @@ msgstr ""
 msgid "Publish a carbon.txt file with your organisational sustainability disclosures."
 msgstr "Publica un archivo carbon.txt con las divulgaciones de sostenibilidad de tu organización."
 
-#: includes/class-admin.php:35
-#: includes/class-admin.php:36
-#: src/index.js:352
+#: includes/class-admin.php:130
+msgid "Settings"
+msgstr "Ajustes"
+
+#: includes/class-admin.php:141
+#: includes/class-admin.php:142
+#: src/index.js:719
 msgid "Carbon.txt"
 msgstr "Carbon.txt"
 
-#: src/index.js:35
+#: includes/class-importer.php:64
+msgid "No existing carbon.txt file was found to rename."
+msgstr "No se encontró ningún archivo carbon.txt existente para renombrar."
+
+#: includes/class-importer.php:84
+msgid "Could not rename the existing file. Check your server file permissions."
+msgstr "No se pudo renombrar el archivo existente. Comprueba los permisos de archivos de tu servidor."
+
+#: src/index.js:41
 msgid "Web page"
 msgstr "Página web"
 
-#: src/index.js:36
+#: src/index.js:42
 msgid "Annual report"
 msgstr "Informe anual"
 
-#: src/index.js:37
+#: src/index.js:43
 msgid "Sustainability page"
 msgstr "Página de sostenibilidad"
 
-#: src/index.js:38
+#: src/index.js:44
 msgid "Certificate"
 msgstr "Certificado"
 
-#: src/index.js:39
+#: src/index.js:45
 msgid "CSRD report"
 msgstr "Informe CSRD"
 
-#: src/index.js:40
+#: src/index.js:46
 msgid "AI model card"
 msgstr "Ficha de modelo de IA"
 
-#: src/index.js:41
+#: src/index.js:47
 msgid "Other"
 msgstr "Otro"
 
-#: src/index.js:139
+#: src/index.js:195
 msgid "Select a published page"
 msgstr "Selecciona una página publicada"
 
-#: src/index.js:140
+#: src/index.js:196
 msgid "Search your pages by title. Its permalink is used as the disclosure URL."
 msgstr "Busca tus páginas por título. Su enlace permanente se usa como URL de la divulgación."
 
+#: src/index.js:236
+msgid "Select a file"
+msgstr "Selecciona un archivo"
+
+#: src/index.js:237
+msgid "Use this file"
+msgstr "Usar este archivo"
+
+#. translators: %s: selected file name or URL.
+#: src/index.js:267
+#, js-format
+msgid "Selected file: %s"
+msgstr "Archivo seleccionado: %s"
+
+#: src/index.js:270
+msgid "No file selected yet."
+msgstr "Aún no se ha seleccionado ningún archivo."
+
+#: src/index.js:274
+msgid "Choose a different file"
+msgstr "Elegir otro archivo"
+
+#: src/index.js:275
+#: src/index.js:512
+msgid "Choose a file"
+msgstr "Elegir un archivo"
+
+#: src/index.js:314
+msgid "An existing carbon.txt file was found on your server."
+msgstr "Se encontró un archivo carbon.txt existente en tu servidor."
+
+#: src/index.js:321
+msgid "An existing carbon.txt file was found on your server at:"
+msgstr "Se encontró un archivo carbon.txt existente en tu servidor en:"
+
+#: src/index.js:328
+msgid "Depending on your hosting configuration, your web server may keep serving that file directly instead of the version this plugin generates — saving here might not change what visitors see until the existing file is removed or renamed."
+msgstr "Según la configuración de tu alojamiento, tu servidor web podría seguir sirviendo ese archivo directamente en lugar de la versión que genera este plugin — guardar aquí podría no cambiar lo que ven los visitantes hasta que se elimine o renombre el archivo existente."
+
+#. translators: %d: number of disclosures found in the existing file.
+#: src/index.js:338
+#, js-format
+msgid "Import %d disclosure(s) from this file"
+msgstr "Importar %d divulgación(es) de este archivo"
+
+#: src/index.js:350
+msgid "We couldn't automatically read its disclosures — view the raw file"
+msgstr "No pudimos leer sus divulgaciones automáticamente — ver el archivo sin procesar"
+
+#: src/index.js:373
+msgid "Rename existing file so this plugin is used"
+msgstr "Renombrar el archivo existente para que se use este plugin"
+
+#: src/index.js:383
+msgid "The file will be kept as a backup in the same location, not deleted. Continue?"
+msgstr "El archivo se conservará como copia de seguridad en la misma ubicación, no se eliminará. ¿Continuar?"
+
+#: src/index.js:396
+msgid "Yes, rename it"
+msgstr "Sí, renómbralo"
+
+#: src/index.js:406
+msgid "Cancel"
+msgstr "Cancelar"
+
 #. translators: %d: disclosure number.
-#: src/index.js:167
+#: src/index.js:452
 #, js-format
 msgid "Disclosure %d"
 msgstr "Divulgación %d"
 
-#: src/index.js:177
+#: src/index.js:462
 msgid "Remove"
 msgstr "Eliminar"
 
-#: src/index.js:184
-msgid "This disclosure needs a URL to be included in your carbon.txt."
-msgstr "Esta divulgación necesita una URL para incluirse en tu carbon.txt."
+#: src/index.js:469
+msgid "This disclosure needs a URL, page, or file to be included in your carbon.txt."
+msgstr "Esta divulgación necesita una URL, página o archivo para incluirse en tu carbon.txt."
 
-#: src/index.js:192
+#: src/index.js:477
 msgid "Document type"
 msgstr "Tipo de documento"
 
-#: src/index.js:204
+#: src/index.js:489
 msgid "URL source"
 msgstr "Origen de la URL"
 
-#: src/index.js:213
+#: src/index.js:498
 msgid "Enter a URL"
 msgstr "Introducir una URL"
 
-#: src/index.js:220
+#: src/index.js:505
 msgid "Select a page"
 msgstr "Seleccionar una página"
 
-#: src/index.js:229
+#: src/index.js:521
 msgid "Disclosure URL"
 msgstr "URL de la divulgación"
 
-#: src/index.js:248
+#: src/index.js:564
 msgid "Title (optional)"
 msgstr "Título (opcional)"
 
-#: src/index.js:259
+#: src/index.js:575
 msgid "Valid until (optional)"
 msgstr "Válido hasta (opcional)"
 
-#: src/index.js:334
+#: src/index.js:661
 msgid "Saved. Your carbon.txt is up to date."
 msgstr "Guardado. Tu carbon.txt está actualizado."
 
-#: src/index.js:341
+#. translators: %s: error message returned by the server.
+#: src/index.js:683
+#, js-format
+msgid "Saving failed: %s"
+msgstr "Error al guardar: %s"
+
+#: src/index.js:686
 msgid "Saving failed. Please try again."
 msgstr "Error al guardar. Inténtalo de nuevo."
 
-#: src/index.js:355
+#: src/index.js:706
+msgid "Could not rename the existing file."
+msgstr "No se pudo renombrar el archivo existente."
+
+#: src/index.js:722
 msgid "Publish organisational sustainability disclosures at your site’s carbon.txt file."
 msgstr "Publica las divulgaciones de sostenibilidad de tu organización en el archivo carbon.txt de tu sitio."
 
-#: src/index.js:379
+#: src/index.js:760
 msgid "No disclosures yet. Add your first sustainability document to publish it in your carbon.txt."
 msgstr "Aún no hay divulgaciones. Añade tu primer documento de sostenibilidad para publicarlo en tu carbon.txt."
 
-#: src/index.js:406
+#: src/index.js:787
 msgid "Add disclosure"
 msgstr "Añadir divulgación"
 
-#: src/index.js:419
+#: src/index.js:800
 msgid "Save"
 msgstr "Guardar"
 
-#: src/index.js:430
+#: src/index.js:811
 msgid "Preview"
 msgstr "Vista previa"
 
-#: src/index.js:433
+#: src/index.js:814
 msgid "View live file"
 msgstr "Ver archivo en vivo"

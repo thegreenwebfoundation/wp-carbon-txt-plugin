@@ -72,17 +72,18 @@ class Settings {
 								'items' => array(
 									'type'                 => 'object',
 									'properties'           => array(
-										'doc_type'    => array(
+										'doc_type'      => array(
 											'type' => 'string',
 											'enum' => self::doc_types(),
 										),
-										'url'         => array(
+										'url'           => array(
 											'type'   => 'string',
 											'format' => 'uri',
 										),
-										'page_id'     => array( 'type' => 'integer' ),
-										'title'       => array( 'type' => 'string' ),
-										'valid_until' => array( 'type' => 'string' ),
+										'page_id'       => array( 'type' => 'integer' ),
+										'attachment_id' => array( 'type' => 'integer' ),
+										'title'         => array( 'type' => 'string' ),
+										'valid_until'   => array( 'type' => 'string' ),
 									),
 									'additionalProperties' => false,
 								),
@@ -166,6 +167,12 @@ class Settings {
 			$page_id = isset( $disclosure['page_id'] ) ? absint( $disclosure['page_id'] ) : 0;
 			if ( $page_id > 0 ) {
 				$entry['page_id'] = $page_id;
+			}
+
+			// Same convenience, for a disclosure pointed at a media library file.
+			$attachment_id = isset( $disclosure['attachment_id'] ) ? absint( $disclosure['attachment_id'] ) : 0;
+			if ( $attachment_id > 0 ) {
+				$entry['attachment_id'] = $attachment_id;
 			}
 
 			$title = isset( $disclosure['title'] ) ? sanitize_text_field( $disclosure['title'] ) : '';
