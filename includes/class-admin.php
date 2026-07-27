@@ -31,10 +31,45 @@ class Admin {
 		add_action( 'admin_menu', array( __CLASS__, 'add_menu' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue' ) );
 		add_action( 'admin_init', array( __CLASS__, 'maybe_redirect_after_activation' ) );
+		add_action( 'rest_api_init', array( __CLASS__, 'register_rest_routes' ) );
 		add_filter(
 			'plugin_action_links_' . plugin_basename( PLUGIN_FILE ),
 			array( __CLASS__, 'add_action_links' )
 		);
+	}
+
+	/**
+	 * Register the REST route used to quarantine an existing carbon.txt
+	 * file found on disk. A plain settings save can't do this — it's a
+	 * filesystem action outside the option store.
+	 */
+	public static function register_rest_routes() {
+		register_rest_route(
+			'wp-carbon-txt/v1',
+			'/existing-file',
+			array(
+				'methods'             => 'DELETE',
+				'callback'            => array( __CLASS__, 'rest_quarantine_existing_file' ),
+				'permission_callback' => static function () {
+					return current_user_can( 'manage_options' );
+				},
+			)
+		);
+	}
+
+	/**
+	 * REST callback: rename the existing file out of the way.
+	 *
+	 * @return \WP_REST_Response|\WP_Error
+	 */
+	public static function rest_quarantine_existing_file() {
+		$result = Importer::quarantine();
+
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		return rest_ensure_response( array( 'renamed_to' => $result ) );
 	}
 
 	/**
@@ -161,6 +196,7 @@ class Admin {
 					'docTypes'         => Settings::doc_types(),
 					'carbonTxtUrl'     => home_url( '/carbon.txt' ),
 					'carbonTxtVersion' => CARBON_TXT_VERSION,
+					'existingFile'     => Importer::summary(),
 				)
 			) . ';',
 			'before'

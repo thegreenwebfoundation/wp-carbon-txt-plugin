@@ -3,8 +3,9 @@
  */
 import { createRoot, useState, useRef } from '@wordpress/element';
 import { useEntityProp, store as coreStore } from '@wordpress/core-data';
-import { useSelect, useDispatch } from '@wordpress/data';
+import { useSelect, useDispatch, select as dataSelect } from '@wordpress/data';
 import { useDebounce } from '@wordpress/compose';
+import apiFetch from '@wordpress/api-fetch';
 import { __, sprintf } from '@wordpress/i18n';
 import {
 	Card,
@@ -28,8 +29,13 @@ import {
 	/* eslint-enable @wordpress/no-unsafe-wp-apis */
 } from '@wordpress/components';
 
-const { optionName, docTypes, carbonTxtUrl, carbonTxtVersion } =
-	window.wpCarbonTxt;
+const {
+	optionName,
+	docTypes,
+	carbonTxtUrl,
+	carbonTxtVersion,
+	existingFile: initialExistingFile,
+} = window.wpCarbonTxt;
 
 const DOC_TYPE_LABELS = {
 	'web-page': __( 'Web page', 'wp-carbon-txt-plugin' ),
@@ -109,30 +115,80 @@ const renderCarbonTxt = ( disclosures ) => {
 };
 
 /**
- * Searchable published-page picker.
+ * Searchable published-page picker. Remembers the selected page by ID
+ * (via `onChange`'s `page_id`) so a previously chosen page is still shown
+ * by title on revisit, even if it isn't among the current search results.
  *
- * @param {{value:string,onChange:Function}} props Props.
+ * @param {Object}   props          Props.
+ * @param {string}   props.value    Current URL (used to pre-fill the field).
+ * @param {?number}  props.pageId   ID of the previously selected page, if any.
+ * @param {Function} props.onChange Called with { url, page_id }.
  */
-function PagePicker( { value, onChange } ) {
+function PagePicker( { value, pageId, onChange } ) {
 	const [ search, setSearch ] = useState( '' );
 	const debouncedSetSearch = useDebounce( setSearch, 250 );
 
-	const pages = useSelect(
-		( select ) =>
-			select( coreStore ).getEntityRecords( 'postType', 'page', {
-				per_page: 20,
-				status: 'publish',
-				search: search || undefined,
-				orderby: search ? 'relevance' : 'title',
-				order: search ? 'desc' : 'asc',
-			} ),
-		[ search ]
+	const { pages, selectedPage } = useSelect(
+		( select ) => {
+			const core = select( coreStore );
+			return {
+				pages: core.getEntityRecords( 'postType', 'page', {
+					per_page: 20,
+					status: 'publish',
+					search: search || undefined,
+					orderby: search ? 'relevance' : 'title',
+					order: search ? 'desc' : 'asc',
+				} ),
+				selectedPage: pageId
+					? core.getEntityRecord( 'postType', 'page', pageId )
+					: null,
+			};
+		},
+		[ search, pageId ]
 	);
 
-	const options = ( pages || [] ).map( ( page ) => ( {
-		value: page.link,
-		label: page.title?.rendered || page.link,
-	} ) );
+	const options = [];
+	const seenIds = new Set();
+
+	// Always offer the currently selected page as an option, even before
+	// it shows up in (or if it never matches) the search results, so the
+	// combobox can display its title instead of falling back to the URL.
+	if ( selectedPage ) {
+		options.push( {
+			value: selectedPage.link,
+			label: selectedPage.title?.rendered || selectedPage.link,
+		} );
+		seenIds.add( selectedPage.id );
+	}
+
+	( pages || [] ).forEach( ( page ) => {
+		if ( seenIds.has( page.id ) ) {
+			return;
+		}
+		seenIds.add( page.id );
+		options.push( {
+			value: page.link,
+			label: page.title?.rendered || page.link,
+		} );
+	} );
+
+	const handleChange = ( nextValue ) => {
+		if ( ! nextValue ) {
+			onChange( { url: '', page_id: undefined } );
+			return;
+		}
+
+		const match =
+			( pages || [] ).find( ( page ) => page.link === nextValue ) ||
+			( selectedPage && selectedPage.link === nextValue
+				? selectedPage
+				: null );
+
+		onChange( {
+			url: nextValue,
+			page_id: match ? match.id : undefined,
+		} );
+	};
 
 	return (
 		<ComboboxControl
@@ -144,9 +200,149 @@ function PagePicker( { value, onChange } ) {
 			value={ value }
 			options={ options }
 			onFilterValueChange={ debouncedSetSearch }
-			onChange={ ( next ) => onChange( next || '' ) }
+			onChange={ handleChange }
 			__next40pxDefaultSize
 		/>
+	);
+}
+
+/**
+ * Warns about a carbon.txt file already on the server, and offers to
+ * import any disclosures we could parse out of it, or to rename it aside
+ * once the plugin's own settings have been saved.
+ *
+ * @param {Object}   props                 Props.
+ * @param {Object}   props.fileInfo        Existing-file summary from the server.
+ * @param {Function} props.onImport        Called to import parsed disclosures.
+ * @param {boolean}  props.canImport       Whether the import action is still offered.
+ * @param {boolean}  props.canQuarantine   Whether renaming the file is currently offered.
+ * @param {Function} props.onQuarantine    Called to rename the file aside.
+ * @param {boolean}  props.isQuarantining  Whether a rename request is in flight.
+ * @param {?string}  props.quarantineError Error message from a failed rename, if any.
+ */
+function ExistingFileNotice( {
+	fileInfo,
+	onImport,
+	canImport,
+	canQuarantine,
+	onQuarantine,
+	isQuarantining,
+	quarantineError,
+} ) {
+	const [ confirming, setConfirming ] = useState( false );
+
+	if ( ! fileInfo.exists ) {
+		return null;
+	}
+
+	return (
+		<Notice
+			status="warning"
+			isDismissible={ false }
+			spokenMessage={ __(
+				'An existing carbon.txt file was found on your server.',
+				'wp-carbon-txt-plugin'
+			) }
+		>
+			<VStack spacing={ 2 }>
+				<Text>
+					{ __(
+						'An existing carbon.txt file was found on your server at:',
+						'wp-carbon-txt-plugin'
+					) }{ ' ' }
+					<code>{ fileInfo.path }</code>
+				</Text>
+				<Text>
+					{ __(
+						'Depending on your hosting configuration, your web server may keep serving that file directly instead of the version this plugin generates — saving here might not change what visitors see until the existing file is removed or renamed.',
+						'wp-carbon-txt-plugin'
+					) }
+				</Text>
+
+				{ canImport && fileInfo.disclosures.length > 0 && (
+					<Button variant="secondary" onClick={ onImport }>
+						{ sprintf(
+							/* translators: %d: number of disclosures found in the existing file. */
+							__(
+								'Import %d disclosure(s) from this file',
+								'wp-carbon-txt-plugin'
+							),
+							fileInfo.disclosures.length
+						) }
+					</Button>
+				) }
+
+				{ ! fileInfo.disclosures.length && fileInfo.raw && (
+					<details>
+						<summary>
+							{ __(
+								"We couldn't automatically read its disclosures — view the raw file",
+								'wp-carbon-txt-plugin'
+							) }
+						</summary>
+						<pre
+							style={ {
+								overflowX: 'auto',
+								fontSize: 12,
+								lineHeight: 1.6,
+							} }
+						>
+							{ fileInfo.raw }
+						</pre>
+					</details>
+				) }
+
+				{ canQuarantine && ! confirming && (
+					<Button
+						variant="tertiary"
+						isDestructive
+						onClick={ () => setConfirming( true ) }
+					>
+						{ __(
+							'Rename existing file so this plugin is used',
+							'wp-carbon-txt-plugin'
+						) }
+					</Button>
+				) }
+
+				{ canQuarantine && confirming && (
+					<VStack spacing={ 2 }>
+						<Text>
+							{ __(
+								'The file will be kept as a backup in the same location, not deleted. Continue?',
+								'wp-carbon-txt-plugin'
+							) }
+						</Text>
+						<Flex expanded={ false } gap={ 2 }>
+							<Button
+								variant="primary"
+								isDestructive
+								isBusy={ isQuarantining }
+								disabled={ isQuarantining }
+								onClick={ onQuarantine }
+							>
+								{ __(
+									'Yes, rename it',
+									'wp-carbon-txt-plugin'
+								) }
+							</Button>
+							<Button
+								variant="tertiary"
+								disabled={ isQuarantining }
+								onClick={ () => setConfirming( false ) }
+							>
+								{ __( 'Cancel', 'wp-carbon-txt-plugin' ) }
+							</Button>
+						</Flex>
+						{ quarantineError && (
+							<Text style={ { color: '#cc1818' } }>
+								{ quarantineError }
+							</Text>
+						) }
+					</VStack>
+				) }
+			</VStack>
+		</Notice>
 	);
 }
 
@@ -156,7 +352,7 @@ function PagePicker( { value, onChange } ) {
  * @param {{disclosure:Object,index:number,onChange:Function,onRemove:Function}} props Props.
  */
 function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
-	const [ mode, setMode ] = useState( 'url' );
+	const [ mode, setMode ] = useState( disclosure.page_id ? 'page' : 'url' );
 
 	return (
 		<Card>
@@ -233,14 +429,17 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 							type="url"
 							placeholder="https://example.com/sustainability"
 							value={ disclosure.url || '' }
-							onChange={ ( url ) => onChange( { url } ) }
+							onChange={ ( url ) =>
+								onChange( { url, page_id: undefined } )
+							}
 							__next40pxDefaultSize
 							__nextHasNoMarginBottom
 						/>
 					) : (
 						<PagePicker
 							value={ disclosure.url || '' }
-							onChange={ ( url ) => onChange( { url } ) }
+							pageId={ disclosure.page_id }
+							onChange={ onChange }
 						/>
 					) }
 
@@ -284,6 +483,11 @@ function App() {
 		optionName
 	);
 	const [ notice, setNotice ] = useState( null );
+	const [ fileInfo, setFileInfo ] = useState( initialExistingFile );
+	const [ hasSavedOnce, setHasSavedOnce ] = useState( false );
+	const [ hasImported, setHasImported ] = useState( false );
+	const [ isQuarantining, setIsQuarantining ] = useState( false );
+	const [ quarantineError, setQuarantineError ] = useState( null );
 
 	const { saveEditedEntityRecord } = useDispatch( coreStore );
 	const isSaving = useSelect(
@@ -324,26 +528,72 @@ function App() {
 		setDisclosures( disclosures.filter( ( _, i ) => i !== index ) );
 	};
 
+	const importFromExistingFile = () => {
+		setDisclosures( [ ...disclosures, ...fileInfo.disclosures ] );
+		setHasImported( true );
+	};
+
 	const save = async () => {
 		setNotice( null );
 		const saved = await saveEditedEntityRecord( 'root', 'site' );
-		setNotice(
-			saved
-				? {
-						status: 'success',
-						text: __(
-							'Saved. Your carbon.txt is up to date.',
-							'wp-carbon-txt-plugin'
-						),
-				  }
-				: {
-						status: 'error',
-						text: __(
-							'Saving failed. Please try again.',
-							'wp-carbon-txt-plugin'
-						),
-				  }
+
+		if ( saved ) {
+			setHasSavedOnce( true );
+			setNotice( {
+				status: 'success',
+				text: __(
+					'Saved. Your carbon.txt is up to date.',
+					'wp-carbon-txt-plugin'
+				),
+			} );
+			return;
+		}
+
+		// Read the store directly rather than via useSelect: we need the
+		// value as of right now, not the one from the render that created
+		// this closure.
+		const lastError = dataSelect( coreStore ).getLastEntitySaveError(
+			'root',
+			'site',
+			undefined
 		);
+
+		setNotice( {
+			status: 'error',
+			text: lastError?.message
+				? sprintf(
+						/* translators: %s: error message returned by the server. */
+						__( 'Saving failed: %s', 'wp-carbon-txt-plugin' ),
+						lastError.message
+				  )
+				: __(
+						'Saving failed. Please try again.',
+						'wp-carbon-txt-plugin'
+				  ),
+		} );
+	};
+
+	const quarantineExistingFile = async () => {
+		setIsQuarantining( true );
+		setQuarantineError( null );
+
+		try {
+			await apiFetch( {
+				path: '/wp-carbon-txt/v1/existing-file',
+				method: 'DELETE',
+			} );
+			setFileInfo( { ...fileInfo, exists: false } );
+		} catch ( error ) {
+			setQuarantineError(
+				error?.message ||
+					__(
+						'Could not rename the existing file.',
+						'wp-carbon-txt-plugin'
+					)
+			);
+		} finally {
+			setIsQuarantining( false );
+		}
 	};
 
 	return (
@@ -366,6 +616,20 @@ function App() {
 					>
 						{ notice.text }
 					</Notice>
+				</div>
+			) }
+
+			{ fileInfo.exists && (
+				<div style={ { margin: '16px 0' } }>
+					<ExistingFileNotice
+						fileInfo={ fileInfo }
+						onImport={ importFromExistingFile }
+						canImport={ ! hasImported }
+						canQuarantine={ hasSavedOnce }
+						onQuarantine={ quarantineExistingFile }
+						isQuarantining={ isQuarantining }
+						quarantineError={ quarantineError }
+					/>
 				</div>
 			) }
 

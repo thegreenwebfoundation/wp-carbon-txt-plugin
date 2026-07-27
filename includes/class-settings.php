@@ -80,6 +80,7 @@ class Settings {
 											'type'   => 'string',
 											'format' => 'uri',
 										),
+										'page_id'     => array( 'type' => 'integer' ),
 										'title'       => array( 'type' => 'string' ),
 										'valid_until' => array( 'type' => 'string' ),
 									),
@@ -158,6 +159,14 @@ class Settings {
 				'doc_type' => $doc_type,
 				'url'      => $url,
 			);
+
+			// Editing convenience only — never rendered into carbon.txt.
+			// Lets the settings screen re-select the same page on revisit
+			// instead of falling back to plain-URL mode.
+			$page_id = isset( $disclosure['page_id'] ) ? absint( $disclosure['page_id'] ) : 0;
+			if ( $page_id > 0 ) {
+				$entry['page_id'] = $page_id;
+			}
 
 			$title = isset( $disclosure['title'] ) ? sanitize_text_field( $disclosure['title'] ) : '';
 			if ( '' !== $title ) {
