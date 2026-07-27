@@ -207,6 +207,18 @@ function PagePicker( { value, pageId, onChange } ) {
 }
 
 /**
+ * File types offered in the disclosure media picker — the kinds of files a
+ * sustainability disclosure is realistically published as.
+ */
+const DISCLOSURE_MEDIA_TYPES = [
+	'application/pdf',
+	'application/msword',
+	'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+	'application/vnd.oasis.opendocument.text',
+	'image',
+];
+
+/**
  * Media library file picker, built on the classic wp.media() frame rather
  * than @wordpress/block-editor's <MediaUpload>, so this plugin doesn't need
  * that package as a dependency just for one modal. Remembers the selected
@@ -236,6 +248,7 @@ function MediaPicker( { value, attachmentId, onChange } ) {
 			title: __( 'Select a file', 'wp-carbon-txt-plugin' ),
 			button: { text: __( 'Use this file', 'wp-carbon-txt-plugin' ) },
 			multiple: false,
+			library: { type: DISCLOSURE_MEDIA_TYPES },
 		} );
 
 		frame.on( 'select', () => {
