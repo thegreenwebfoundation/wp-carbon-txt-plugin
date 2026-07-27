@@ -161,6 +161,7 @@ class Admin {
 					'docTypes'         => Settings::doc_types(),
 					'carbonTxtUrl'     => home_url( '/carbon.txt' ),
 					'carbonTxtVersion' => CARBON_TXT_VERSION,
+					'existingFile'     => Importer::summary(),
 				)
 			) . ';',
 			'before'

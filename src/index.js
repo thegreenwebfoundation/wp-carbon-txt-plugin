@@ -28,7 +28,7 @@ import {
 	/* eslint-enable @wordpress/no-unsafe-wp-apis */
 } from '@wordpress/components';
 
-const { optionName, docTypes, carbonTxtUrl, carbonTxtVersion } =
+const { optionName, docTypes, carbonTxtUrl, carbonTxtVersion, existingFile } =
 	window.wpCarbonTxt;
 
 const DOC_TYPE_LABELS = {
@@ -147,6 +147,71 @@ function PagePicker( { value, onChange } ) {
 			onChange={ ( next ) => onChange( next || '' ) }
 			__next40pxDefaultSize
 		/>
+	);
+}
+
+/**
+ * Warns about a carbon.txt file already on the server, and offers to
+ * import any disclosures we could parse out of it.
+ *
+ * @param {{onImport:Function}} props Props.
+ */
+function ExistingFileNotice( { onImport } ) {
+	if ( ! existingFile.exists ) {
+		return null;
+	}
+
+	return (
+		<Notice status="warning" isDismissible={ false }>
+			<VStack spacing={ 2 }>
+				<Text>
+					{ __(
+						'An existing carbon.txt file was found on your server at:',
+						'wp-carbon-txt-plugin'
+					) }{ ' ' }
+					<code>{ existingFile.path }</code>
+				</Text>
+				<Text>
+					{ __(
+						'Depending on your hosting configuration, your web server may keep serving that file directly instead of the version this plugin generates — saving here might not change what visitors see until the existing file is removed or renamed.',
+						'wp-carbon-txt-plugin'
+					) }
+				</Text>
+
+				{ existingFile.disclosures.length > 0 && (
+					<Button variant="secondary" onClick={ onImport }>
+						{ sprintf(
+							/* translators: %d: number of disclosures found in the existing file. */
+							__(
+								'Import %d disclosure(s) from this file',
+								'wp-carbon-txt-plugin'
+							),
+							existingFile.disclosures.length
+						) }
+					</Button>
+				) }
+
+				{ ! existingFile.disclosures.length && existingFile.raw && (
+					<details>
+						<summary>
+							{ __(
+								"We couldn't automatically read its disclosures — view the raw file",
+								'wp-carbon-txt-plugin'
+							) }
+						</summary>
+						<pre
+							style={ {
+								overflowX: 'auto',
+								fontSize: 12,
+								lineHeight: 1.6,
+							} }
+						>
+							{ existingFile.raw }
+						</pre>
+					</details>
+				) }
+			</VStack>
+		</Notice>
 	);
 }
 
@@ -324,6 +389,9 @@ function App() {
 		setDisclosures( disclosures.filter( ( _, i ) => i !== index ) );
 	};
 
+	const importFromExistingFile = () =>
+		setDisclosures( [ ...disclosures, ...existingFile.disclosures ] );
+
 	const save = async () => {
 		setNotice( null );
 		const saved = await saveEditedEntityRecord( 'root', 'site' );
@@ -366,6 +434,12 @@ function App() {
 					>
 						{ notice.text }
 					</Notice>
+				</div>
+			) }
+
+			{ existingFile.exists && (
+				<div style={ { margin: '16px 0' } }>
+					<ExistingFileNotice onImport={ importFromExistingFile } />
 				</div>
 			) }
 
