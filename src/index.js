@@ -115,30 +115,80 @@ const renderCarbonTxt = ( disclosures ) => {
 };
 
 /**
- * Searchable published-page picker.
+ * Searchable published-page picker. Remembers the selected page by ID
+ * (via `onChange`'s `page_id`) so a previously chosen page is still shown
+ * by title on revisit, even if it isn't among the current search results.
  *
- * @param {{value:string,onChange:Function}} props Props.
+ * @param {Object}   props          Props.
+ * @param {string}   props.value    Current URL (used to pre-fill the field).
+ * @param {?number}  props.pageId   ID of the previously selected page, if any.
+ * @param {Function} props.onChange Called with { url, page_id }.
  */
-function PagePicker( { value, onChange } ) {
+function PagePicker( { value, pageId, onChange } ) {
 	const [ search, setSearch ] = useState( '' );
 	const debouncedSetSearch = useDebounce( setSearch, 250 );
 
-	const pages = useSelect(
-		( select ) =>
-			select( coreStore ).getEntityRecords( 'postType', 'page', {
-				per_page: 20,
-				status: 'publish',
-				search: search || undefined,
-				orderby: search ? 'relevance' : 'title',
-				order: search ? 'desc' : 'asc',
-			} ),
-		[ search ]
+	const { pages, selectedPage } = useSelect(
+		( select ) => {
+			const core = select( coreStore );
+			return {
+				pages: core.getEntityRecords( 'postType', 'page', {
+					per_page: 20,
+					status: 'publish',
+					search: search || undefined,
+					orderby: search ? 'relevance' : 'title',
+					order: search ? 'desc' : 'asc',
+				} ),
+				selectedPage: pageId
+					? core.getEntityRecord( 'postType', 'page', pageId )
+					: null,
+			};
+		},
+		[ search, pageId ]
 	);
 
-	const options = ( pages || [] ).map( ( page ) => ( {
-		value: page.link,
-		label: page.title?.rendered || page.link,
-	} ) );
+	const options = [];
+	const seenIds = new Set();
+
+	// Always offer the currently selected page as an option, even before
+	// it shows up in (or if it never matches) the search results, so the
+	// combobox can display its title instead of falling back to the URL.
+	if ( selectedPage ) {
+		options.push( {
+			value: selectedPage.link,
+			label: selectedPage.title?.rendered || selectedPage.link,
+		} );
+		seenIds.add( selectedPage.id );
+	}
+
+	( pages || [] ).forEach( ( page ) => {
+		if ( seenIds.has( page.id ) ) {
+			return;
+		}
+		seenIds.add( page.id );
+		options.push( {
+			value: page.link,
+			label: page.title?.rendered || page.link,
+		} );
+	} );
+
+	const handleChange = ( nextValue ) => {
+		if ( ! nextValue ) {
+			onChange( { url: '', page_id: undefined } );
+			return;
+		}
+
+		const match =
+			( pages || [] ).find( ( page ) => page.link === nextValue ) ||
+			( selectedPage && selectedPage.link === nextValue
+				? selectedPage
+				: null );
+
+		onChange( {
+			url: nextValue,
+			page_id: match ? match.id : undefined,
+		} );
+	};
 
 	return (
 		<ComboboxControl
@@ -150,7 +200,7 @@ function PagePicker( { value, onChange } ) {
 			value={ value }
 			options={ options }
 			onFilterValueChange={ debouncedSetSearch }
-			onChange={ ( next ) => onChange( next || '' ) }
+			onChange={ handleChange }
 			__next40pxDefaultSize
 		/>
 	);
@@ -302,7 +352,7 @@ function ExistingFileNotice( {
  * @param {{disclosure:Object,index:number,onChange:Function,onRemove:Function}} props Props.
  */
 function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
-	const [ mode, setMode ] = useState( 'url' );
+	const [ mode, setMode ] = useState( disclosure.page_id ? 'page' : 'url' );
 
 	return (
 		<Card>
@@ -379,14 +429,17 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 							type="url"
 							placeholder="https://example.com/sustainability"
 							value={ disclosure.url || '' }
-							onChange={ ( url ) => onChange( { url } ) }
+							onChange={ ( url ) =>
+								onChange( { url, page_id: undefined } )
+							}
 							__next40pxDefaultSize
 							__nextHasNoMarginBottom
 						/>
 					) : (
 						<PagePicker
 							value={ disclosure.url || '' }
-							onChange={ ( url ) => onChange( { url } ) }
+							pageId={ disclosure.page_id }
+							onChange={ onChange }
 						/>
 					) }
 
