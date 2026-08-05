@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: WP Carbon.txt 0.1.0\n"
+"Project-Id-Version: WP Carbon.txt 0.2.0\n"
 "Report-Msgid-Bugs-To: https://github.com/thegreenwebfoundation/wp-carbon-txt-plugin/issues\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-07-27T16:42:31+00:00\n"
+"POT-Creation-Date: 2026-08-05T14:39:04+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: wp-carbon-txt-plugin\n"
@@ -40,199 +40,207 @@ msgstr ""
 
 #: includes/class-admin.php:141
 #: includes/class-admin.php:142
-#: src/index.js:719
+#: src/index.js:761
 msgid "Carbon.txt"
 msgstr ""
 
-#: includes/class-importer.php:64
+#: includes/class-importer.php:84
 msgid "No existing carbon.txt file was found to rename."
 msgstr ""
 
-#: includes/class-importer.php:84
+#: includes/class-importer.php:104
 msgid "Could not rename the existing file. Check your server file permissions."
 msgstr ""
 
-#: src/index.js:41
+#: src/index.js:42
 msgid "Web page"
 msgstr ""
 
-#: src/index.js:42
+#: src/index.js:43
 msgid "Annual report"
 msgstr ""
 
-#: src/index.js:43
+#: src/index.js:44
 msgid "Sustainability page"
 msgstr ""
 
-#: src/index.js:44
+#: src/index.js:45
 msgid "Certificate"
 msgstr ""
 
-#: src/index.js:45
+#: src/index.js:46
 msgid "CSRD report"
 msgstr ""
 
-#: src/index.js:46
+#: src/index.js:47
 msgid "AI model card"
 msgstr ""
 
-#: src/index.js:47
+#: src/index.js:48
 msgid "Other"
 msgstr ""
 
-#: src/index.js:195
+#: src/index.js:196
 msgid "Select a published page"
 msgstr ""
 
-#: src/index.js:196
+#: src/index.js:197
 msgid "Search your pages by title. Its permalink is used as the disclosure URL."
 msgstr ""
 
-#: src/index.js:236
+#: src/index.js:249
 msgid "Select a file"
 msgstr ""
 
-#: src/index.js:237
+#: src/index.js:250
 msgid "Use this file"
 msgstr ""
 
 #. translators: %s: selected file name or URL.
-#: src/index.js:267
+#: src/index.js:281
 #, js-format
 msgid "Selected file: %s"
 msgstr ""
 
-#: src/index.js:270
+#: src/index.js:284
 msgid "No file selected yet."
 msgstr ""
 
-#: src/index.js:274
+#: src/index.js:288
 msgid "Choose a different file"
 msgstr ""
 
-#: src/index.js:275
-#: src/index.js:512
+#: src/index.js:289
+#: src/index.js:554
 msgid "Choose a file"
 msgstr ""
 
+#: src/index.js:309
+msgid "A carbon.txt file was also found at the well-known location:"
+msgstr ""
+
 #: src/index.js:314
+msgid "A file at your domain root takes priority over this location, so it will typically be ignored as long as your root carbon.txt is reachable — you may still want to review or remove it to avoid confusion."
+msgstr ""
+
+#: src/index.js:356
 msgid "An existing carbon.txt file was found on your server."
 msgstr ""
 
-#: src/index.js:321
+#: src/index.js:363
 msgid "An existing carbon.txt file was found on your server at:"
 msgstr ""
 
-#: src/index.js:328
+#: src/index.js:370
 msgid "Depending on your hosting configuration, your web server may keep serving that file directly instead of the version this plugin generates — saving here might not change what visitors see until the existing file is removed or renamed."
 msgstr ""
 
 #. translators: %d: number of disclosures found in the existing file.
-#: src/index.js:338
+#: src/index.js:380
 #, js-format
 msgid "Import %d disclosure(s) from this file"
 msgstr ""
 
-#: src/index.js:350
+#: src/index.js:392
 msgid "We couldn't automatically read its disclosures — view the raw file"
 msgstr ""
 
-#: src/index.js:373
+#: src/index.js:415
 msgid "Rename existing file so this plugin is used"
 msgstr ""
 
-#: src/index.js:383
+#: src/index.js:425
 msgid "The file will be kept as a backup in the same location, not deleted. Continue?"
 msgstr ""
 
-#: src/index.js:396
+#: src/index.js:438
 msgid "Yes, rename it"
 msgstr ""
 
-#: src/index.js:406
+#: src/index.js:448
 msgid "Cancel"
 msgstr ""
 
 #. translators: %d: disclosure number.
-#: src/index.js:452
+#: src/index.js:494
 #, js-format
 msgid "Disclosure %d"
 msgstr ""
 
-#: src/index.js:462
+#: src/index.js:504
 msgid "Remove"
 msgstr ""
 
-#: src/index.js:469
+#: src/index.js:511
 msgid "This disclosure needs a URL, page, or file to be included in your carbon.txt."
 msgstr ""
 
-#: src/index.js:477
+#: src/index.js:519
 msgid "Document type"
 msgstr ""
 
-#: src/index.js:489
+#: src/index.js:531
 msgid "URL source"
 msgstr ""
 
-#: src/index.js:498
+#: src/index.js:540
 msgid "Enter a URL"
 msgstr ""
 
-#: src/index.js:505
+#: src/index.js:547
 msgid "Select a page"
 msgstr ""
 
-#: src/index.js:521
+#: src/index.js:563
 msgid "Disclosure URL"
 msgstr ""
 
-#: src/index.js:564
+#: src/index.js:606
 msgid "Title (optional)"
 msgstr ""
 
-#: src/index.js:575
+#: src/index.js:617
 msgid "Valid until (optional)"
 msgstr ""
 
-#: src/index.js:661
+#: src/index.js:703
 msgid "Saved. Your carbon.txt is up to date."
 msgstr ""
 
 #. translators: %s: error message returned by the server.
-#: src/index.js:683
+#: src/index.js:725
 #, js-format
 msgid "Saving failed: %s"
 msgstr ""
 
-#: src/index.js:686
+#: src/index.js:728
 msgid "Saving failed. Please try again."
 msgstr ""
 
-#: src/index.js:706
+#: src/index.js:748
 msgid "Could not rename the existing file."
 msgstr ""
 
-#: src/index.js:722
+#: src/index.js:764
 msgid "Publish organisational sustainability disclosures at your site’s carbon.txt file."
 msgstr ""
 
-#: src/index.js:760
+#: src/index.js:808
 msgid "No disclosures yet. Add your first sustainability document to publish it in your carbon.txt."
 msgstr ""
 
-#: src/index.js:787
+#: src/index.js:835
 msgid "Add disclosure"
 msgstr ""
 
-#: src/index.js:800
+#: src/index.js:848
 msgid "Save"
 msgstr ""
 
-#: src/index.js:811
+#: src/index.js:859
 msgid "Preview"
 msgstr ""
 
-#: src/index.js:814
+#: src/index.js:862
 msgid "View live file"
 msgstr ""

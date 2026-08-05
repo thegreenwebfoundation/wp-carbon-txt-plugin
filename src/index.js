@@ -35,6 +35,7 @@ const {
 	carbonTxtUrl,
 	carbonTxtVersion,
 	existingFile: initialExistingFile,
+	wellKnownFile,
 } = window.wpCarbonTxt;
 
 const DOC_TYPE_LABELS = {
@@ -288,6 +289,34 @@ function MediaPicker( { value, attachmentId, onChange } ) {
 					: __( 'Choose a file', 'wp-carbon-txt-plugin' ) }
 			</Button>
 		</VStack>
+	);
+}
+
+/**
+ * Warns that a carbon.txt file also exists at the alternate well-known
+ * location. Per the carbon.txt lookup order, a file at the domain root
+ * ranks above this one, so it's only ever consulted as a fallback — this
+ * is informational, not something the plugin offers to change.
+ */
+function WellKnownFileNotice() {
+	if ( ! wellKnownFile.exists ) {
+		return null;
+	}
+
+	return (
+		<Notice status="warning" isDismissible={ false }>
+			<Text>
+				{ __(
+					'A carbon.txt file was also found at the well-known location:',
+					'wp-carbon-txt-plugin'
+				) }{ ' ' }
+				<code>{ wellKnownFile.path }</code>.{ ' ' }
+				{ __(
+					'A file at your domain root takes priority over this location, so it will typically be ignored as long as your root carbon.txt is reachable — you may still want to review or remove it to avoid confusion.',
+					'wp-carbon-txt-plugin'
+				) }
+			</Text>
+		</Notice>
 	);
 }
 
@@ -760,6 +789,12 @@ function App() {
 						isQuarantining={ isQuarantining }
 						quarantineError={ quarantineError }
 					/>
+				</div>
+			) }
+
+			{ wellKnownFile.exists && (
+				<div style={ { margin: '16px 0' } }>
+					<WellKnownFileNotice />
 				</div>
 			) }
 

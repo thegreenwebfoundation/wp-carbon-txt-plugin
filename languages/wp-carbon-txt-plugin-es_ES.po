@@ -2,7 +2,7 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: WP Carbon.txt 0.1.0\n"
+"Project-Id-Version: WP Carbon.txt 0.2.0\n"
 "Report-Msgid-Bugs-To: https://github.com/thegreenwebfoundation/wp-carbon-txt-plugin/issues\n"
 "Last-Translator: Nahuai Badiola\n"
 "Language-Team: Español\n"
@@ -18,6 +18,14 @@ msgstr ""
 #: wp-carbon-txt-plugin.php
 msgid "Publish a carbon.txt file with your organisational sustainability disclosures."
 msgstr "Publica un archivo carbon.txt con las divulgaciones de sostenibilidad de tu organización."
+
+#: src/index.js:309
+msgid "A carbon.txt file was also found at the well-known location:"
+msgstr "También se encontró un archivo carbon.txt en la ubicación well-known:"
+
+#: src/index.js:314
+msgid "A file at your domain root takes priority over this location, so it will typically be ignored as long as your root carbon.txt is reachable — you may still want to review or remove it to avoid confusion."
+msgstr "Un archivo en la raíz de tu dominio tiene prioridad sobre esta ubicación, por lo que normalmente se ignorará mientras tu carbon.txt de la raíz sea accesible — aun así, quizá quieras revisarlo o eliminarlo para evitar confusiones."
 
 #: includes/class-admin.php:130
 msgid "Settings"

@@ -49,6 +49,26 @@ class Importer {
 	}
 
 	/**
+	 * Path checked for a carbon.txt file at the alternate well-known
+	 * location. Per the carbon.txt lookup order, this ranks below a file
+	 * at the domain root, so it's only ever consulted as a fallback.
+	 *
+	 * @return string
+	 */
+	public static function well_known_file_path() {
+		return ABSPATH . '.well-known/carbon.txt';
+	}
+
+	/**
+	 * Whether a file exists at the well-known location.
+	 *
+	 * @return bool
+	 */
+	public static function well_known_file_exists() {
+		return file_exists( self::well_known_file_path() );
+	}
+
+	/**
 	 * Rename the existing file out of the way, so the web server stops
 	 * serving it at /carbon.txt. The original is kept as a timestamped
 	 * backup in the same directory rather than deleted, so nothing is lost.

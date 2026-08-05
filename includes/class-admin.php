@@ -201,6 +201,10 @@ class Admin {
 					'carbonTxtUrl'     => home_url( '/carbon.txt' ),
 					'carbonTxtVersion' => CARBON_TXT_VERSION,
 					'existingFile'     => Importer::summary(),
+					'wellKnownFile'    => array(
+						'exists' => Importer::well_known_file_exists(),
+						'path'   => Importer::well_known_file_path(),
+					),
 				)
 			) . ';',
 			'before'
