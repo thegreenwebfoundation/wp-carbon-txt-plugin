@@ -17,9 +17,9 @@ WP Carbon.txt lets you publish a carbon.txt file at your site root
 
 You can declare one or more organisational disclosures. For each one,
 choose a document type and point to it by pasting a URL, selecting an
-existing published page, or choosing a file (PDF, Word, OpenDocument, or
-an image) from your media library — plus an optional title and
-valid-until date. A live preview shows the exact file that will be served.
+existing published page, or choosing a file from your media library —
+plus an optional title and valid-until date. A live preview shows the
+exact file that will be served.
 
 If a carbon.txt file already exists on your server, the settings screen
 warns you about it, offers to import any disclosures found in it, and
@@ -38,7 +38,7 @@ Source lives in `src/`. Build the admin app with:
 == Changelog ==
 
 = 0.2.0 =
-* Add a media library file picker (PDF, Word, OpenDocument, or images) as a third way to point a disclosure at a URL, alongside pasting one or selecting a page.
+* Add a media library file picker as a third way to point a disclosure at a URL, alongside pasting one or selecting a page.
 * Remember the selected page or file by ID, so revisiting a disclosure shows the same selection instead of falling back to a plain URL.
 * Detect a carbon.txt file already on the server, warn that the web server may keep serving it directly, and offer to import disclosures found in it.
 * Offer to rename an existing file aside as a dated backup (never deleted) once settings have been saved.

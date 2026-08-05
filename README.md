@@ -15,8 +15,8 @@ sustainability data relating to that organisation.
 - Point a disclosure at a URL in three ways:
   - Paste any URL directly.
   - Pick an existing **published page** with a searchable autocomplete.
-  - Choose a **file from the media library** (see supported file types
-    below).
+  - Choose a **file from the media library** — the picker shows every
+    file, so use its built-in search to find the one you want.
 
   Whichever you pick, revisiting a disclosure later reopens it the same
   way — it remembers the selected page or file, not just the resulting URL.
@@ -40,20 +40,6 @@ the file picker uses the classic `wp.media()` frame rather than pulling in
 `@wordpress/block-editor` as a dependency.
 
 The output follows the [carbon.txt v0.5 syntax](https://carbontxt.org/syntax).
-
-### Supported file types
-
-The media library file picker is limited to the kinds of files a
-sustainability disclosure is realistically published as:
-
-- PDF (`.pdf`)
-- Word (`.doc`, `.docx`) and OpenDocument Text (`.odt`)
-- Any image (`.jpg`, `.png`, `.gif`, `.webp`, `.svg`, etc.)
-
-Everything else in your media library — spreadsheets, presentations,
-plain text, audio, video, archives — is filtered out of the picker. This
-is a fixed allow-list in `DISCLOSURE_MEDIA_TYPES` in `src/index.js`, not a
-user-facing setting; adjust it there if you need other formats.
 
 ## Installation
 
