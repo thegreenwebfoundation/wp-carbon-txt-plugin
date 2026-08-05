@@ -53,17 +53,28 @@ class Admin {
 				'permission_callback' => static function () {
 					return current_user_can( 'manage_options' );
 				},
+				'args'                => array(
+					'location' => array(
+						'type'    => 'string',
+						'enum'    => array( 'root', 'well_known' ),
+						'default' => 'root',
+					),
+				),
 			)
 		);
 	}
 
 	/**
-	 * REST callback: rename the existing file out of the way.
+	 * REST callback: rename the existing file out of the way, at whichever
+	 * location was requested.
 	 *
+	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response|\WP_Error
 	 */
-	public static function rest_quarantine_existing_file() {
-		$result = Importer::quarantine();
+	public static function rest_quarantine_existing_file( $request ) {
+		$result = 'well_known' === $request->get_param( 'location' )
+			? Importer::quarantine_well_known()
+			: Importer::quarantine();
 
 		if ( is_wp_error( $result ) ) {
 			return $result;
@@ -201,10 +212,7 @@ class Admin {
 					'carbonTxtUrl'     => home_url( '/carbon.txt' ),
 					'carbonTxtVersion' => CARBON_TXT_VERSION,
 					'existingFile'     => Importer::summary(),
-					'wellKnownFile'    => array(
-						'exists' => Importer::well_known_file_exists(),
-						'path'   => Importer::well_known_file_path(),
-					),
+					'wellKnownFile'    => Importer::well_known_summary(),
 				)
 			) . ';',
 			'before'

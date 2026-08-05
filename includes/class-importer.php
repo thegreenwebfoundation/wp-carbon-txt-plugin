@@ -40,15 +40,6 @@ class Importer {
 	}
 
 	/**
-	 * Whether a file exists at the checked path.
-	 *
-	 * @return bool
-	 */
-	public static function existing_file_exists() {
-		return file_exists( self::file_path() );
-	}
-
-	/**
 	 * Path checked for a carbon.txt file at the alternate well-known
 	 * location. Per the carbon.txt lookup order, this ranks below a file
 	 * at the domain root, so it's only ever consulted as a fallback.
@@ -60,24 +51,34 @@ class Importer {
 	}
 
 	/**
-	 * Whether a file exists at the well-known location.
-	 *
-	 * @return bool
-	 */
-	public static function well_known_file_exists() {
-		return file_exists( self::well_known_file_path() );
-	}
-
-	/**
-	 * Rename the existing file out of the way, so the web server stops
-	 * serving it at /carbon.txt. The original is kept as a timestamped
-	 * backup in the same directory rather than deleted, so nothing is lost.
+	 * Rename the file at the domain root out of the way, so the web
+	 * server stops serving it at /carbon.txt. The original is kept as a
+	 * timestamped backup in the same directory rather than deleted, so
+	 * nothing is lost.
 	 *
 	 * @return string|\WP_Error The backup path on success.
 	 */
 	public static function quarantine() {
-		$path = self::file_path();
+		return self::quarantine_path( self::file_path() );
+	}
 
+	/**
+	 * Same as quarantine(), for the file at the well-known location.
+	 *
+	 * @return string|\WP_Error The backup path on success.
+	 */
+	public static function quarantine_well_known() {
+		return self::quarantine_path( self::well_known_file_path() );
+	}
+
+	/**
+	 * Rename a file out of the way, keeping a timestamped backup in the
+	 * same directory rather than deleting it, so nothing is lost.
+	 *
+	 * @param string $path Path to the file to rename.
+	 * @return string|\WP_Error The backup path on success.
+	 */
+	private static function quarantine_path( $path ) {
 		if ( ! file_exists( $path ) ) {
 			return new \WP_Error(
 				'wp_carbon_txt_no_file',
@@ -87,7 +88,7 @@ class Importer {
 		}
 
 		// A plain date reads better than a full timestamp, but if
-		// quarantine() has already run today the destination would
+		// quarantine_path() has already run today the destination would
 		// collide — rename() silently overwrites, which would destroy
 		// that earlier backup. Disambiguate rather than risk that.
 		$date        = wp_date( 'Y-m-d' );
@@ -110,32 +111,52 @@ class Importer {
 	}
 
 	/**
-	 * Summarize the existing file for the settings screen: whether it
-	 * exists, the path checked, any disclosures we could parse out of it,
-	 * and (only when nothing could be parsed) its raw contents to review.
+	 * Summarize the file at the domain root for the settings screen:
+	 * whether it exists, the path checked, any disclosures we could parse
+	 * out of it, and (only when nothing could be parsed) its raw contents
+	 * to review.
 	 *
 	 * @return array{exists:bool,path:string,disclosures:array,raw:string}
 	 */
 	public static function summary() {
+		return self::summary_for_path( self::file_path() );
+	}
+
+	/**
+	 * Same as summary(), for the file at the well-known location.
+	 *
+	 * @return array{exists:bool,path:string,disclosures:array,raw:string}
+	 */
+	public static function well_known_summary() {
+		return self::summary_for_path( self::well_known_file_path() );
+	}
+
+	/**
+	 * Build the existing-file summary for a given path.
+	 *
+	 * @param string $path Path to check.
+	 * @return array{exists:bool,path:string,disclosures:array,raw:string}
+	 */
+	private static function summary_for_path( $path ) {
 		$summary = array(
 			'exists'      => false,
-			'path'        => self::file_path(),
+			'path'        => $path,
 			'disclosures' => array(),
 			'raw'         => '',
 		);
 
-		if ( ! self::existing_file_exists() ) {
+		if ( ! file_exists( $path ) ) {
 			return $summary;
 		}
 
 		$summary['exists'] = true;
 
-		$size = filesize( self::file_path() );
+		$size = filesize( $path );
 		if ( false === $size || $size > self::MAX_FILE_SIZE ) {
 			return $summary;
 		}
 
-		$content = file_get_contents( self::file_path() ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local read of a small, already size-checked file, not a remote request.
+		$content = file_get_contents( $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local read of a small, already size-checked file, not a remote request.
 		if ( false === $content ) {
 			return $summary;
 		}

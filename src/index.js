@@ -35,8 +35,44 @@ const {
 	carbonTxtUrl,
 	carbonTxtVersion,
 	existingFile: initialExistingFile,
-	wellKnownFile,
+	wellKnownFile: initialWellKnownFile,
 } = window.wpCarbonTxt;
+
+/**
+ * Per-location text for ExistingFileNotice. Keyed by the same 'root' /
+ * 'well_known' value used as the REST `location` param, so no separate
+ * field is needed to carry that back to the request.
+ */
+const FILE_LOCATIONS = {
+	root: {
+		intro: __(
+			'An existing carbon.txt file was found on your server at:',
+			'wp-carbon-txt-plugin'
+		),
+		explanation: __(
+			'Depending on your hosting configuration, your web server may keep serving that file directly instead of the version this plugin generates — saving here might not change what visitors see until the existing file is removed or renamed.',
+			'wp-carbon-txt-plugin'
+		),
+		spokenMessage: __(
+			'An existing carbon.txt file was found on your server.',
+			'wp-carbon-txt-plugin'
+		),
+	},
+	well_known: {
+		intro: __(
+			'A carbon.txt file was also found at the well-known location:',
+			'wp-carbon-txt-plugin'
+		),
+		explanation: __(
+			'A file at your domain root takes priority over this location, so it will typically be ignored as long as your root carbon.txt is reachable — you may still want to review or remove it to avoid confusion.',
+			'wp-carbon-txt-plugin'
+		),
+		spokenMessage: __(
+			'A carbon.txt file was found at the well-known location.',
+			'wp-carbon-txt-plugin'
+		),
+	},
+};
 
 const DOC_TYPE_LABELS = {
 	'web-page': __( 'Web page', 'wp-carbon-txt-plugin' ),
@@ -280,170 +316,166 @@ function MediaPicker( { value, attachmentId, onChange } ) {
 }
 
 /**
- * Warns that a carbon.txt file also exists at the alternate well-known
- * location. Per the carbon.txt lookup order, a file at the domain root
- * ranks above this one, so it's only ever consulted as a fallback — this
- * is informational, not something the plugin offers to change.
- */
-function WellKnownFileNotice() {
-	if ( ! wellKnownFile.exists ) {
-		return null;
-	}
-
-	return (
-		<Notice status="warning" isDismissible={ false }>
-			<Text>
-				{ __(
-					'A carbon.txt file was also found at the well-known location:',
-					'wp-carbon-txt-plugin'
-				) }{ ' ' }
-				<code>{ wellKnownFile.path }</code>.{ ' ' }
-				{ __(
-					'A file at your domain root takes priority over this location, so it will typically be ignored as long as your root carbon.txt is reachable — you may still want to review or remove it to avoid confusion.',
-					'wp-carbon-txt-plugin'
-				) }
-			</Text>
-		</Notice>
-	);
-}
-
-/**
- * Warns about a carbon.txt file already on the server, and offers to
- * import any disclosures we could parse out of it, or to rename it aside
- * once the plugin's own settings have been saved.
+ * Warns about a carbon.txt file already on the server — at either the
+ * domain root or the well-known location — and offers to import any
+ * disclosures parsed out of it, or to rename it aside once the plugin's
+ * own settings have been saved. Self-contained: tracks its own copy of
+ * the file's existence, import, and quarantine state, so two independent
+ * instances (one per location) don't need to share state through App.
  *
- * @param {Object}   props                 Props.
- * @param {Object}   props.fileInfo        Existing-file summary from the server.
- * @param {Function} props.onImport        Called to import parsed disclosures.
- * @param {boolean}  props.canImport       Whether the import action is still offered.
- * @param {boolean}  props.canQuarantine   Whether renaming the file is currently offered.
- * @param {Function} props.onQuarantine    Called to rename the file aside.
- * @param {boolean}  props.isQuarantining  Whether a rename request is in flight.
- * @param {?string}  props.quarantineError Error message from a failed rename, if any.
+ * @param {Object}              props                 Props.
+ * @param {'root'|'well_known'} props.location        Which location this instance is for.
+ * @param {Object}              props.initialFileInfo Existing-file summary from the server.
+ * @param {Function}            props.onImport        Called with the file's disclosures to import them.
+ * @param {boolean}             props.hasSavedOnce    Whether settings have been saved at least once.
  */
 function ExistingFileNotice( {
-	fileInfo,
+	location,
+	initialFileInfo,
 	onImport,
-	canImport,
-	canQuarantine,
-	onQuarantine,
-	isQuarantining,
-	quarantineError,
+	hasSavedOnce,
 } ) {
+	const [ fileInfo, setFileInfo ] = useState( initialFileInfo );
+	const [ hasImported, setHasImported ] = useState( false );
+	const [ isQuarantining, setIsQuarantining ] = useState( false );
+	const [ quarantineError, setQuarantineError ] = useState( null );
 	const [ confirming, setConfirming ] = useState( false );
 
 	if ( ! fileInfo.exists ) {
 		return null;
 	}
 
+	const text = FILE_LOCATIONS[ location ];
+
+	const handleImport = () => {
+		onImport( fileInfo.disclosures );
+		setHasImported( true );
+	};
+
+	const handleQuarantine = async () => {
+		setIsQuarantining( true );
+		setQuarantineError( null );
+
+		try {
+			await apiFetch( {
+				path: `/wp-carbon-txt/v1/existing-file?location=${ location }`,
+				method: 'DELETE',
+			} );
+			setFileInfo( { ...fileInfo, exists: false } );
+		} catch ( error ) {
+			setQuarantineError(
+				error?.message ||
+					__(
+						'Could not rename the existing file.',
+						'wp-carbon-txt-plugin'
+					)
+			);
+		} finally {
+			setIsQuarantining( false );
+		}
+	};
+
+	const canImport = ! hasImported;
+	const canQuarantine = hasSavedOnce;
+
 	return (
-		<Notice
-			status="warning"
-			isDismissible={ false }
-			spokenMessage={ __(
-				'An existing carbon.txt file was found on your server.',
-				'wp-carbon-txt-plugin'
-			) }
-		>
-			<VStack spacing={ 2 }>
-				<Text>
-					{ __(
-						'An existing carbon.txt file was found on your server at:',
-						'wp-carbon-txt-plugin'
-					) }{ ' ' }
-					<code>{ fileInfo.path }</code>
-				</Text>
-				<Text>
-					{ __(
-						'Depending on your hosting configuration, your web server may keep serving that file directly instead of the version this plugin generates — saving here might not change what visitors see until the existing file is removed or renamed.',
-						'wp-carbon-txt-plugin'
+		<div style={ { margin: '16px 0' } }>
+			<Notice
+				status="warning"
+				isDismissible={ false }
+				spokenMessage={ text.spokenMessage }
+			>
+				<VStack spacing={ 2 }>
+					<Text>
+						{ text.intro } <code>{ fileInfo.path }</code>
+					</Text>
+					<Text>{ text.explanation }</Text>
+
+					{ canImport && fileInfo.disclosures.length > 0 && (
+						<Button variant="secondary" onClick={ handleImport }>
+							{ sprintf(
+								/* translators: %d: number of disclosures found in the existing file. */
+								__(
+									'Import %d disclosure(s) from this file',
+									'wp-carbon-txt-plugin'
+								),
+								fileInfo.disclosures.length
+							) }
+						</Button>
 					) }
-				</Text>
 
-				{ canImport && fileInfo.disclosures.length > 0 && (
-					<Button variant="secondary" onClick={ onImport }>
-						{ sprintf(
-							/* translators: %d: number of disclosures found in the existing file. */
-							__(
-								'Import %d disclosure(s) from this file',
-								'wp-carbon-txt-plugin'
-							),
-							fileInfo.disclosures.length
-						) }
-					</Button>
-				) }
-
-				{ ! fileInfo.disclosures.length && fileInfo.raw && (
-					<details>
-						<summary>
-							{ __(
-								"We couldn't automatically read its disclosures — view the raw file",
-								'wp-carbon-txt-plugin'
-							) }
-						</summary>
-						<pre
-							style={ {
-								overflowX: 'auto',
-								fontSize: 12,
-								lineHeight: 1.6,
-							} }
-						>
-							{ fileInfo.raw }
-						</pre>
-					</details>
-				) }
-
-				{ canQuarantine && ! confirming && (
-					<Button
-						variant="tertiary"
-						isDestructive
-						onClick={ () => setConfirming( true ) }
-					>
-						{ __(
-							'Rename existing file so this plugin is used',
-							'wp-carbon-txt-plugin'
-						) }
-					</Button>
-				) }
-
-				{ canQuarantine && confirming && (
-					<VStack spacing={ 2 }>
-						<Text>
-							{ __(
-								'The file will be kept as a backup in the same location, not deleted. Continue?',
-								'wp-carbon-txt-plugin'
-							) }
-						</Text>
-						<Flex expanded={ false } gap={ 2 }>
-							<Button
-								variant="primary"
-								isDestructive
-								isBusy={ isQuarantining }
-								disabled={ isQuarantining }
-								onClick={ onQuarantine }
-							>
+					{ ! fileInfo.disclosures.length && fileInfo.raw && (
+						<details>
+							<summary>
 								{ __(
-									'Yes, rename it',
+									"We couldn't automatically read its disclosures — view the raw file",
 									'wp-carbon-txt-plugin'
 								) }
-							</Button>
-							<Button
-								variant="tertiary"
-								disabled={ isQuarantining }
-								onClick={ () => setConfirming( false ) }
+							</summary>
+							<pre
+								style={ {
+									overflowX: 'auto',
+									fontSize: 12,
+									lineHeight: 1.6,
+								} }
 							>
-								{ __( 'Cancel', 'wp-carbon-txt-plugin' ) }
-							</Button>
-						</Flex>
-						{ quarantineError && (
-							<Text style={ { color: '#cc1818' } }>
-								{ quarantineError }
+								{ fileInfo.raw }
+							</pre>
+						</details>
+					) }
+
+					{ canQuarantine && ! confirming && (
+						<Button
+							variant="tertiary"
+							isDestructive
+							onClick={ () => setConfirming( true ) }
+						>
+							{ __(
+								'Rename existing file so this plugin is used',
+								'wp-carbon-txt-plugin'
+							) }
+						</Button>
+					) }
+
+					{ canQuarantine && confirming && (
+						<VStack spacing={ 2 }>
+							<Text>
+								{ __(
+									'The file will be kept as a backup in the same location, not deleted. Continue?',
+									'wp-carbon-txt-plugin'
+								) }
 							</Text>
-						) }
-					</VStack>
-				) }
-			</VStack>
-		</Notice>
+							<Flex expanded={ false } gap={ 2 }>
+								<Button
+									variant="primary"
+									isDestructive
+									isBusy={ isQuarantining }
+									disabled={ isQuarantining }
+									onClick={ handleQuarantine }
+								>
+									{ __(
+										'Yes, rename it',
+										'wp-carbon-txt-plugin'
+									) }
+								</Button>
+								<Button
+									variant="tertiary"
+									disabled={ isQuarantining }
+									onClick={ () => setConfirming( false ) }
+								>
+									{ __( 'Cancel', 'wp-carbon-txt-plugin' ) }
+								</Button>
+							</Flex>
+							{ quarantineError && (
+								<Text style={ { color: '#cc1818' } }>
+									{ quarantineError }
+								</Text>
+							) }
+						</VStack>
+					) }
+				</VStack>
+			</Notice>
+		</div>
 	);
 }
 
@@ -629,11 +661,7 @@ function App() {
 		optionName
 	);
 	const [ notice, setNotice ] = useState( null );
-	const [ fileInfo, setFileInfo ] = useState( initialExistingFile );
 	const [ hasSavedOnce, setHasSavedOnce ] = useState( false );
-	const [ hasImported, setHasImported ] = useState( false );
-	const [ isQuarantining, setIsQuarantining ] = useState( false );
-	const [ quarantineError, setQuarantineError ] = useState( null );
 
 	const { saveEditedEntityRecord } = useDispatch( coreStore );
 	const isSaving = useSelect(
@@ -674,10 +702,8 @@ function App() {
 		setDisclosures( disclosures.filter( ( _, i ) => i !== index ) );
 	};
 
-	const importFromExistingFile = () => {
-		setDisclosures( [ ...disclosures, ...fileInfo.disclosures ] );
-		setHasImported( true );
-	};
+	const importDisclosures = ( toImport ) =>
+		setDisclosures( [ ...disclosures, ...toImport ] );
 
 	const save = async () => {
 		setNotice( null );
@@ -719,29 +745,6 @@ function App() {
 		} );
 	};
 
-	const quarantineExistingFile = async () => {
-		setIsQuarantining( true );
-		setQuarantineError( null );
-
-		try {
-			await apiFetch( {
-				path: '/wp-carbon-txt/v1/existing-file',
-				method: 'DELETE',
-			} );
-			setFileInfo( { ...fileInfo, exists: false } );
-		} catch ( error ) {
-			setQuarantineError(
-				error?.message ||
-					__(
-						'Could not rename the existing file.',
-						'wp-carbon-txt-plugin'
-					)
-			);
-		} finally {
-			setIsQuarantining( false );
-		}
-	};
-
 	return (
 		<>
 			<Heading level={ 1 }>
@@ -765,24 +768,22 @@ function App() {
 				</div>
 			) }
 
-			{ fileInfo.exists && (
-				<div style={ { margin: '16px 0' } }>
-					<ExistingFileNotice
-						fileInfo={ fileInfo }
-						onImport={ importFromExistingFile }
-						canImport={ ! hasImported }
-						canQuarantine={ hasSavedOnce }
-						onQuarantine={ quarantineExistingFile }
-						isQuarantining={ isQuarantining }
-						quarantineError={ quarantineError }
-					/>
-				</div>
+			{ initialExistingFile.exists && (
+				<ExistingFileNotice
+					location="root"
+					initialFileInfo={ initialExistingFile }
+					onImport={ importDisclosures }
+					hasSavedOnce={ hasSavedOnce }
+				/>
 			) }
 
-			{ wellKnownFile.exists && (
-				<div style={ { margin: '16px 0' } }>
-					<WellKnownFileNotice />
-				</div>
+			{ initialWellKnownFile.exists && (
+				<ExistingFileNotice
+					location="well_known"
+					initialFileInfo={ initialWellKnownFile }
+					onImport={ importDisclosures }
+					hasSavedOnce={ hasSavedOnce }
+				/>
 			) }
 
 			<Flex align="flex-start" gap={ 6 } style={ { marginTop: 16 } }>
