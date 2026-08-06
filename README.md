@@ -22,13 +22,22 @@ sustainability data relating to that organisation.
   way — it remembers the selected page or file, not just the resulting URL.
 - Optional **title** and **valid-until** date per disclosure.
 - **Live preview** of the exact `carbon.txt` that will be served.
-- Detects a **carbon.txt file already on your server** (e.g. created with
-  the [carbontxt.org builder](https://carbontxt.org/tools/builder) and
+- Detects a **carbon.txt file already on your server**, at either the
+  domain root or the well-known location (e.g. created with the
+  [carbontxt.org builder](https://carbontxt.org/tools/builder) and
   uploaded manually), warns that your web server may still serve that file
   directly regardless of these settings, and offers to:
   - **Import** any disclosures it can parse out of that file.
-  - **Rename it aside** as a dated backup — never deleted — once your
-    settings here have been saved at least once.
+  - **Permanently delete** it once its disclosures have been imported and
+    your settings here have been saved, so this plugin's own output is
+    what gets served.
+- **Keep a copy** of your disclosures — copy to clipboard or download as a
+  file — before deactivating or deleting the plugin, since removing it
+  also removes its saved settings.
+- Detects a **DNS-based delegation record** (a `carbon-txt-location` TXT
+  record, per [carbontxt.org/faq](https://carbontxt.org/faq)) on your
+  domain, and warns that it takes priority over any file this plugin
+  generates.
 - The file is generated on request from your saved settings and cached, so
   there is no physical file to manage and it survives deploys.
 - Served at the site root even with plain permalinks.
