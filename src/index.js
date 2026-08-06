@@ -369,23 +369,6 @@ const deleteExistingFile = ( location ) =>
 	} );
 
 /**
- * Warns about a carbon.txt file already on the server — at either the
- * domain root or the well-known location — and offers to import any
- * disclosures parsed out of it. Once a disclosure has been imported and
- * saved, the file is no longer needed and is deleted automatically (its
- * data now lives in the plugin's own settings); a manual delete button
- * covers the case where the admin doesn't import from it. Self-contained:
- * tracks its own copy of the file's existence and import/delete state, so
- * two independent instances (one per location) don't need to share state
- * through App.
- *
- * @param {Object}              props                 Props.
- * @param {'root'|'well_known'} props.location        Which location this instance is for.
- * @param {Object}              props.initialFileInfo Existing-file summary from the server.
- * @param {Function}            props.onImport        Called with the file's disclosures to import them.
- * @param {number}              props.saveCount       Number of settings saves that have succeeded so far.
- */
-/**
  * Warns that a DNS TXT record delegates carbon.txt discovery elsewhere.
  * Per the carbon.txt discovery order (DNS, then domain root, then
  * well-known, then HTTP header), this ranks above any file this plugin
@@ -429,6 +412,23 @@ function DnsRecordNotice( { dnsRecord } ) {
 	);
 }
 
+/**
+ * Warns about a carbon.txt file already on the server — at either the
+ * domain root or the well-known location — and offers to import any
+ * disclosures parsed out of it. Once a disclosure has been imported and
+ * saved, the file is no longer needed and is deleted automatically (its
+ * data now lives in the plugin's own settings); a manual delete button
+ * covers the case where the admin doesn't import from it. Self-contained:
+ * tracks its own copy of the file's existence and import/delete state, so
+ * two independent instances (one per location) don't need to share state
+ * through App.
+ *
+ * @param {Object}              props                 Props.
+ * @param {'root'|'well_known'} props.location        Which location this instance is for.
+ * @param {Object}              props.initialFileInfo Existing-file summary from the server.
+ * @param {Function}            props.onImport        Called with the file's disclosures to import them.
+ * @param {number}              props.saveCount       Number of settings saves that have succeeded so far.
+ */
 function ExistingFileNotice( {
 	location,
 	initialFileInfo,
