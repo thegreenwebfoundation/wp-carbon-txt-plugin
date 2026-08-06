@@ -39,8 +39,8 @@ class Admin {
 	}
 
 	/**
-	 * Register the REST route used to quarantine an existing carbon.txt
-	 * file found on disk. A plain settings save can't do this — it's a
+	 * Register the REST route used to delete an existing carbon.txt file
+	 * found on disk. A plain settings save can't do this — it's a
 	 * filesystem action outside the option store.
 	 */
 	public static function register_rest_routes() {
@@ -49,27 +49,38 @@ class Admin {
 			'/existing-file',
 			array(
 				'methods'             => 'DELETE',
-				'callback'            => array( __CLASS__, 'rest_quarantine_existing_file' ),
+				'callback'            => array( __CLASS__, 'rest_delete_existing_file' ),
 				'permission_callback' => static function () {
 					return current_user_can( 'manage_options' );
 				},
+				'args'                => array(
+					'location' => array(
+						'type'    => 'string',
+						'enum'    => array( 'root', 'well_known' ),
+						'default' => 'root',
+					),
+				),
 			)
 		);
 	}
 
 	/**
-	 * REST callback: rename the existing file out of the way.
+	 * REST callback: delete the existing file, at whichever location was
+	 * requested.
 	 *
+	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response|\WP_Error
 	 */
-	public static function rest_quarantine_existing_file() {
-		$result = Importer::quarantine();
+	public static function rest_delete_existing_file( $request ) {
+		$result = 'well_known' === $request->get_param( 'location' )
+			? Importer::delete_well_known_file()
+			: Importer::delete_existing_file();
 
 		if ( is_wp_error( $result ) ) {
 			return $result;
 		}
 
-		return rest_ensure_response( array( 'renamed_to' => $result ) );
+		return rest_ensure_response( array( 'deleted' => true ) );
 	}
 
 	/**
@@ -201,6 +212,8 @@ class Admin {
 					'carbonTxtUrl'     => home_url( '/carbon.txt' ),
 					'carbonTxtVersion' => CARBON_TXT_VERSION,
 					'existingFile'     => Importer::summary(),
+					'wellKnownFile'    => Importer::well_known_summary(),
+					'dnsRecord'        => Dns::summary(),
 				)
 			) . ';',
 			'before'

@@ -40,82 +40,112 @@ class Importer {
 	}
 
 	/**
-	 * Whether a file exists at the checked path.
+	 * Path checked for a carbon.txt file at the alternate well-known
+	 * location. Per the carbon.txt lookup order, this ranks below a file
+	 * at the domain root, so it's only ever consulted as a fallback.
 	 *
-	 * @return bool
+	 * @return string
 	 */
-	public static function existing_file_exists() {
-		return file_exists( self::file_path() );
+	public static function well_known_file_path() {
+		return ABSPATH . '.well-known/carbon.txt';
 	}
 
 	/**
-	 * Rename the existing file out of the way, so the web server stops
-	 * serving it at /carbon.txt. The original is kept as a timestamped
-	 * backup in the same directory rather than deleted, so nothing is lost.
+	 * Permanently delete the file at the domain root, so the web server
+	 * stops serving it at /carbon.txt. Deleting rather than renaming aside
+	 * is considered safe here specifically because this is only ever
+	 * called once the file's disclosures have already been imported into
+	 * the plugin's own settings — the data isn't actually at risk.
 	 *
-	 * @return string|\WP_Error The backup path on success.
+	 * @return true|\WP_Error
 	 */
-	public static function quarantine() {
-		$path = self::file_path();
+	public static function delete_existing_file() {
+		return self::delete_file_at( self::file_path() );
+	}
 
+	/**
+	 * Same as delete_existing_file(), for the file at the well-known
+	 * location.
+	 *
+	 * @return true|\WP_Error
+	 */
+	public static function delete_well_known_file() {
+		return self::delete_file_at( self::well_known_file_path() );
+	}
+
+	/**
+	 * Permanently delete a file.
+	 *
+	 * @param string $path Path to the file to delete.
+	 * @return true|\WP_Error
+	 */
+	private static function delete_file_at( $path ) {
 		if ( ! file_exists( $path ) ) {
 			return new \WP_Error(
 				'wp_carbon_txt_no_file',
-				__( 'No existing carbon.txt file was found to rename.', 'wp-carbon-txt-plugin' ),
+				__( 'No existing carbon.txt file was found to delete.', 'wp-carbon-txt-plugin' ),
 				array( 'status' => 404 )
 			);
 		}
 
-		// A plain date reads better than a full timestamp, but if
-		// quarantine() has already run today the destination would
-		// collide — rename() silently overwrites, which would destroy
-		// that earlier backup. Disambiguate rather than risk that.
-		$date        = wp_date( 'Y-m-d' );
-		$backup_path = $path . '.' . $date . '.bak';
-		$suffix      = 2;
-		while ( file_exists( $backup_path ) ) {
-			$backup_path = $path . '.' . $date . '-' . $suffix . '.bak';
-			++$suffix;
-		}
-
-		if ( ! rename( $path, $backup_path ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- WP_Filesystem's direct method behaves identically here; using it properly would mean also building an FTP-credentials flow for the case it doesn't, which this scoped action doesn't warrant.
+		if ( ! wp_delete_file_from_directory( $path, dirname( $path ) ) ) {
 			return new \WP_Error(
-				'wp_carbon_txt_rename_failed',
-				__( 'Could not rename the existing file. Check your server file permissions.', 'wp-carbon-txt-plugin' ),
+				'wp_carbon_txt_delete_failed',
+				__( 'Could not delete the existing file. Check your server file permissions.', 'wp-carbon-txt-plugin' ),
 				array( 'status' => 500 )
 			);
 		}
 
-		return $backup_path;
+		return true;
 	}
 
 	/**
-	 * Summarize the existing file for the settings screen: whether it
-	 * exists, the path checked, any disclosures we could parse out of it,
-	 * and (only when nothing could be parsed) its raw contents to review.
+	 * Summarize the file at the domain root for the settings screen:
+	 * whether it exists, the path checked, any disclosures we could parse
+	 * out of it, and (only when nothing could be parsed) its raw contents
+	 * to review.
 	 *
 	 * @return array{exists:bool,path:string,disclosures:array,raw:string}
 	 */
 	public static function summary() {
+		return self::summary_for_path( self::file_path() );
+	}
+
+	/**
+	 * Same as summary(), for the file at the well-known location.
+	 *
+	 * @return array{exists:bool,path:string,disclosures:array,raw:string}
+	 */
+	public static function well_known_summary() {
+		return self::summary_for_path( self::well_known_file_path() );
+	}
+
+	/**
+	 * Build the existing-file summary for a given path.
+	 *
+	 * @param string $path Path to check.
+	 * @return array{exists:bool,path:string,disclosures:array,raw:string}
+	 */
+	private static function summary_for_path( $path ) {
 		$summary = array(
 			'exists'      => false,
-			'path'        => self::file_path(),
+			'path'        => $path,
 			'disclosures' => array(),
 			'raw'         => '',
 		);
 
-		if ( ! self::existing_file_exists() ) {
+		if ( ! file_exists( $path ) ) {
 			return $summary;
 		}
 
 		$summary['exists'] = true;
 
-		$size = filesize( self::file_path() );
+		$size = filesize( $path );
 		if ( false === $size || $size > self::MAX_FILE_SIZE ) {
 			return $summary;
 		}
 
-		$content = file_get_contents( self::file_path() ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local read of a small, already size-checked file, not a remote request.
+		$content = file_get_contents( $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local read of a small, already size-checked file, not a remote request.
 		if ( false === $content ) {
 			return $summary;
 		}

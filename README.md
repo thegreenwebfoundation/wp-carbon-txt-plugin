@@ -15,20 +15,29 @@ sustainability data relating to that organisation.
 - Point a disclosure at a URL in three ways:
   - Paste any URL directly.
   - Pick an existing **published page** with a searchable autocomplete.
-  - Choose a **file from the media library** (see supported file types
-    below).
+  - Choose a **file from the media library** — the picker shows every
+    file, so use its built-in search to find the one you want.
 
   Whichever you pick, revisiting a disclosure later reopens it the same
   way — it remembers the selected page or file, not just the resulting URL.
 - Optional **title** and **valid-until** date per disclosure.
 - **Live preview** of the exact `carbon.txt` that will be served.
-- Detects a **carbon.txt file already on your server** (e.g. created with
-  the [carbontxt.org builder](https://carbontxt.org/tools/builder) and
+- Detects a **carbon.txt file already on your server**, at either the
+  domain root or the well-known location (e.g. created with the
+  [carbontxt.org builder](https://carbontxt.org/tools/builder) and
   uploaded manually), warns that your web server may still serve that file
   directly regardless of these settings, and offers to:
   - **Import** any disclosures it can parse out of that file.
-  - **Rename it aside** as a dated backup — never deleted — once your
-    settings here have been saved at least once.
+  - **Permanently delete** it once its disclosures have been imported and
+    your settings here have been saved, so this plugin's own output is
+    what gets served.
+- **Keep a copy** of your disclosures — copy to clipboard or download as a
+  file — before deactivating or deleting the plugin, since removing it
+  also removes its saved settings.
+- Detects a **DNS-based delegation record** (a `carbon-txt-location` TXT
+  record, per [carbontxt.org/faq](https://carbontxt.org/faq)) on your
+  domain, and warns that it takes priority over any file this plugin
+  generates.
 - The file is generated on request from your saved settings and cached, so
   there is no physical file to manage and it survives deploys.
 - Served at the site root even with plain permalinks.
@@ -40,20 +49,6 @@ the file picker uses the classic `wp.media()` frame rather than pulling in
 `@wordpress/block-editor` as a dependency.
 
 The output follows the [carbon.txt v0.5 syntax](https://carbontxt.org/syntax).
-
-### Supported file types
-
-The media library file picker is limited to the kinds of files a
-sustainability disclosure is realistically published as:
-
-- PDF (`.pdf`)
-- Word (`.doc`, `.docx`) and OpenDocument Text (`.odt`)
-- Any image (`.jpg`, `.png`, `.gif`, `.webp`, `.svg`, etc.)
-
-Everything else in your media library — spreadsheets, presentations,
-plain text, audio, video, archives — is filtered out of the picker. This
-is a fixed allow-list in `DISCLOSURE_MEDIA_TYPES` in `src/index.js`, not a
-user-facing setting; adjust it there if you need other formats.
 
 ## Installation
 
