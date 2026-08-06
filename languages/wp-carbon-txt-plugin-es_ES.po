@@ -3,7 +3,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: WP Carbon.txt 0.2.0\n"
-"Report-Msgid-Bugs-To: https://github.com/thegreenwebfoundation/wp-carbon-txt-plugin/issues\n"
+"Report-Msgid-Bugs-To: https://github.com/thegreenwebfoundation/wp-carbon-txt-"
+"plugin/issues\n"
+"POT-Creation-Date: 2026-08-06T09:33:46+00:00\n"
 "Last-Translator: Nahuai Badiola\n"
 "Language-Team: Español\n"
 "Language: es_ES\n"
@@ -14,18 +16,36 @@ msgstr ""
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: wp-carbon-txt-plugin\n"
 
+#. Plugin Name of the plugin
+#: wp-carbon-txt-plugin.php
+msgid "WP Carbon.txt"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: wp-carbon-txt-plugin.php
+msgid "https://github.com/thegreenwebfoundation/wp-carbon-txt-plugin"
+msgstr ""
+
 #. Description of the plugin
 #: wp-carbon-txt-plugin.php
-msgid "Publish a carbon.txt file with your organisational sustainability disclosures."
-msgstr "Publica un archivo carbon.txt con las divulgaciones de sostenibilidad de tu organización."
+msgid ""
+"Publish a carbon.txt file with your organisational sustainability "
+"disclosures."
+msgstr ""
+"Publica un archivo carbon.txt con las divulgaciones de sostenibilidad de tu "
+"organización."
+
+#. Author of the plugin
+#: wp-carbon-txt-plugin.php
+msgid "Nahuai Badiola"
+msgstr ""
 
 #: includes/class-admin.php:141
 msgid "Settings"
 msgstr "Ajustes"
 
-#: includes/class-admin.php:152
-#: includes/class-admin.php:153
-#: src/index.js:877
+#: includes/class-admin.php:152 includes/class-admin.php:153 build/index.js:4
+#: src/index.js:922
 msgid "Carbon.txt"
 msgstr "Carbon.txt"
 
@@ -35,233 +55,299 @@ msgstr "No se encontró ningún archivo carbon.txt existente para eliminar."
 
 #: includes/class-importer.php:94
 msgid "Could not delete the existing file. Check your server file permissions."
-msgstr "No se pudo eliminar el archivo existente. Comprueba los permisos de archivos de tu servidor."
+msgstr ""
+"No se pudo eliminar el archivo existente. Comprueba los permisos de archivos "
+"de tu servidor."
 
-#: src/index.js:48
+#: build/index.js:1 src/index.js:49
 msgid "An existing carbon.txt file was found on your server at:"
 msgstr "Se encontró un archivo carbon.txt existente en tu servidor en:"
 
-#: src/index.js:52
-msgid "Depending on your hosting configuration, your web server may keep serving that file directly instead of the version this plugin generates — saving here might not change what visitors see until the existing file is removed or renamed."
-msgstr "Según la configuración de tu alojamiento, tu servidor web podría seguir sirviendo ese archivo directamente en lugar de la versión que genera este plugin — guardar aquí podría no cambiar lo que ven los visitantes hasta que se elimine o renombre el archivo existente."
+#: build/index.js:1 src/index.js:53
+msgid ""
+"Depending on your hosting configuration, your web server may keep serving "
+"that file directly instead of the version this plugin generates — saving "
+"here might not change what visitors see until the existing file is removed "
+"or renamed."
+msgstr ""
+"Según la configuración de tu alojamiento, tu servidor web podría seguir "
+"sirviendo ese archivo directamente en lugar de la versión que genera este "
+"plugin — guardar aquí podría no cambiar lo que ven los visitantes hasta que "
+"se elimine o renombre el archivo existente."
 
-#: src/index.js:56
+#: build/index.js:1 src/index.js:57
 msgid "An existing carbon.txt file was found on your server."
 msgstr "Se encontró un archivo carbon.txt existente en tu servidor."
 
-#: src/index.js:62
+#: build/index.js:1 src/index.js:63
 msgid "A carbon.txt file was also found at the well-known location:"
 msgstr "También se encontró un archivo carbon.txt en la ubicación well-known:"
 
-#: src/index.js:66
-msgid "A file at your domain root takes priority over this location, so it will typically be ignored as long as your root carbon.txt is reachable — you may still want to review or remove it to avoid confusion."
-msgstr "Un archivo en la raíz de tu dominio tiene prioridad sobre esta ubicación, por lo que normalmente se ignorará mientras tu carbon.txt de la raíz sea accesible — aun así, quizá quieras revisarlo o eliminarlo para evitar confusiones."
+#: build/index.js:1 src/index.js:67
+msgid ""
+"A file at your domain root takes priority over this location, so it will "
+"typically be ignored as long as your root carbon.txt is reachable — you may "
+"still want to review or remove it to avoid confusion."
+msgstr ""
+"Un archivo en la raíz de tu dominio tiene prioridad sobre esta ubicación, "
+"por lo que normalmente se ignorará mientras tu carbon.txt de la raíz sea "
+"accesible — aun así, quizá quieras revisarlo o eliminarlo para evitar "
+"confusiones."
 
-#: src/index.js:70
+#: build/index.js:1 src/index.js:71
 msgid "A carbon.txt file was found at the well-known location."
 msgstr "Se encontró un archivo carbon.txt en la ubicación well-known."
 
-#: src/index.js:78
+#: build/index.js:1 src/index.js:79
 msgid "Web page"
 msgstr "Página web"
 
-#: src/index.js:79
+#: build/index.js:1 src/index.js:80
 msgid "Annual report"
 msgstr "Informe anual"
 
-#: src/index.js:80
+#: build/index.js:1 src/index.js:81
 msgid "Sustainability page"
 msgstr "Página de sostenibilidad"
 
-#: src/index.js:81
+#: build/index.js:1 src/index.js:82
 msgid "Certificate"
 msgstr "Certificado"
 
-#: src/index.js:82
+#: build/index.js:1 src/index.js:83
 msgid "CSRD report"
 msgstr "Informe CSRD"
 
-#: src/index.js:83
+#: build/index.js:1 src/index.js:84
 msgid "AI model card"
 msgstr "Ficha de modelo de IA"
 
-#: src/index.js:84
+#: build/index.js:1 src/index.js:85
 msgid "Other"
 msgstr "Otro"
 
-#: src/index.js:270
+#: build/index.js:1 src/index.js:271
 msgid "Select a published page"
 msgstr "Selecciona una página publicada"
 
-#: src/index.js:271
-msgid "Search your pages by title. Its permalink is used as the disclosure URL."
-msgstr "Busca tus páginas por título. Su enlace permanente se usa como URL de la divulgación."
-
-#: src/index.js:311
-msgid "Select a file"
-msgstr "Selecciona un archivo"
-
-#: src/index.js:312
-msgid "Use this file"
-msgstr "Usar este archivo"
+#: build/index.js:1 src/index.js:272
+msgid ""
+"Search your pages by title. Its permalink is used as the disclosure URL."
+msgstr ""
+"Busca tus páginas por título. Su enlace permanente se usa como URL de la "
+"divulgación."
 
 #. translators: %s: selected file name or URL.
-#: src/index.js:342
-#, js-format
+#: build/index.js:2 src/index.js:343
 msgid "Selected file: %s"
 msgstr "Archivo seleccionado: %s"
 
-#: src/index.js:345
+#: build/index.js:2 src/index.js:346
 msgid "No file selected yet."
 msgstr "Aún no se ha seleccionado ningún archivo."
 
-#: src/index.js:349
+#: build/index.js:2 src/index.js:312
+msgid "Select a file"
+msgstr "Selecciona un archivo"
+
+#: build/index.js:2 src/index.js:313
+msgid "Use this file"
+msgstr "Usar este archivo"
+
+#: build/index.js:2 src/index.js:350
 msgid "Choose a different file"
 msgstr "Elegir otro archivo"
 
-#: src/index.js:350
-#: src/index.js:662
+#: build/index.js:2 build/index.js:4 src/index.js:351 src/index.js:707
 msgid "Choose a file"
 msgstr "Elegir un archivo"
 
-#: src/index.js:410
+#: build/index.js:2 src/index.js:407
+msgid ""
+"A DNS record was found delegating carbon.txt discovery to another location."
+msgstr ""
+"Se encontró un registro DNS que delega la búsqueda de carbon.txt a otra "
+"ubicación."
+
+#: build/index.js:2 src/index.js:414
+msgid "A DNS TXT record on your domain delegates carbon.txt discovery to:"
+msgstr ""
+"Un registro TXT de DNS en tu dominio delega la búsqueda de carbon.txt a:"
+
+#: build/index.js:2 src/index.js:421
+msgid ""
+"A DNS record takes priority over any file this plugin generates — visitors "
+"and validators will follow it instead. If that’s intentional, no action is "
+"needed; otherwise, review or remove the carbon-txt-location TXT record on "
+"your domain so this plugin’s file is used."
+msgstr ""
+"Un registro DNS tiene prioridad sobre cualquier archivo que genere este "
+"plugin — los visitantes y validadores lo seguirán a él en su lugar. Si "
+"esto es intencional, no es necesario hacer nada; en caso contrario, "
+"revisa o elimina el registro TXT carbon-txt-location de tu dominio para "
+"que se use el archivo de este plugin."
+
+#: build/index.js:2 src/index.js:455
 msgid "Could not delete the existing file."
 msgstr "No se pudo eliminar el archivo existente."
 
 #. translators: %d: number of disclosures found in the existing file.
-#: src/index.js:469
-#, js-format
+#: build/index.js:3 src/index.js:514
 msgid "Import %d disclosure(s) from this file"
 msgstr "Importar %d divulgación(es) de este archivo"
 
-#: src/index.js:481
+#: build/index.js:3 src/index.js:526
 msgid "Removing the old file…"
 msgstr "Eliminando el archivo antiguo…"
 
-#: src/index.js:485
-msgid "Imported. Once you save, this file will be permanently deleted — its data now lives in your plugin settings."
-msgstr "Importado. Al guardar, este archivo se eliminará permanentemente — sus datos ya viven en los ajustes del plugin."
+#: build/index.js:3 src/index.js:530
+msgid ""
+"Imported. Once you save, this file will be permanently deleted — its data "
+"now lives in your plugin settings."
+msgstr ""
+"Importado. Al guardar, este archivo se eliminará permanentemente — sus datos "
+"ya viven en los ajustes del plugin."
 
-#: src/index.js:495
+#: build/index.js:3 src/index.js:540
 msgid "We couldn't automatically read its disclosures — view the raw file"
-msgstr "No pudimos leer sus divulgaciones automáticamente — ver el archivo sin procesar"
+msgstr ""
+"No pudimos leer sus divulgaciones automáticamente — ver el archivo sin "
+"procesar"
 
-#: src/index.js:518
+#: build/index.js:3 src/index.js:563
 msgid "Delete existing file so this plugin is used"
 msgstr "Eliminar el archivo existente para que se use este plugin"
 
-#: src/index.js:528
+#: build/index.js:3 src/index.js:573
 msgid "This cannot be undone. Continue?"
 msgstr "Esto no se puede deshacer. ¿Continuar?"
 
-#: src/index.js:545
+#: build/index.js:3 src/index.js:590
 msgid "Yes, delete it"
 msgstr "Sí, eliminarlo"
 
-#: src/index.js:555
+#: build/index.js:3 src/index.js:600
 msgid "Cancel"
 msgstr "Cancelar"
 
 #. translators: %d: disclosure number.
-#: src/index.js:602
-#, js-format
+#: build/index.js:4 src/index.js:647
 msgid "Disclosure %d"
 msgstr "Divulgación %d"
 
-#: src/index.js:612
+#: build/index.js:4 src/index.js:657
 msgid "Remove"
 msgstr "Eliminar"
 
-#: src/index.js:619
-msgid "This disclosure needs a URL, page, or file to be included in your carbon.txt."
-msgstr "Esta divulgación necesita una URL, página o archivo para incluirse en tu carbon.txt."
+#: build/index.js:4 src/index.js:664
+msgid ""
+"This disclosure needs a URL, page, or file to be included in your carbon.txt."
+msgstr ""
+"Esta divulgación necesita una URL, página o archivo para incluirse en tu "
+"carbon.txt."
 
-#: src/index.js:627
+#: build/index.js:4 src/index.js:672
 msgid "Document type"
 msgstr "Tipo de documento"
 
-#: src/index.js:639
+#: build/index.js:4 src/index.js:684
 msgid "URL source"
 msgstr "Origen de la URL"
 
-#: src/index.js:648
+#: build/index.js:4 src/index.js:693
 msgid "Enter a URL"
 msgstr "Introducir una URL"
 
-#: src/index.js:655
+#: build/index.js:4 src/index.js:700
 msgid "Select a page"
 msgstr "Seleccionar una página"
 
-#: src/index.js:671
+#: build/index.js:4 src/index.js:716
 msgid "Disclosure URL"
 msgstr "URL de la divulgación"
 
-#: src/index.js:714
+#: build/index.js:4 src/index.js:759
 msgid "Title (optional)"
 msgstr "Título (opcional)"
 
-#: src/index.js:725
+#: build/index.js:4 src/index.js:770
 msgid "Valid until (optional)"
 msgstr "Válido hasta (opcional)"
 
-#: src/index.js:811
-msgid "Could not copy automatically — please select and copy the preview text manually."
-msgstr "No se pudo copiar automáticamente — selecciona y copia el texto de la vista previa manualmente."
+#: build/index.js:4 src/index.js:925
+msgid ""
+"Publish organisational sustainability disclosures at your site’s carbon.txt "
+"file."
+msgstr ""
+"Publica las divulgaciones de sostenibilidad de tu organización en el archivo "
+"carbon.txt de tu sitio."
 
-#: src/index.js:842
+#: build/index.js:4 src/index.js:969
+msgid ""
+"No disclosures yet. Add your first sustainability document to publish it in "
+"your carbon.txt."
+msgstr ""
+"Aún no hay divulgaciones. Añade tu primer documento de sostenibilidad para "
+"publicarlo en tu carbon.txt."
+
+#: build/index.js:4 src/index.js:996
+msgid "Add disclosure"
+msgstr "Añadir divulgación"
+
+#: build/index.js:4 src/index.js:887
 msgid "Saved. Your carbon.txt is up to date."
 msgstr "Guardado. Tu carbon.txt está actualizado."
 
 #. translators: %s: error message returned by the server.
-#: src/index.js:864
-#, js-format
+#: build/index.js:5 src/index.js:909
 msgid "Saving failed: %s"
 msgstr "Error al guardar: %s"
 
-#: src/index.js:867
+#: build/index.js:5 src/index.js:912
 msgid "Saving failed. Please try again."
 msgstr "Error al guardar. Inténtalo de nuevo."
 
-#: src/index.js:880
-msgid "Publish organisational sustainability disclosures at your site’s carbon.txt file."
-msgstr "Publica las divulgaciones de sostenibilidad de tu organización en el archivo carbon.txt de tu sitio."
-
-#: src/index.js:922
-msgid "No disclosures yet. Add your first sustainability document to publish it in your carbon.txt."
-msgstr "Aún no hay divulgaciones. Añade tu primer documento de sostenibilidad para publicarlo en tu carbon.txt."
-
-#: src/index.js:949
-msgid "Add disclosure"
-msgstr "Añadir divulgación"
-
-#: src/index.js:962
+#: build/index.js:5 src/index.js:1009
 msgid "Save"
 msgstr "Guardar"
 
-#: src/index.js:973
+#: build/index.js:5 src/index.js:1020
 msgid "Preview"
 msgstr "Vista previa"
 
-#: src/index.js:976
+#: build/index.js:5 src/index.js:1023
 msgid "View live file"
 msgstr "Ver archivo en vivo"
 
-#: src/index.js:1002
+#: build/index.js:5 src/index.js:1049
 msgid "Keep a copy of your disclosures"
 msgstr "Conserva una copia de tus divulgaciones"
 
-#: src/index.js:1011
-msgid "Removing this plugin also removes its saved settings. Save a copy of your current disclosures if you ever plan to deactivate or delete it."
-msgstr "Eliminar este plugin también borra sus ajustes guardados. Guarda una copia de tus divulgaciones actuales si en algún momento planeas desactivarlo o eliminarlo."
+#: build/index.js:5 src/index.js:1058
+msgid ""
+"Removing this plugin also removes its saved settings. Save a copy of your "
+"current disclosures if you ever plan to deactivate or delete it."
+msgstr ""
+"Eliminar este plugin también borra sus ajustes guardados. Guarda una copia "
+"de tus divulgaciones actuales si en algún momento planeas desactivarlo o "
+"eliminarlo."
 
-#: src/index.js:1026
+#: build/index.js:5 src/index.js:856
+msgid ""
+"Could not copy automatically — please select and copy the preview text "
+"manually."
+msgstr ""
+"No se pudo copiar automáticamente — selecciona y copia el texto de la vista "
+"previa manualmente."
+
+#: build/index.js:5 src/index.js:1073
 msgid "Copied!"
 msgstr "¡Copiado!"
 
-#: src/index.js:1030
+#: build/index.js:5 src/index.js:1077
 msgid "Copy to clipboard"
 msgstr "Copiar al portapapeles"
 
-#: src/index.js:1039
+#: build/index.js:5 src/index.js:1086
 msgid "Download file"
 msgstr "Descargar archivo"

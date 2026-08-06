@@ -28,6 +28,7 @@ require_once __DIR__ . '/includes/class-settings.php';
 require_once __DIR__ . '/includes/class-renderer.php';
 require_once __DIR__ . '/includes/class-endpoint.php';
 require_once __DIR__ . '/includes/class-importer.php';
+require_once __DIR__ . '/includes/class-dns.php';
 require_once __DIR__ . '/includes/class-admin.php';
 
 Settings::init();

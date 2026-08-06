@@ -36,6 +36,7 @@ const {
 	carbonTxtVersion,
 	existingFile: initialExistingFile,
 	wellKnownFile: initialWellKnownFile,
+	dnsRecord: initialDnsRecord,
 } = window.wpCarbonTxt;
 
 /**
@@ -384,6 +385,50 @@ const deleteExistingFile = ( location ) =>
  * @param {Function}            props.onImport        Called with the file's disclosures to import them.
  * @param {number}              props.saveCount       Number of settings saves that have succeeded so far.
  */
+/**
+ * Warns that a DNS TXT record delegates carbon.txt discovery elsewhere.
+ * Per the carbon.txt discovery order (DNS, then domain root, then
+ * well-known, then HTTP header), this ranks above any file this plugin
+ * generates — there's nothing to import or delete here, since the plugin
+ * has no control over DNS, so this is informational only.
+ *
+ * @param {{dnsRecord:{domain:?string,location:?string}}} props Props.
+ */
+function DnsRecordNotice( { dnsRecord } ) {
+	if ( ! dnsRecord.location ) {
+		return null;
+	}
+
+	return (
+		<div style={ { margin: '16px 0' } }>
+			<Notice
+				status="warning"
+				isDismissible={ false }
+				spokenMessage={ __(
+					'A DNS record was found delegating carbon.txt discovery to another location.',
+					'wp-carbon-txt-plugin'
+				) }
+			>
+				<VStack spacing={ 2 } alignment="left">
+					<Text>
+						{ __(
+							'A DNS TXT record on your domain delegates carbon.txt discovery to:',
+							'wp-carbon-txt-plugin'
+						) }{ ' ' }
+						<code>{ dnsRecord.location }</code>
+					</Text>
+					<Text>
+						{ __(
+							'A DNS record takes priority over any file this plugin generates — visitors and validators will follow it instead. If that’s intentional, no action is needed; otherwise, review or remove the carbon-txt-location TXT record on your domain so this plugin’s file is used.',
+							'wp-carbon-txt-plugin'
+						) }
+					</Text>
+				</VStack>
+			</Notice>
+		</div>
+	);
+}
+
 function ExistingFileNotice( {
 	location,
 	initialFileInfo,
@@ -893,6 +938,8 @@ function App() {
 					</Notice>
 				</div>
 			) }
+
+			<DnsRecordNotice dnsRecord={ initialDnsRecord } />
 
 			{ initialExistingFile.exists && (
 				<ExistingFileNotice

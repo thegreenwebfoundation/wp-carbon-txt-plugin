@@ -213,6 +213,7 @@ class Admin {
 					'carbonTxtVersion' => CARBON_TXT_VERSION,
 					'existingFile'     => Importer::summary(),
 					'wellKnownFile'    => Importer::well_known_summary(),
+					'dnsRecord'        => Dns::summary(),
 				)
 			) . ';',
 			'before'
