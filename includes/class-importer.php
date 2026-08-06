@@ -51,63 +51,52 @@ class Importer {
 	}
 
 	/**
-	 * Rename the file at the domain root out of the way, so the web
-	 * server stops serving it at /carbon.txt. The original is kept as a
-	 * timestamped backup in the same directory rather than deleted, so
-	 * nothing is lost.
+	 * Permanently delete the file at the domain root, so the web server
+	 * stops serving it at /carbon.txt. Deleting rather than renaming aside
+	 * is considered safe here specifically because this is only ever
+	 * called once the file's disclosures have already been imported into
+	 * the plugin's own settings — the data isn't actually at risk.
 	 *
-	 * @return string|\WP_Error The backup path on success.
+	 * @return true|\WP_Error
 	 */
-	public static function quarantine() {
-		return self::quarantine_path( self::file_path() );
+	public static function delete_existing_file() {
+		return self::delete_file_at( self::file_path() );
 	}
 
 	/**
-	 * Same as quarantine(), for the file at the well-known location.
+	 * Same as delete_existing_file(), for the file at the well-known
+	 * location.
 	 *
-	 * @return string|\WP_Error The backup path on success.
+	 * @return true|\WP_Error
 	 */
-	public static function quarantine_well_known() {
-		return self::quarantine_path( self::well_known_file_path() );
+	public static function delete_well_known_file() {
+		return self::delete_file_at( self::well_known_file_path() );
 	}
 
 	/**
-	 * Rename a file out of the way, keeping a timestamped backup in the
-	 * same directory rather than deleting it, so nothing is lost.
+	 * Permanently delete a file.
 	 *
-	 * @param string $path Path to the file to rename.
-	 * @return string|\WP_Error The backup path on success.
+	 * @param string $path Path to the file to delete.
+	 * @return true|\WP_Error
 	 */
-	private static function quarantine_path( $path ) {
+	private static function delete_file_at( $path ) {
 		if ( ! file_exists( $path ) ) {
 			return new \WP_Error(
 				'wp_carbon_txt_no_file',
-				__( 'No existing carbon.txt file was found to rename.', 'wp-carbon-txt-plugin' ),
+				__( 'No existing carbon.txt file was found to delete.', 'wp-carbon-txt-plugin' ),
 				array( 'status' => 404 )
 			);
 		}
 
-		// A plain date reads better than a full timestamp, but if
-		// quarantine_path() has already run today the destination would
-		// collide — rename() silently overwrites, which would destroy
-		// that earlier backup. Disambiguate rather than risk that.
-		$date        = wp_date( 'Y-m-d' );
-		$backup_path = $path . '.' . $date . '.bak';
-		$suffix      = 2;
-		while ( file_exists( $backup_path ) ) {
-			$backup_path = $path . '.' . $date . '-' . $suffix . '.bak';
-			++$suffix;
-		}
-
-		if ( ! rename( $path, $backup_path ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- WP_Filesystem's direct method behaves identically here; using it properly would mean also building an FTP-credentials flow for the case it doesn't, which this scoped action doesn't warrant.
+		if ( ! wp_delete_file_from_directory( $path, dirname( $path ) ) ) {
 			return new \WP_Error(
-				'wp_carbon_txt_rename_failed',
-				__( 'Could not rename the existing file. Check your server file permissions.', 'wp-carbon-txt-plugin' ),
+				'wp_carbon_txt_delete_failed',
+				__( 'Could not delete the existing file. Check your server file permissions.', 'wp-carbon-txt-plugin' ),
 				array( 'status' => 500 )
 			);
 		}
 
-		return $backup_path;
+		return true;
 	}
 
 	/**

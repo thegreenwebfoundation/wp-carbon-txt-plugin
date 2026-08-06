@@ -1,7 +1,7 @@
 /**
  * Carbon.txt settings screen.
  */
-import { createRoot, useState, useRef } from '@wordpress/element';
+import { createRoot, useState, useRef, useEffect } from '@wordpress/element';
 import { useEntityProp, store as coreStore } from '@wordpress/core-data';
 import { useSelect, useDispatch, select as dataSelect } from '@wordpress/data';
 import { useDebounce } from '@wordpress/compose';
@@ -124,6 +124,44 @@ const renderDisclosure = ( disclosure ) => {
 		pairs.push( `valid_until = ${ tomlDate( disclosure.valid_until ) }` );
 	}
 	return `{ ${ pairs.join( ', ' ) } }`;
+};
+
+/**
+ * Copy text to the clipboard. `navigator.clipboard` only exists in secure
+ * contexts (HTTPS, or localhost) — on a plain-HTTP site (common on local
+ * dev environments) it's `undefined`, not just permission-denied, so this
+ * falls back to the older `document.execCommand( 'copy' )` technique via a
+ * temporary off-screen textarea.
+ *
+ * @param {string} text Text to copy.
+ * @return {Promise} Resolves on success, rejects on failure.
+ */
+const copyToClipboard = ( text ) => {
+	if ( window.navigator?.clipboard?.writeText ) {
+		return window.navigator.clipboard.writeText( text );
+	}
+
+	return new Promise( ( resolve, reject ) => {
+		const textarea = document.createElement( 'textarea' );
+		textarea.value = text;
+		textarea.setAttribute( 'readonly', '' );
+		textarea.style.position = 'fixed';
+		textarea.style.top = '-1000px';
+		document.body.appendChild( textarea );
+		textarea.select();
+
+		try {
+			if ( document.execCommand( 'copy' ) ) {
+				resolve();
+			} else {
+				reject( new Error( 'execCommand( "copy" ) failed' ) );
+			}
+		} catch ( error ) {
+			reject( error );
+		} finally {
+			document.body.removeChild( textarea );
+		}
+	} );
 };
 
 /**
@@ -316,30 +354,83 @@ function MediaPicker( { value, attachmentId, onChange } ) {
 }
 
 /**
+ * Delete the existing file at a given location. Module-level and stable
+ * (not recreated per render) so it can be called from a useEffect without
+ * dependency-array churn.
+ *
+ * @param {'root'|'well_known'} location Which location to delete at.
+ * @return {Promise} Resolves on success, rejects with the REST error.
+ */
+const deleteExistingFile = ( location ) =>
+	apiFetch( {
+		path: `/wp-carbon-txt/v1/existing-file?location=${ location }`,
+		method: 'DELETE',
+	} );
+
+/**
  * Warns about a carbon.txt file already on the server — at either the
  * domain root or the well-known location — and offers to import any
- * disclosures parsed out of it, or to rename it aside once the plugin's
- * own settings have been saved. Self-contained: tracks its own copy of
- * the file's existence, import, and quarantine state, so two independent
- * instances (one per location) don't need to share state through App.
+ * disclosures parsed out of it. Once a disclosure has been imported and
+ * saved, the file is no longer needed and is deleted automatically (its
+ * data now lives in the plugin's own settings); a manual delete button
+ * covers the case where the admin doesn't import from it. Self-contained:
+ * tracks its own copy of the file's existence and import/delete state, so
+ * two independent instances (one per location) don't need to share state
+ * through App.
  *
  * @param {Object}              props                 Props.
  * @param {'root'|'well_known'} props.location        Which location this instance is for.
  * @param {Object}              props.initialFileInfo Existing-file summary from the server.
  * @param {Function}            props.onImport        Called with the file's disclosures to import them.
- * @param {boolean}             props.hasSavedOnce    Whether settings have been saved at least once.
+ * @param {number}              props.saveCount       Number of settings saves that have succeeded so far.
  */
 function ExistingFileNotice( {
 	location,
 	initialFileInfo,
 	onImport,
-	hasSavedOnce,
+	saveCount,
 } ) {
 	const [ fileInfo, setFileInfo ] = useState( initialFileInfo );
 	const [ hasImported, setHasImported ] = useState( false );
-	const [ isQuarantining, setIsQuarantining ] = useState( false );
-	const [ quarantineError, setQuarantineError ] = useState( null );
+	const [ saveCountAtImport, setSaveCountAtImport ] = useState( null );
+	const [ isDeleting, setIsDeleting ] = useState( false );
+	const [ deleteError, setDeleteError ] = useState( null );
 	const [ confirming, setConfirming ] = useState( false );
+
+	const runDelete = async () => {
+		setIsDeleting( true );
+		setDeleteError( null );
+
+		try {
+			await deleteExistingFile( location );
+			setFileInfo( ( info ) => ( { ...info, exists: false } ) );
+		} catch ( error ) {
+			setDeleteError(
+				error?.message ||
+					__(
+						'Could not delete the existing file.',
+						'wp-carbon-txt-plugin'
+					)
+			);
+		} finally {
+			setIsDeleting( false );
+		}
+	};
+
+	// Once a save succeeds *after* this file's disclosures were imported,
+	// its data is safely in the plugin's own settings, so delete it
+	// automatically rather than leaving it to shadow the plugin's output.
+	useEffect( () => {
+		if (
+			hasImported &&
+			saveCountAtImport !== null &&
+			saveCount > saveCountAtImport &&
+			fileInfo.exists
+		) {
+			runDelete();
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps -- runDelete is stable in effect; only saveCount changing should trigger this.
+	}, [ saveCount ] );
 
 	if ( ! fileInfo.exists ) {
 		return null;
@@ -350,33 +441,13 @@ function ExistingFileNotice( {
 	const handleImport = () => {
 		onImport( fileInfo.disclosures );
 		setHasImported( true );
-	};
-
-	const handleQuarantine = async () => {
-		setIsQuarantining( true );
-		setQuarantineError( null );
-
-		try {
-			await apiFetch( {
-				path: `/wp-carbon-txt/v1/existing-file?location=${ location }`,
-				method: 'DELETE',
-			} );
-			setFileInfo( { ...fileInfo, exists: false } );
-		} catch ( error ) {
-			setQuarantineError(
-				error?.message ||
-					__(
-						'Could not rename the existing file.',
-						'wp-carbon-txt-plugin'
-					)
-			);
-		} finally {
-			setIsQuarantining( false );
-		}
+		setSaveCountAtImport( saveCount );
 	};
 
 	const canImport = ! hasImported;
-	const canQuarantine = hasSavedOnce;
+	// Once imported, deletion happens automatically on the next save; the
+	// manual button is only a fallback if that automatic attempt failed.
+	const canDelete = saveCount > 0 && ( ! hasImported || deleteError );
 
 	return (
 		<div style={ { margin: '16px 0' } }>
@@ -385,7 +456,7 @@ function ExistingFileNotice( {
 				isDismissible={ false }
 				spokenMessage={ text.spokenMessage }
 			>
-				<VStack spacing={ 2 }>
+				<VStack spacing={ 2 } alignment="left">
 					<Text>
 						{ text.intro } <code>{ fileInfo.path }</code>
 					</Text>
@@ -402,6 +473,20 @@ function ExistingFileNotice( {
 								fileInfo.disclosures.length
 							) }
 						</Button>
+					) }
+
+					{ hasImported && (
+						<Text>
+							{ isDeleting
+								? __(
+										'Removing the old file…',
+										'wp-carbon-txt-plugin'
+								  )
+								: __(
+										'Imported. Once you save, this file will be permanently deleted — its data now lives in your plugin settings.',
+										'wp-carbon-txt-plugin'
+								  ) }
+						</Text>
 					) }
 
 					{ ! fileInfo.disclosures.length && fileInfo.raw && (
@@ -424,51 +509,55 @@ function ExistingFileNotice( {
 						</details>
 					) }
 
-					{ canQuarantine && ! confirming && (
+					{ canDelete && ! confirming && (
 						<Button
 							variant="tertiary"
 							isDestructive
 							onClick={ () => setConfirming( true ) }
 						>
 							{ __(
-								'Rename existing file so this plugin is used',
+								'Delete existing file so this plugin is used',
 								'wp-carbon-txt-plugin'
 							) }
 						</Button>
 					) }
 
-					{ canQuarantine && confirming && (
-						<VStack spacing={ 2 }>
+					{ canDelete && confirming && (
+						<VStack spacing={ 2 } alignment="left">
 							<Text>
 								{ __(
-									'The file will be kept as a backup in the same location, not deleted. Continue?',
+									'This cannot be undone. Continue?',
 									'wp-carbon-txt-plugin'
 								) }
 							</Text>
-							<Flex expanded={ false } gap={ 2 }>
+							<Flex
+								expanded={ false }
+								justify="flex-start"
+								gap={ 2 }
+							>
 								<Button
 									variant="primary"
 									isDestructive
-									isBusy={ isQuarantining }
-									disabled={ isQuarantining }
-									onClick={ handleQuarantine }
+									isBusy={ isDeleting }
+									disabled={ isDeleting }
+									onClick={ runDelete }
 								>
 									{ __(
-										'Yes, rename it',
+										'Yes, delete it',
 										'wp-carbon-txt-plugin'
 									) }
 								</Button>
 								<Button
 									variant="tertiary"
-									disabled={ isQuarantining }
+									disabled={ isDeleting }
 									onClick={ () => setConfirming( false ) }
 								>
 									{ __( 'Cancel', 'wp-carbon-txt-plugin' ) }
 								</Button>
 							</Flex>
-							{ quarantineError && (
+							{ deleteError && (
 								<Text style={ { color: '#cc1818' } }>
-									{ quarantineError }
+									{ deleteError }
 								</Text>
 							) }
 						</VStack>
@@ -661,7 +750,12 @@ function App() {
 		optionName
 	);
 	const [ notice, setNotice ] = useState( null );
-	const [ hasSavedOnce, setHasSavedOnce ] = useState( false );
+	// A counter rather than a boolean: ExistingFileNotice needs to know
+	// whether a save happened *after* a given import, not just whether
+	// any save has ever succeeded.
+	const [ saveCount, setSaveCount ] = useState( 0 );
+	const [ backupCopied, setBackupCopied ] = useState( false );
+	const [ backupCopyError, setBackupCopyError ] = useState( null );
 
 	const { saveEditedEntityRecord } = useDispatch( coreStore );
 	const isSaving = useSelect(
@@ -702,6 +796,38 @@ function App() {
 		setDisclosures( disclosures.filter( ( _, i ) => i !== index ) );
 	};
 
+	// Always exports the *current* on-screen disclosures (same content as
+	// the Preview pane), not a server round trip — so it's accurate even
+	// with unsaved edits, and needs no backend support of its own.
+	const handleCopyBackup = async () => {
+		setBackupCopyError( null );
+
+		try {
+			await copyToClipboard( renderCarbonTxt( disclosures ) );
+			setBackupCopied( true );
+			setTimeout( () => setBackupCopied( false ), 2000 );
+		} catch ( error ) {
+			setBackupCopyError(
+				__(
+					'Could not copy automatically — please select and copy the preview text manually.',
+					'wp-carbon-txt-plugin'
+				)
+			);
+		}
+	};
+
+	const handleDownloadBackup = () => {
+		const blob = new Blob( [ renderCarbonTxt( disclosures ) ], {
+			type: 'text/plain',
+		} );
+		const url = URL.createObjectURL( blob );
+		const link = document.createElement( 'a' );
+		link.href = url;
+		link.download = 'carbon.txt';
+		link.click();
+		URL.revokeObjectURL( url );
+	};
+
 	const importDisclosures = ( toImport ) =>
 		setDisclosures( [ ...disclosures, ...toImport ] );
 
@@ -710,7 +836,7 @@ function App() {
 		const saved = await saveEditedEntityRecord( 'root', 'site' );
 
 		if ( saved ) {
-			setHasSavedOnce( true );
+			setSaveCount( ( count ) => count + 1 );
 			setNotice( {
 				status: 'success',
 				text: __(
@@ -773,7 +899,7 @@ function App() {
 					location="root"
 					initialFileInfo={ initialExistingFile }
 					onImport={ importDisclosures }
-					hasSavedOnce={ hasSavedOnce }
+					saveCount={ saveCount }
 				/>
 			) }
 
@@ -782,7 +908,7 @@ function App() {
 					location="well_known"
 					initialFileInfo={ initialWellKnownFile }
 					onImport={ importDisclosures }
-					hasSavedOnce={ hasSavedOnce }
+					saveCount={ saveCount }
 				/>
 			) }
 
@@ -867,6 +993,61 @@ function App() {
 							>
 								{ renderCarbonTxt( disclosures ) }
 							</pre>
+						</CardBody>
+					</Card>
+
+					<Card style={ { marginTop: 16 } }>
+						<CardHeader>
+							<Heading level={ 2 }>
+								{ __(
+									'Keep a copy of your disclosures',
+									'wp-carbon-txt-plugin'
+								) }
+							</Heading>
+						</CardHeader>
+						<CardBody>
+							<VStack spacing={ 2 } alignment="left">
+								<Text>
+									{ __(
+										'Removing this plugin also removes its saved settings. Save a copy of your current disclosures if you ever plan to deactivate or delete it.',
+										'wp-carbon-txt-plugin'
+									) }
+								</Text>
+								<Flex
+									expanded={ false }
+									justify="flex-start"
+									gap={ 2 }
+								>
+									<Button
+										variant="secondary"
+										onClick={ handleCopyBackup }
+									>
+										{ backupCopied
+											? __(
+													'Copied!',
+													'wp-carbon-txt-plugin'
+											  )
+											: __(
+													'Copy to clipboard',
+													'wp-carbon-txt-plugin'
+											  ) }
+									</Button>
+									<Button
+										variant="secondary"
+										onClick={ handleDownloadBackup }
+									>
+										{ __(
+											'Download file',
+											'wp-carbon-txt-plugin'
+										) }
+									</Button>
+								</Flex>
+								{ backupCopyError && (
+									<Text style={ { color: '#cc1818' } }>
+										{ backupCopyError }
+									</Text>
+								) }
+							</VStack>
 						</CardBody>
 					</Card>
 				</FlexBlock>
