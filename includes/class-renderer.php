@@ -34,7 +34,7 @@ class Renderer {
 		}
 
 		$lines   = array();
-		$lines[] = 'version = "' . CARBON_TXT_VERSION . '"';
+		$lines[] = 'version = "' . Settings::latest_version() . '"';
 		$lines[] = '';
 		$lines[] = '[org]';
 
@@ -72,6 +72,9 @@ class Renderer {
 		}
 		if ( ! empty( $disclosure['valid_until'] ) ) {
 			$pairs[] = 'valid_until = ' . self::toml_date( $disclosure['valid_until'] );
+		}
+		if ( ! empty( $disclosure['domain'] ) ) {
+			$pairs[] = 'domain = ' . self::toml_string( $disclosure['domain'] );
 		}
 
 		return '{ ' . implode( ', ', $pairs ) . ' }';

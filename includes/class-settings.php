@@ -15,20 +15,54 @@ defined( 'ABSPATH' ) || exit;
 class Settings {
 
 	/**
-	 * Valid carbon.txt disclosure document types (spec v0.5).
+	 * Per-spec-version disclosure profiles. Add an entry here when a new
+	 * carbon.txt syntax version ships, rather than touching call sites —
+	 * everything that varies by version (currently just the doc_type enum)
+	 * lives in this one table.
 	 *
+	 * @return array<string,array{doc_types:string[]}>
+	 */
+	private static function profiles() {
+		return array(
+			'0.5' => array(
+				'doc_types' => array(
+					'web-page',
+					'annual-report',
+					'sustainability-page',
+					'certificate',
+					'csrd-report',
+					'ai-model-card',
+					'other',
+				),
+			),
+		);
+	}
+
+	/**
+	 * The newest carbon.txt syntax version this plugin knows about. This is
+	 * always the version the plugin generates.
+	 *
+	 * @return string
+	 */
+	public static function latest_version() {
+		$versions = array_keys( self::profiles() );
+		usort( $versions, 'version_compare' );
+		return end( $versions );
+	}
+
+	/**
+	 * Valid carbon.txt disclosure document types for a given spec version.
+	 *
+	 * @param string|null $version Spec version, e.g. "0.5". Defaults to the
+	 *                              latest known version.
 	 * @return string[]
 	 */
-	public static function doc_types() {
-		return array(
-			'web-page',
-			'annual-report',
-			'sustainability-page',
-			'certificate',
-			'csrd-report',
-			'ai-model-card',
-			'other',
-		);
+	public static function doc_types( $version = null ) {
+		$profiles = self::profiles();
+		if ( null === $version || ! isset( $profiles[ $version ] ) ) {
+			$version = self::latest_version();
+		}
+		return $profiles[ $version ]['doc_types'];
 	}
 
 	/**
@@ -84,6 +118,7 @@ class Settings {
 										'attachment_id' => array( 'type' => 'integer' ),
 										'title'         => array( 'type' => 'string' ),
 										'valid_until'   => array( 'type' => 'string' ),
+										'domain'        => array( 'type' => 'string' ),
 									),
 									'additionalProperties' => false,
 								),
@@ -183,6 +218,11 @@ class Settings {
 			$valid_until = isset( $disclosure['valid_until'] ) ? sanitize_text_field( $disclosure['valid_until'] ) : '';
 			if ( '' !== $valid_until ) {
 				$entry['valid_until'] = $valid_until;
+			}
+
+			$domain = isset( $disclosure['domain'] ) ? sanitize_text_field( $disclosure['domain'] ) : '';
+			if ( '' !== $domain ) {
+				$entry['domain'] = $domain;
 			}
 
 			$clean[] = $entry;

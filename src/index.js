@@ -124,6 +124,9 @@ const renderDisclosure = ( disclosure ) => {
 	if ( disclosure.valid_until ) {
 		pairs.push( `valid_until = ${ tomlDate( disclosure.valid_until ) }` );
 	}
+	if ( disclosure.domain ) {
+		pairs.push( `domain = ${ tomlString( disclosure.domain ) }` );
+	}
 	return `{ ${ pairs.join( ', ' ) } }`;
 };
 
@@ -507,6 +510,23 @@ function ExistingFileNotice( {
 					</Text>
 					<Text>{ text.explanation }</Text>
 
+					{ canImport &&
+						fileInfo.disclosures.length > 0 &&
+						fileInfo.file_version &&
+						fileInfo.file_version !== carbonTxtVersion && (
+							<Text>
+								{ sprintf(
+									/* translators: 1: carbon.txt syntax version found in the file. 2: carbon.txt syntax version this plugin generates. */
+									__(
+										'This file uses carbon.txt version %1$s. Importing will bring it up to version %2$s, the version this plugin generates.',
+										'wp-carbon-txt-plugin'
+									),
+									fileInfo.file_version,
+									carbonTxtVersion
+								) }
+							</Text>
+						) }
+
 					{ canImport && fileInfo.disclosures.length > 0 && (
 						<Button variant="secondary" onClick={ handleImport }>
 							{ sprintf(
@@ -534,13 +554,31 @@ function ExistingFileNotice( {
 						</Text>
 					) }
 
+					{ fileInfo.unsupported_version && (
+						<Text>
+							{ sprintf(
+								/* translators: %s: carbon.txt syntax version found in the file. */
+								__(
+									'This file uses carbon.txt version %s, which is newer than this plugin supports. Update the plugin, then reload this page to import it.',
+									'wp-carbon-txt-plugin'
+								),
+								fileInfo.unsupported_version
+							) }
+						</Text>
+					) }
+
 					{ ! fileInfo.disclosures.length && fileInfo.raw && (
 						<details>
 							<summary>
-								{ __(
-									"We couldn't automatically read its disclosures — view the raw file",
-									'wp-carbon-txt-plugin'
-								) }
+								{ fileInfo.unsupported_version
+									? __(
+											'View the raw file',
+											'wp-carbon-txt-plugin'
+									  )
+									: __(
+											"We couldn't automatically read its disclosures — view the raw file",
+											'wp-carbon-txt-plugin'
+									  ) }
 							</summary>
 							<pre
 								style={ {
@@ -676,6 +714,22 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 							label: DOC_TYPE_LABELS[ type ] || type,
 						} ) ) }
 						onChange={ ( doc_type ) => onChange( { doc_type } ) }
+						__next40pxDefaultSize
+						__nextHasNoMarginBottom
+					/>
+
+					<TextControl
+						label={ __(
+							'Domain (optional)',
+							'wp-carbon-txt-plugin'
+						) }
+						help={ __(
+							'The domain this disclosure applies to, if this carbon.txt covers multiple domains.',
+							'wp-carbon-txt-plugin'
+						) }
+						placeholder="example.com"
+						value={ disclosure.domain || '' }
+						onChange={ ( domain ) => onChange( { domain } ) }
 						__next40pxDefaultSize
 						__nextHasNoMarginBottom
 					/>

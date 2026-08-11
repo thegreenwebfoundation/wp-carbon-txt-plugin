@@ -19,10 +19,9 @@ namespace WpCarbonTxt;
 
 defined( 'ABSPATH' ) || exit;
 
-const OPTION_NAME        = 'wp_carbon_txt_settings';
-const CACHE_KEY          = 'wp_carbon_txt_rendered';
-const CARBON_TXT_VERSION = '0.5';
-const PLUGIN_FILE        = __FILE__;
+const OPTION_NAME = 'wp_carbon_txt_settings';
+const CACHE_KEY   = 'wp_carbon_txt_rendered';
+const PLUGIN_FILE = __FILE__;
 
 require_once __DIR__ . '/includes/class-settings.php';
 require_once __DIR__ . '/includes/class-renderer.php';

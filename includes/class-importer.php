@@ -105,7 +105,7 @@ class Importer {
 	 * out of it, and (only when nothing could be parsed) its raw contents
 	 * to review.
 	 *
-	 * @return array{exists:bool,path:string,disclosures:array,raw:string}
+	 * @return array{exists:bool,path:string,disclosures:array,raw:string,file_version:?string,unsupported_version:?string}
 	 */
 	public static function summary() {
 		return self::summary_for_path( self::file_path() );
@@ -114,7 +114,7 @@ class Importer {
 	/**
 	 * Same as summary(), for the file at the well-known location.
 	 *
-	 * @return array{exists:bool,path:string,disclosures:array,raw:string}
+	 * @return array{exists:bool,path:string,disclosures:array,raw:string,file_version:?string,unsupported_version:?string}
 	 */
 	public static function well_known_summary() {
 		return self::summary_for_path( self::well_known_file_path() );
@@ -124,14 +124,16 @@ class Importer {
 	 * Build the existing-file summary for a given path.
 	 *
 	 * @param string $path Path to check.
-	 * @return array{exists:bool,path:string,disclosures:array,raw:string}
+	 * @return array{exists:bool,path:string,disclosures:array,raw:string,file_version:?string,unsupported_version:?string}
 	 */
 	private static function summary_for_path( $path ) {
 		$summary = array(
-			'exists'      => false,
-			'path'        => $path,
-			'disclosures' => array(),
-			'raw'         => '',
+			'exists'              => false,
+			'path'                => $path,
+			'disclosures'         => array(),
+			'raw'                 => '',
+			'file_version'        => null,
+			'unsupported_version' => null,
 		);
 
 		if ( ! file_exists( $path ) ) {
@@ -150,7 +152,20 @@ class Importer {
 			return $summary;
 		}
 
-		$disclosures = self::parse_disclosures( $content );
+		$file_version            = self::parse_version( $content );
+		$summary['file_version'] = $file_version;
+
+		// A file written for a newer spec version than this plugin knows
+		// about may use fields or doc_types we can't recognize. Rather than
+		// silently drop or downgrade that data, refuse to parse it and let
+		// the admin know why — they can update the plugin and re-import.
+		if ( $file_version && version_compare( $file_version, Settings::latest_version(), '>' ) ) {
+			$summary['raw']                 = $content;
+			$summary['unsupported_version'] = $file_version;
+			return $summary;
+		}
+
+		$disclosures = self::parse_disclosures( $content, $file_version );
 
 		if ( $disclosures ) {
 			$summary['disclosures'] = $disclosures;
@@ -162,16 +177,34 @@ class Importer {
 	}
 
 	/**
-	 * Parse `[org]` disclosures out of raw carbon.txt content.
+	 * Extract the top-level `version = "..."` value from raw carbon.txt
+	 * content, if present. A file with no version key at all is either
+	 * pre-0.2 syntax (unsupported — falls through to the raw-file display
+	 * like any other unparseable file) or a 0.2 file omitting the then
+	 * optional version key.
 	 *
 	 * @param string $content Raw file content.
+	 * @return string|null
+	 */
+	private static function parse_version( $content ) {
+		if ( preg_match( '/^\s*version\s*=\s*"([^"]*)"/m', $content, $match ) ) {
+			return $match[1];
+		}
+		return null;
+	}
+
+	/**
+	 * Parse `[org]` disclosures out of raw carbon.txt content.
+	 *
+	 * @param string      $content Raw file content.
+	 * @param string|null $version Spec version declared by the file, if any.
 	 * @return array
 	 */
-	private static function parse_disclosures( $content ) {
-		$disclosures = self::parse_array_of_tables( $content );
+	private static function parse_disclosures( $content, $version = null ) {
+		$disclosures = self::parse_array_of_tables( $content, $version );
 
 		if ( ! $disclosures ) {
-			$disclosures = self::parse_inline_array( $content );
+			$disclosures = self::parse_inline_array( $content, $version );
 		}
 
 		return $disclosures;
@@ -180,10 +213,11 @@ class Importer {
 	/**
 	 * Parse repeated `[[org.disclosures]]` blocks.
 	 *
-	 * @param string $content Raw file content.
+	 * @param string      $content Raw file content.
+	 * @param string|null $version Spec version declared by the file, if any.
 	 * @return array
 	 */
-	private static function parse_array_of_tables( $content ) {
+	private static function parse_array_of_tables( $content, $version = null ) {
 		if ( ! preg_match_all( '/\[\[\s*org\.disclosures\s*\]\]/', $content, $headers, PREG_OFFSET_CAPTURE ) ) {
 			return array();
 		}
@@ -202,7 +236,7 @@ class Importer {
 				$block = substr( $block, 0, $next_header[0][1] );
 			}
 
-			$entry = self::extract_disclosure( $block );
+			$entry = self::extract_disclosure( $block, $version );
 			if ( $entry ) {
 				$disclosures[] = $entry;
 			}
@@ -214,10 +248,11 @@ class Importer {
 	/**
 	 * Parse an inline `disclosures = [ { ... }, { ... } ]` array.
 	 *
-	 * @param string $content Raw file content.
+	 * @param string      $content Raw file content.
+	 * @param string|null $version Spec version declared by the file, if any.
 	 * @return array
 	 */
-	private static function parse_inline_array( $content ) {
+	private static function parse_inline_array( $content, $version = null ) {
 		if ( ! preg_match( '/disclosures\s*=\s*\[/', $content, $match, PREG_OFFSET_CAPTURE ) ) {
 			return array();
 		}
@@ -231,7 +266,7 @@ class Importer {
 
 		if ( preg_match_all( '/\{(.*?)\}/s', $array_body, $tables ) ) {
 			foreach ( $tables[1] as $table ) {
-				$entry = self::extract_disclosure( $table );
+				$entry = self::extract_disclosure( $table, $version );
 				if ( $entry ) {
 					$disclosures[] = $entry;
 				}
@@ -285,10 +320,14 @@ class Importer {
 	 * Extract the known disclosure fields from a block of `key = value`
 	 * pairs (either TOML inline-table body or array-of-tables body).
 	 *
-	 * @param string $text Block of text containing key = value pairs.
+	 * @param string      $text    Block of text containing key = value pairs.
+	 * @param string|null $version Spec version declared by the file, if any —
+	 *                              used to validate doc_type against the enum
+	 *                              that was actually valid for that version,
+	 *                              rather than always the newest one.
 	 * @return array|null Disclosure array, or null if no url was found.
 	 */
-	private static function extract_disclosure( $text ) {
+	private static function extract_disclosure( $text, $version = null ) {
 		$pairs = array();
 
 		if ( preg_match_all( '/([A-Za-z_][A-Za-z0-9_]*)\s*=\s*("(?:[^"\\\\]|\\\\.)*"|\d{4}-\d{2}-\d{2})/', $text, $matches, PREG_SET_ORDER ) ) {
@@ -316,7 +355,7 @@ class Importer {
 		// back rather than let an invalid value reach the REST schema,
 		// which would reject the whole save.
 		$doc_type = isset( $pairs['doc_type'] ) ? $pairs['doc_type'] : 'web-page';
-		if ( ! in_array( $doc_type, Settings::doc_types(), true ) ) {
+		if ( ! in_array( $doc_type, Settings::doc_types( $version ), true ) ) {
 			$doc_type = 'web-page';
 		}
 
@@ -331,6 +370,10 @@ class Importer {
 
 		if ( ! empty( $pairs['valid_until'] ) ) {
 			$entry['valid_until'] = $pairs['valid_until'];
+		}
+
+		if ( ! empty( $pairs['domain'] ) ) {
+			$entry['domain'] = $pairs['domain'];
 		}
 
 		return $entry;

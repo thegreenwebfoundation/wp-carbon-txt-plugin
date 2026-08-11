@@ -210,7 +210,7 @@ class Admin {
 					'optionName'       => OPTION_NAME,
 					'docTypes'         => Settings::doc_types(),
 					'carbonTxtUrl'     => home_url( '/carbon.txt' ),
-					'carbonTxtVersion' => CARBON_TXT_VERSION,
+					'carbonTxtVersion' => Settings::latest_version(),
 					'existingFile'     => Importer::summary(),
 					'wellKnownFile'    => Importer::well_known_summary(),
 					'dnsRecord'        => Dns::summary(),
