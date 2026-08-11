@@ -26,6 +26,7 @@ class Endpoint {
 		add_action( 'init', array( __CLASS__, 'add_rewrite_rule' ) );
 		add_filter( 'query_vars', array( __CLASS__, 'register_query_var' ) );
 		add_action( 'parse_request', array( __CLASS__, 'match_plain_request' ) );
+		add_filter( 'redirect_canonical', array( __CLASS__, 'bypass_canonical_redirect' ) );
 		add_action( 'template_redirect', array( __CLASS__, 'maybe_serve' ) );
 	}
 
@@ -67,6 +68,23 @@ class Endpoint {
 		if ( untrailingslashit( $request_path ) === trailingslashit( $home_path ) . 'carbon.txt' ) {
 			$wp->query_vars[ self::QUERY_VAR ] = '1';
 		}
+	}
+
+	/**
+	 * Stop redirect_canonical() from 301-redirecting /carbon.txt to a
+	 * trailing-slash URL. Core exempts is_robots()/is_favicon() the same
+	 * way; without this, every request pays for two full WP bootstraps
+	 * instead of one.
+	 *
+	 * @param string|false $redirect_url Redirect target, or false to cancel.
+	 * @return string|false
+	 */
+	public static function bypass_canonical_redirect( $redirect_url ) {
+		if ( get_query_var( self::QUERY_VAR ) ) {
+			return false;
+		}
+
+		return $redirect_url;
 	}
 
 	/**
