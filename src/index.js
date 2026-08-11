@@ -20,6 +20,8 @@ import {
 	Button,
 	Notice,
 	ExternalLink,
+	Panel,
+	PanelBody,
 	/* eslint-disable @wordpress/no-unsafe-wp-apis -- Long-stable components; revisit when they graduate. */
 	__experimentalToggleGroupControl as ToggleGroupControl,
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
@@ -1097,60 +1099,60 @@ function App() {
 						</CardBody>
 					</Card>
 
-					<Card style={ { marginTop: 16 } }>
-						<CardHeader>
-							<Heading level={ 2 }>
-								{ __(
+					<div style={ { marginTop: 16 } }>
+						<Panel>
+							<PanelBody
+								title={ __(
 									'Keep a copy of your disclosures',
 									'wp-carbon-txt-plugin'
 								) }
-							</Heading>
-						</CardHeader>
-						<CardBody>
-							<VStack spacing={ 2 } alignment="left">
-								<Text>
-									{ __(
-										'Removing this plugin also removes its saved settings. Save a copy of your current disclosures if you ever plan to deactivate or delete it.',
-										'wp-carbon-txt-plugin'
-									) }
-								</Text>
-								<Flex
-									expanded={ false }
-									justify="flex-start"
-									gap={ 2 }
-								>
-									<Button
-										variant="secondary"
-										onClick={ handleCopyBackup }
-									>
-										{ backupCopied
-											? __(
-													'Copied!',
-													'wp-carbon-txt-plugin'
-											  )
-											: __(
-													'Copy to clipboard',
-													'wp-carbon-txt-plugin'
-											  ) }
-									</Button>
-									<Button
-										variant="secondary"
-										onClick={ handleDownloadBackup }
-									>
+								initialOpen={ false }
+							>
+								<VStack spacing={ 2 } alignment="left">
+									<Text>
 										{ __(
-											'Download file',
+											'Removing this plugin also removes its saved settings. Save a copy of your current disclosures if you ever plan to deactivate or delete it.',
 											'wp-carbon-txt-plugin'
 										) }
-									</Button>
-								</Flex>
-								{ backupCopyError && (
-									<Text style={ { color: '#cc1818' } }>
-										{ backupCopyError }
 									</Text>
-								) }
-							</VStack>
-						</CardBody>
-					</Card>
+									<Flex
+										expanded={ false }
+										justify="flex-start"
+										gap={ 2 }
+									>
+										<Button
+											variant="secondary"
+											onClick={ handleCopyBackup }
+										>
+											{ backupCopied
+												? __(
+														'Copied!',
+														'wp-carbon-txt-plugin'
+												  )
+												: __(
+														'Copy to clipboard',
+														'wp-carbon-txt-plugin'
+												  ) }
+										</Button>
+										<Button
+											variant="secondary"
+											onClick={ handleDownloadBackup }
+										>
+											{ __(
+												'Download file',
+												'wp-carbon-txt-plugin'
+											) }
+										</Button>
+									</Flex>
+									{ backupCopyError && (
+										<Text style={ { color: '#cc1818' } }>
+											{ backupCopyError }
+										</Text>
+									) }
+								</VStack>
+							</PanelBody>
+						</Panel>
+					</div>
 				</FlexBlock>
 			</Flex>
 		</>

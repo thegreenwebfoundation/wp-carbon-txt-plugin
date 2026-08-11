@@ -1,0 +1,39 @@
+.wp-carbon-txt-modal-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 100000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 16px;
+	background: rgba( 0, 0, 0, 0.6 );
+}
+
+.wp-carbon-txt-modal-overlay[hidden] {
+	display: none;
+}
+
+.wp-carbon-txt-modal {
+	width: 100%;
+	max-width: 32rem;
+	padding: 24px;
+	background: #fff;
+	border-radius: 4px;
+	box-shadow: 0 4px 24px rgba( 0, 0, 0, 0.2 );
+}
+
+.wp-carbon-txt-modal h2 {
+	margin-top: 0;
+}
+
+.wp-carbon-txt-modal__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	margin-top: 16px;
+}
+
+.wp-carbon-txt-modal__actions .button-link {
+	margin-left: auto;
+}

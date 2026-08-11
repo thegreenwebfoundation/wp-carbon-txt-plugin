@@ -29,10 +29,12 @@ require_once __DIR__ . '/includes/class-endpoint.php';
 require_once __DIR__ . '/includes/class-importer.php';
 require_once __DIR__ . '/includes/class-dns.php';
 require_once __DIR__ . '/includes/class-admin.php';
+require_once __DIR__ . '/includes/class-deactivateprompt.php';
 
 Settings::init();
 Endpoint::init();
 Admin::init();
+DeactivatePrompt::init();
 
 // Load bundled translations.
 add_action(
