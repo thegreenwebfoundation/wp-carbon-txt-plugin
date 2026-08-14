@@ -4,7 +4,7 @@ Tags: carbon.txt, sustainability, emissions, carbon, green web
 Requires at least: 6.6
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 0.3.0
+Stable tag: 0.4.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -45,6 +45,12 @@ Source lives in `src/`. Build the admin app with:
 `npm install && npm run build`
 
 == Changelog ==
+
+= 0.4.0 =
+* Add an optional Green Web Foundation API key and a "Validate" action to check your disclosures against their hosted validator before saving.
+* Support additional carbon.txt spec versions via a per-version document-type table, and add an optional `domain` field to disclosures.
+* Skip WordPress's canonical redirect for `/carbon.txt` so the file isn't redirected away from its expected path.
+* Offer to export your disclosures before deactivating the plugin, and collapse the settings-page backup section by default.
 
 = 0.3.0 =
 * Check the well-known location (`/.well-known/carbon.txt`) for an existing file, with the same import and cleanup tools already offered for the domain root.

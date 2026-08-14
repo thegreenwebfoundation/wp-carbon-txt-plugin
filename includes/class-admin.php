@@ -39,9 +39,11 @@ class Admin {
 	}
 
 	/**
-	 * Register the REST route used to delete an existing carbon.txt file
-	 * found on disk. A plain settings save can't do this — it's a
-	 * filesystem action outside the option store.
+	 * Register this plugin's REST routes: deleting an existing carbon.txt
+	 * file found on disk, validating content against the Green Web
+	 * Foundation's hosted validator, and storing the API key it requires.
+	 * None of these are a plain settings save — they're either a filesystem
+	 * action or a proxied external call, both outside the option store.
 	 */
 	public static function register_rest_routes() {
 		register_rest_route(
@@ -62,6 +64,95 @@ class Admin {
 				),
 			)
 		);
+
+		register_rest_route(
+			'wp-carbon-txt/v1',
+			'/validate',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( __CLASS__, 'rest_validate' ),
+				'permission_callback' => static function () {
+					return current_user_can( 'manage_options' );
+				},
+				'args'                => array(
+					'content' => array(
+						'type'              => 'string',
+						'required'          => true,
+						'validate_callback' => static function ( $value ) {
+							return strlen( $value ) <= Importer::MAX_FILE_SIZE;
+						},
+					),
+				),
+			)
+		);
+
+		register_rest_route(
+			'wp-carbon-txt/v1',
+			'/api-key',
+			array(
+				array(
+					'methods'             => 'POST',
+					'callback'            => array( __CLASS__, 'rest_save_api_key' ),
+					'permission_callback' => static function () {
+						return current_user_can( 'manage_options' );
+					},
+					'args'                => array(
+						'api_key' => array(
+							'type'     => 'string',
+							'required' => true,
+						),
+					),
+				),
+				array(
+					'methods'             => 'DELETE',
+					'callback'            => array( __CLASS__, 'rest_delete_api_key' ),
+					'permission_callback' => static function () {
+						return current_user_can( 'manage_options' );
+					},
+				),
+			)
+		);
+	}
+
+	/**
+	 * REST callback: validate carbon.txt content against the Green Web
+	 * Foundation's hosted validator.
+	 *
+	 * @param \WP_REST_Request $request Request.
+	 * @return \WP_REST_Response|\WP_Error
+	 */
+	public static function rest_validate( $request ) {
+		$result = Api_Client::validate_content( $request->get_param( 'content' ) );
+
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		return rest_ensure_response( $result );
+	}
+
+	/**
+	 * REST callback: store a new API key. Write-only — the key is never
+	 * returned by any REST response, this one included.
+	 *
+	 * @param \WP_REST_Request $request Request.
+	 * @return \WP_REST_Response
+	 */
+	public static function rest_save_api_key( $request ) {
+		Api_Key::set( $request->get_param( 'api_key' ) );
+
+		return rest_ensure_response( array( 'configured' => Api_Key::is_configured() ) );
+	}
+
+	/**
+	 * REST callback: clear the stored API key.
+	 *
+	 * @return \WP_REST_Response
+	 */
+	public static function rest_delete_api_key() {
+		Api_Key::set( '' );
+
+		return rest_ensure_response( array( 'configured' => false ) );
 	}
 
 	/**
@@ -214,6 +305,7 @@ class Admin {
 					'existingFile'     => Importer::summary(),
 					'wellKnownFile'    => Importer::well_known_summary(),
 					'dnsRecord'        => Dns::summary(),
+					'apiKeyConfigured' => Api_Key::is_configured(),
 				)
 			) . ';',
 			'before'

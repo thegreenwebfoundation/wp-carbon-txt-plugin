@@ -3,7 +3,7 @@
  * Plugin Name:       WP Carbon.txt
  * Plugin URI:        https://github.com/thegreenwebfoundation/wp-carbon-txt-plugin
  * Description:       Publish a carbon.txt file with your organisational sustainability disclosures.
- * Version:           0.3.0
+ * Version:           0.4.0
  * Requires at least: 6.6
  * Requires PHP:      7.4
  * Author:            Nahuai Badiola
@@ -28,6 +28,8 @@ require_once __DIR__ . '/includes/class-renderer.php';
 require_once __DIR__ . '/includes/class-endpoint.php';
 require_once __DIR__ . '/includes/class-importer.php';
 require_once __DIR__ . '/includes/class-dns.php';
+require_once __DIR__ . '/includes/class-api-key.php';
+require_once __DIR__ . '/includes/class-api-client.php';
 require_once __DIR__ . '/includes/class-admin.php';
 require_once __DIR__ . '/includes/class-deactivateprompt.php';
 
