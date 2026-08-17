@@ -557,8 +557,9 @@ function ApiKeySection( { configured, onChange } ) {
 
 /**
  * Renders the outcome of a validation request. The API's success response
- * shape isn't publicly documented, so this reads the common fields
- * defensively and falls back to the raw JSON rather than assuming a shape.
+ * shape is `{ success: boolean, data: object, logs: string[] }`. We key off
+ * `success`, surface the validator's `logs` trace, and fall back to the raw
+ * JSON if a future response doesn't match that shape.
  *
  * @param {Object}  props
  * @param {?Object} props.validation Validation state: { status, result?, message? }.
@@ -577,67 +578,83 @@ function ValidationResult( { validation } ) {
 	}
 
 	const { result } = validation;
-	const errors = Array.isArray( result?.errors ) ? result.errors : [];
-	const warnings = Array.isArray( result?.warnings ) ? result.warnings : [];
-	const knownValidField =
-		undefined !== result?.valid || undefined !== result?.is_valid;
-	const isValid = true === result?.valid || true === result?.is_valid;
 
-	if ( ! errors.length && ! warnings.length ) {
-		const readableSuccess = knownValidField ? isValid : true;
-
+	// Unexpected shape — show the raw response rather than guess.
+	if ( 'boolean' !== typeof result?.success ) {
 		return (
-			<Notice
-				status={ readableSuccess ? 'success' : 'info' }
-				isDismissible={ false }
-			>
+			<Notice status="info" isDismissible={ false }>
 				<VStack spacing={ 2 } alignment="left">
 					<Text>
-						{ readableSuccess
-							? __(
-									'Valid — no issues found.',
-									'wp-carbon-txt-plugin'
-							  )
-							: __(
-									'The validator responded, but its result couldn’t be read — see the raw response below.',
-									'wp-carbon-txt-plugin'
-							  ) }
+						{ __(
+							'The validator responded in an unexpected format — see the raw response below.',
+							'wp-carbon-txt-plugin'
+						) }
 					</Text>
-					{ ! readableSuccess && (
-						<pre
-							style={ {
-								whiteSpace: 'pre-wrap',
-								fontSize: 12,
-							} }
-						>
-							{ JSON.stringify( result, null, 2 ) }
-						</pre>
-					) }
+					<pre
+						style={ {
+							whiteSpace: 'pre-wrap',
+							fontSize: 12,
+							overflowX: 'auto',
+						} }
+					>
+						{ JSON.stringify( result, null, 2 ) }
+					</pre>
 				</VStack>
 			</Notice>
 		);
 	}
 
+	const logs = Array.isArray( result.logs ) ? result.logs.map( String ) : [];
+
 	return (
 		<Notice
-			status={ errors.length ? 'error' : 'warning' }
+			status={ result.success ? 'success' : 'error' }
 			isDismissible={ false }
 		>
 			<VStack spacing={ 2 } alignment="left">
-				{ errors.map( ( item, index ) => (
-					<Text key={ `error-${ index }` }>
-						{ 'string' === typeof item
-							? item
-							: JSON.stringify( item ) }
-					</Text>
-				) ) }
-				{ warnings.map( ( item, index ) => (
-					<Text key={ `warning-${ index }` }>
-						{ 'string' === typeof item
-							? item
-							: JSON.stringify( item ) }
-					</Text>
-				) ) }
+				<Text>
+					{ result.success
+						? __(
+								'Valid — your carbon.txt passed the Green Web Foundation validator.',
+								'wp-carbon-txt-plugin'
+						  )
+						: __(
+								'Invalid — the Green Web Foundation validator reported problems. See the log below.',
+								'wp-carbon-txt-plugin'
+						  ) }
+				</Text>
+				{ logs.length > 0 && (
+					<details open={ ! result.success }>
+						<summary style={ { cursor: 'pointer' } }>
+							{ __( 'Validator log', 'wp-carbon-txt-plugin' ) }
+						</summary>
+						<pre
+							style={ {
+								whiteSpace: 'pre-wrap',
+								fontSize: 12,
+								overflowX: 'auto',
+								marginTop: 8,
+							} }
+						>
+							{ logs.join( '\n' ) }
+						</pre>
+					</details>
+				) }
+				<details>
+					<summary style={ { cursor: 'pointer' } }>
+						{ __( 'Full response', 'wp-carbon-txt-plugin' ) }
+					</summary>
+					<pre
+						style={ {
+							whiteSpace: 'pre-wrap',
+							fontSize: 12,
+							overflowX: 'auto',
+							marginTop: 8,
+						} }
+					>
+						{ JSON.stringify( result, null, 2 ) }
+					</pre>
+				</details>
 			</VStack>
 		</Notice>
 	);

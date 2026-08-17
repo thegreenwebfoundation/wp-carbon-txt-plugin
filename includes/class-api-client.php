@@ -87,7 +87,11 @@ class Api_Client {
 		if ( $code < 200 || $code >= 300 ) {
 			return new \WP_Error(
 				'wp_carbon_txt_api_error',
-				__( 'The validation service returned an unexpected error.', 'wp-carbon-txt-plugin' ),
+				sprintf(
+					/* translators: %d: HTTP status code returned by the validation service. */
+					__( 'The validation service returned an unexpected error (HTTP %d).', 'wp-carbon-txt-plugin' ),
+					$code
+				),
 				array( 'status' => 502 )
 			);
 		}

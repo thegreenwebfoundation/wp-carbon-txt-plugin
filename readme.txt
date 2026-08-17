@@ -4,7 +4,7 @@ Tags: carbon.txt, sustainability, emissions, carbon, green web
 Requires at least: 6.6
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 0.4.0
+Stable tag: 0.4.1
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -45,6 +45,11 @@ Source lives in `src/`. Build the admin app with:
 `npm install && npm run build`
 
 == Changelog ==
+
+= 0.4.1 =
+* Fix the Validate result to read the validation service's actual response shape, instead of a response shape that didn't match what it returns.
+* Show the validation service's full response in a collapsible section, alongside its log trace.
+* Include the HTTP status code in the generic validation-error message, for easier troubleshooting.
 
 = 0.4.0 =
 * Add an optional Green Web Foundation API key and a "Validate" action to check your disclosures against their hosted validator before saving.
