@@ -556,111 +556,6 @@ function ApiKeySection( { configured, onChange } ) {
 }
 
 /**
- * Renders the outcome of a validation request. The API's success response
- * shape is `{ success: boolean, data: object, logs: string[] }`. We key off
- * `success`, surface the validator's `logs` trace, and fall back to the raw
- * JSON if a future response doesn't match that shape.
- *
- * @param {Object}  props
- * @param {?Object} props.validation Validation state: { status, result?, message? }.
- */
-function ValidationResult( { validation } ) {
-	if ( ! validation || 'loading' === validation.status ) {
-		return null;
-	}
-
-	if ( 'error' === validation.status ) {
-		return (
-			<Notice status="error" isDismissible={ false }>
-				{ validation.message }
-			</Notice>
-		);
-	}
-
-	const { result } = validation;
-
-	// Unexpected shape — show the raw response rather than guess.
-	if ( 'boolean' !== typeof result?.success ) {
-		return (
-			<Notice status="info" isDismissible={ false }>
-				<VStack spacing={ 2 } alignment="left">
-					<Text>
-						{ __(
-							'The validator responded in an unexpected format — see the raw response below.',
-							'wp-carbon-txt-plugin'
-						) }
-					</Text>
-					<pre
-						style={ {
-							whiteSpace: 'pre-wrap',
-							fontSize: 12,
-							overflowX: 'auto',
-						} }
-					>
-						{ JSON.stringify( result, null, 2 ) }
-					</pre>
-				</VStack>
-			</Notice>
-		);
-	}
-
-	const logs = Array.isArray( result.logs ) ? result.logs.map( String ) : [];
-
-	return (
-		<Notice
-			status={ result.success ? 'success' : 'error' }
-			isDismissible={ false }
-		>
-			<VStack spacing={ 2 } alignment="left">
-				<Text>
-					{ result.success
-						? __(
-								'Valid — your carbon.txt passed the Green Web Foundation validator.',
-								'wp-carbon-txt-plugin'
-						  )
-						: __(
-								'Invalid — the Green Web Foundation validator reported problems. See the log below.',
-								'wp-carbon-txt-plugin'
-						  ) }
-				</Text>
-				{ logs.length > 0 && (
-					<details open={ ! result.success }>
-						<summary style={ { cursor: 'pointer' } }>
-							{ __( 'Validator log', 'wp-carbon-txt-plugin' ) }
-						</summary>
-						<pre
-							style={ {
-								whiteSpace: 'pre-wrap',
-								fontSize: 12,
-								overflowX: 'auto',
-								marginTop: 8,
-							} }
-						>
-							{ logs.join( '\n' ) }
-						</pre>
-					</details>
-				) }
-				<details>
-					<summary style={ { cursor: 'pointer' } }>
-						{ __( 'Full response', 'wp-carbon-txt-plugin' ) }
-					</summary>
-					<pre
-						style={ {
-							whiteSpace: 'pre-wrap',
-							fontSize: 12,
-							overflowX: 'auto',
-							marginTop: 8,
-						} }
-					>
-						{ JSON.stringify( result, null, 2 ) }
-					</pre>
-				</details>
-			</VStack>
-		</Notice>
-	);
-}
-
-/**
  * Warns about a carbon.txt file already on the server — at either the
  * domain root or the well-known location — and offers to import any
  * disclosures parsed out of it. Once a disclosure has been imported and
@@ -1103,7 +998,6 @@ function App() {
 	const [ apiKeyConfigured, setApiKeyConfigured ] = useState(
 		initialApiKeyConfigured
 	);
-	const [ validation, setValidation ] = useState( null );
 
 	const { saveEditedEntityRecord } = useDispatch( coreStore );
 	const isSaving = useSelect(
@@ -1178,31 +1072,6 @@ function App() {
 
 	const importDisclosures = ( toImport ) =>
 		setDisclosures( [ ...disclosures, ...toImport ] );
-
-	// Validates the *current* on-screen disclosures (same source as the
-	// Preview pane and the backup export), so it works before saving.
-	const handleValidate = async () => {
-		setValidation( { status: 'loading' } );
-
-		try {
-			const result = await apiFetch( {
-				path: '/wp-carbon-txt/v1/validate',
-				method: 'POST',
-				data: { content: renderCarbonTxt( disclosures ) },
-			} );
-			setValidation( { status: 'success', result } );
-		} catch ( err ) {
-			setValidation( {
-				status: 'error',
-				message:
-					err?.message ||
-					__(
-						'Validation failed. Please try again.',
-						'wp-carbon-txt-plugin'
-					),
-			} );
-		}
-	};
 
 	const save = async () => {
 		setNotice( null );
@@ -1328,40 +1197,16 @@ function App() {
 								</Button>
 							</FlexItem>
 							<FlexItem>
-								<Flex expanded={ false } gap={ 2 }>
-									<Button
-										variant="secondary"
-										onClick={ handleValidate }
-										isBusy={
-											'loading' === validation?.status
-										}
-										disabled={
-											! apiKeyConfigured ||
-											'loading' === validation?.status
-										}
-									>
-										{ __(
-											'Validate',
-											'wp-carbon-txt-plugin'
-										) }
-									</Button>
-									<Button
-										variant="primary"
-										onClick={ save }
-										isBusy={ isSaving }
-										disabled={ isSaving }
-									>
-										{ __( 'Save', 'wp-carbon-txt-plugin' ) }
-									</Button>
-								</Flex>
+								<Button
+									variant="primary"
+									onClick={ save }
+									isBusy={ isSaving }
+									disabled={ isSaving }
+								>
+									{ __( 'Save', 'wp-carbon-txt-plugin' ) }
+								</Button>
 							</FlexItem>
 						</Flex>
-
-						{ validation && (
-							<div style={ { marginTop: 8 } }>
-								<ValidationResult validation={ validation } />
-							</div>
-						) }
 					</VStack>
 				</FlexBlock>
 
