@@ -42,16 +42,16 @@ class DeactivatePrompt {
 
 		wp_enqueue_style(
 			'wp-carbon-txt-deactivate',
-			$base . 'assets/deactivate.css',
+			$base . 'admin/deactivate.css',
 			array(),
-			filemtime( $path . 'assets/deactivate.css' )
+			filemtime( $path . 'admin/deactivate.css' )
 		);
 
 		wp_enqueue_script(
 			'wp-carbon-txt-deactivate',
-			$base . 'assets/deactivate.js',
+			$base . 'admin/deactivate.js',
 			array(),
-			filemtime( $path . 'assets/deactivate.js' ),
+			filemtime( $path . 'admin/deactivate.js' ),
 			true
 		);
 
