@@ -18,8 +18,9 @@ WP Carbon.txt lets you publish a carbon.txt file at your site root
 You can declare one or more organisational disclosures. For each one,
 choose a document type and point to it by pasting a URL, selecting an
 existing published page, or choosing a file from your media library —
-plus an optional title and valid-until date. A live preview shows the
-exact file that will be served.
+plus an optional title, valid-until date, and domain (for disclosures
+that apply to more than one domain). A live preview shows the exact
+file that will be served.
 
 If a carbon.txt file already exists on your server — at the domain root or
 the well-known location — the settings screen warns you about it and
@@ -27,8 +28,13 @@ offers to import any disclosures found in it. Once imported and saved,
 the old file is permanently deleted so this plugin's own output is what
 gets served.
 
-Before removing the plugin, use the "Keep a copy" section to copy your
-disclosures to the clipboard or download them as a carbon.txt file.
+Removing the plugin also removes its saved settings, so it offers to copy
+or download your disclosures before you deactivate it — and a "Keep a
+copy" section is always available, collapsed, on the settings screen.
+
+Add your Green Web Foundation API key in Settings — the first step
+toward validating your carbon.txt against their hosted validator, coming
+in an upcoming release.
 
 The settings screen also checks your domain for a `carbon-txt-location`
 DNS TXT record (see https://carbontxt.org/faq). If one is set, it takes

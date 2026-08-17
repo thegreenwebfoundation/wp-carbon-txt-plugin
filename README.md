@@ -20,7 +20,9 @@ sustainability data relating to that organisation.
 
   Whichever you pick, revisiting a disclosure later reopens it the same
   way — it remembers the selected page or file, not just the resulting URL.
-- Optional **title** and **valid-until** date per disclosure.
+- Optional **title**, **valid-until** date, and **domain** (for
+  organisations publishing disclosures that apply to more than one domain)
+  per disclosure.
 - **Live preview** of the exact `carbon.txt` that will be served.
 - Detects a **carbon.txt file already on your server**, at either the
   domain root or the well-known location (e.g. created with the
@@ -32,8 +34,12 @@ sustainability data relating to that organisation.
     your settings here have been saved, so this plugin's own output is
     what gets served.
 - **Keep a copy** of your disclosures — copy to clipboard or download as a
-  file — before deactivating or deleting the plugin, since removing it
-  also removes its saved settings.
+  file — since removing the plugin also removes its saved settings.
+  Offered proactively when you deactivate it from the Plugins screen, and
+  always available from a collapsed section on the settings screen.
+- Add your **Green Web Foundation API key** in Settings — the first step
+  toward validating your carbon.txt against their hosted validator, coming
+  in an upcoming release.
 - Detects a **DNS-based delegation record** (a `carbon-txt-location` TXT
   record, per [carbontxt.org/faq](https://carbontxt.org/faq)) on your
   domain, and warns that it takes priority over any file this plugin
