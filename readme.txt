@@ -56,9 +56,6 @@ Source lives in `src/`. Build the admin app with:
 
 = 0.4.1 =
 * Add an optional Green Web Foundation API key field: after each save, the plugin asks the Green Web Foundation's hosted validator to validate your domain (publicly reachable domains only).
-
-= 0.4.0 =
-* Add an optional Green Web Foundation API key field, laying groundwork for validating your domain against their hosted validator.
 * Support additional carbon.txt spec versions via a per-version document-type table, and add an optional `domain` field to disclosures.
 * Skip WordPress's canonical redirect for `/carbon.txt` so the file isn't redirected away from its expected path.
 * Offer to export your disclosures before deactivating the plugin, and collapse the settings-page backup section by default.
