@@ -40,10 +40,11 @@ class Admin {
 
 	/**
 	 * Register this plugin's REST routes: deleting an existing carbon.txt
-	 * file found on disk, validating content against the Green Web
-	 * Foundation's hosted validator, and storing the API key it requires.
-	 * None of these are a plain settings save — they're either a filesystem
-	 * action or a proxied external call, both outside the option store.
+	 * file found on disk, asking the Green Web Foundation's hosted
+	 * validator to validate this site's domain, and storing the API key
+	 * that requires. None of these are a plain settings save — they're
+	 * either a filesystem action or a proxied external call, both outside
+	 * the option store.
 	 */
 	public static function register_rest_routes() {
 		register_rest_route(
@@ -67,22 +68,13 @@ class Admin {
 
 		register_rest_route(
 			'wp-carbon-txt/v1',
-			'/validate',
+			'/validate-domain',
 			array(
 				'methods'             => 'POST',
-				'callback'            => array( __CLASS__, 'rest_validate' ),
+				'callback'            => array( __CLASS__, 'rest_validate_domain' ),
 				'permission_callback' => static function () {
 					return current_user_can( 'manage_options' );
 				},
-				'args'                => array(
-					'content' => array(
-						'type'              => 'string',
-						'required'          => true,
-						'validate_callback' => static function ( $value ) {
-							return strlen( $value ) <= Importer::MAX_FILE_SIZE;
-						},
-					),
-				),
 			)
 		);
 
@@ -115,14 +107,15 @@ class Admin {
 	}
 
 	/**
-	 * REST callback: validate carbon.txt content against the Green Web
-	 * Foundation's hosted validator.
+	 * REST callback: ask the Green Web Foundation's hosted validator to
+	 * validate this site's domain. The domain is resolved server-side from
+	 * home_url() — the request carries nothing, so the stored key can't be
+	 * pointed at a domain the site isn't on.
 	 *
-	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response|\WP_Error
 	 */
-	public static function rest_validate( $request ) {
-		$result = Api_Client::validate_content( $request->get_param( 'content' ) );
+	public static function rest_validate_domain() {
+		$result = Api_Client::validate_domain( Dns::site_domain() );
 
 		if ( is_wp_error( $result ) ) {
 			return $result;

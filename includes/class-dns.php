@@ -31,6 +31,12 @@ class Dns {
 	const CACHE_TTL = DAY_IN_SECONDS;
 
 	/**
+	 * Reserved / development-only suffixes a real public site can't live
+	 * under. Deliberately excludes '.dev' — a real gTLD Google operates.
+	 */
+	const NON_PUBLIC_SUFFIXES = array( 'local', 'test', 'localhost', 'example', 'invalid', 'home', 'localdomain', 'lan', 'internal' );
+
+	/**
 	 * Look up the carbon-txt-location TXT record for a domain, if any.
 	 *
 	 * The record's value isn't guaranteed to be a full URL — real-world
@@ -100,6 +106,39 @@ class Dns {
 		 * @param string|null $domain Domain derived from home_url().
 		 */
 		return apply_filters( 'wp_carbon_txt_dns_domain', $domain );
+	}
+
+	/**
+	 * Whether a domain looks publicly reachable.
+	 *
+	 * The Green Web Foundation's validator fetches carbon.txt from the live
+	 * web, so pointing it at a local or staging hostname would only burn an
+	 * API request on a domain they can't reach — those are skipped instead.
+	 * Subdomains of a public domain (e.g. staging.example.com) pass: they're
+	 * publicly resolvable even when they host non-production copies.
+	 *
+	 * Filterable so hosts with extra local conventions can extend the
+	 * non-public list, and so a test can force the check to pass.
+	 *
+	 * @param string|null $domain Domain to check, without scheme or path.
+	 * @return bool
+	 */
+	public static function is_public_domain( $domain ) {
+		$domain = (string) $domain;
+
+		$is_public =
+			'' !== $domain &&
+			! filter_var( $domain, FILTER_VALIDATE_IP ) &&
+			false !== strpos( $domain, '.' ) &&
+			! preg_match( '/\.(?:' . implode( '|', self::NON_PUBLIC_SUFFIXES ) . ')$/i', $domain );
+
+		/**
+		 * Filters whether a domain is considered publicly reachable.
+		 *
+		 * @param bool   $is_public Whether the domain looks public.
+		 * @param string $domain    The domain being checked.
+		 */
+		return apply_filters( 'wp_carbon_txt_is_public_domain', $is_public, $domain );
 	}
 
 	/**

@@ -19,6 +19,7 @@ import {
 	ComboboxControl,
 	Button,
 	Notice,
+	Spinner,
 	ExternalLink,
 	Panel,
 	PanelBody,
@@ -495,7 +496,7 @@ function ApiKeySection( { configured, onChange } ) {
 			<VStack spacing={ 2 } alignment="left">
 				<Text>
 					{ __(
-						'Add a free Green Web Foundation API key to validate your carbon.txt against their hosted validator before saving.',
+						'Add a free Green Web Foundation API key and every save of this screen asks them to validate your domain — they fetch your live carbon.txt and register the domain in their dashboard when it passes.',
 						'wp-carbon-txt-plugin'
 					) }{ ' ' }
 					<ExternalLink href="https://admin.thegreenwebfoundation.org">
@@ -998,6 +999,10 @@ function App() {
 	const [ apiKeyConfigured, setApiKeyConfigured ] = useState(
 		initialApiKeyConfigured
 	);
+	// Own state — must never clobber the save notice, since a validation
+	// result arrives after "Saved." and describes a different thing.
+	const [ validation, setValidation ] = useState( null );
+	const keyHintShownRef = useRef( false );
 
 	const { saveEditedEntityRecord } = useDispatch( coreStore );
 	const isSaving = useSelect(
@@ -1073,6 +1078,74 @@ function App() {
 	const importDisclosures = ( toImport ) =>
 		setDisclosures( [ ...disclosures, ...toImport ] );
 
+	// Not awaited by save(): the Foundation's fetch can run the full
+	// request timeout, and blocking the primary action on a third-party
+	// round trip would make Save feel broken.
+	const validateDomain = async () => {
+		setValidation( { status: 'in_progress' } );
+
+		try {
+			const result = await apiFetch( {
+				path: '/wp-carbon-txt/v1/validate-domain',
+				method: 'POST',
+			} );
+
+			// Only an explicit `success === true` counts as passing — the
+			// API's response shape isn't documented, so anything else falls
+			// to the failure branch.
+			if ( result.success === true ) {
+				setValidation( {
+					status: 'success',
+					text: __(
+						'The Green Web Foundation validated your domain: your carbon.txt passed, and your domain is now registered in their dashboard.',
+						'wp-carbon-txt-plugin'
+					),
+				} );
+				return;
+			}
+
+			// Observed failure shape: { success: false, errors: [...] },
+			// with `logs` kept as a fallback — take whichever exists, a
+			// handful of lines at most.
+			const lines = [
+				...( Array.isArray( result?.errors ) ? result.errors : [] ),
+				...( Array.isArray( result?.logs ) ? result.logs : [] ),
+			]
+				.map( ( line ) =>
+					'object' === typeof line && null !== line
+						? JSON.stringify( line )
+						: String( line )
+				)
+				.filter( Boolean )
+				.slice( 0, 5 );
+
+			setValidation( {
+				status: 'warning',
+				text: __(
+					'The Green Web Foundation could not validate your domain. Their report:',
+					'wp-carbon-txt-plugin'
+				),
+				lines,
+			} );
+		} catch ( err ) {
+			// Expected skip for non-public domains — explain it, don't alarm.
+			if ( 'wp_carbon_txt_domain_not_public' === err?.code ) {
+				setValidation( { status: 'warning', text: err.message } );
+				return;
+			}
+
+			setValidation( {
+				status: 'error',
+				text:
+					err?.message ||
+					__(
+						'Could not reach the validation service. Please try again.',
+						'wp-carbon-txt-plugin'
+					),
+			} );
+		}
+	};
+
 	const save = async () => {
 		setNotice( null );
 		const saved = await saveEditedEntityRecord( 'root', 'site' );
@@ -1086,6 +1159,19 @@ function App() {
 					'wp-carbon-txt-plugin'
 				),
 			} );
+
+			if ( apiKeyConfigured ) {
+				validateDomain();
+			} else if ( ! keyHintShownRef.current ) {
+				keyHintShownRef.current = true;
+				setNotice( {
+					status: 'info',
+					text: __(
+						'Want the Green Web Foundation to check your carbon.txt? Add your free API key under “Green Web Foundation API key” on this screen — after that, every save is validated automatically.',
+						'wp-carbon-txt-plugin'
+					),
+				} );
+			}
 			return;
 		}
 
@@ -1132,6 +1218,49 @@ function App() {
 						onRemove={ () => setNotice( null ) }
 					>
 						{ notice.text }
+					</Notice>
+				</div>
+			) }
+
+			{ validation && (
+				<div style={ { margin: '16px 0' } }>
+					<Notice
+						status={
+							'in_progress' === validation.status
+								? 'info'
+								: validation.status
+						}
+						onRemove={ () => setValidation( null ) }
+					>
+						{ 'in_progress' === validation.status ? (
+							<Flex expanded={ false } align="center" gap={ 2 }>
+								<Spinner />
+								<Text>
+									{ __(
+										'Asking the Green Web Foundation to validate your domain…',
+										'wp-carbon-txt-plugin'
+									) }
+								</Text>
+							</Flex>
+						) : (
+							<VStack spacing={ 2 } alignment="left">
+								<Text>{ validation.text }</Text>
+								{ validation.lines?.length > 0 && (
+									<ul
+										style={ {
+											margin: 0,
+											paddingLeft: 20,
+											fontSize: 13,
+											lineHeight: 1.6,
+										} }
+									>
+										{ validation.lines.map( ( line, i ) => (
+											<li key={ i }>{ line }</li>
+										) ) }
+									</ul>
+								) }
+							</VStack>
+						) }
 					</Notice>
 				</div>
 			) }

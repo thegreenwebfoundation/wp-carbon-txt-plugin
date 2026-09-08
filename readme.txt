@@ -4,7 +4,7 @@ Tags: carbon.txt, sustainability, emissions, carbon, green web
 Requires at least: 6.6
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 0.4.0
+Stable tag: 0.4.1
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -32,9 +32,11 @@ Removing the plugin also removes its saved settings, so it offers to copy
 or download your disclosures before you deactivate it — and a "Keep a
 copy" section is always available, collapsed, on the settings screen.
 
-Add your Green Web Foundation API key in Settings — the first step
-toward validating your carbon.txt against their hosted validator, coming
-in an upcoming release.
+Add your free Green Web Foundation API key in Settings, and every save
+automatically asks their hosted validator to validate your domain. Their
+validator fetches your live carbon.txt from the web, so this needs a
+publicly reachable site — local and staging domains are skipped — and a
+passing domain is registered in your Green Web Foundation dashboard.
 
 The settings screen also checks your domain for a `carbon-txt-location`
 DNS TXT record (see https://carbontxt.org/faq). If one is set, it takes
@@ -52,8 +54,11 @@ Source lives in `src/`. Build the admin app with:
 
 == Changelog ==
 
+= 0.4.1 =
+* Add an optional Green Web Foundation API key field: after each save, the plugin asks the Green Web Foundation's hosted validator to validate your domain (publicly reachable domains only).
+
 = 0.4.0 =
-* Add an optional Green Web Foundation API key field, laying groundwork for validating carbon.txt content against their hosted validator in an upcoming release.
+* Add an optional Green Web Foundation API key field, laying groundwork for validating your domain against their hosted validator.
 * Support additional carbon.txt spec versions via a per-version document-type table, and add an optional `domain` field to disclosures.
 * Skip WordPress's canonical redirect for `/carbon.txt` so the file isn't redirected away from its expected path.
 * Offer to export your disclosures before deactivating the plugin, and collapse the settings-page backup section by default.
