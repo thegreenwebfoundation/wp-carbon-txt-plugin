@@ -315,12 +315,8 @@ msgid "Domain (optional)"
 msgstr "Dominio (opcional)"
 
 #: build/index.js:6 src/index.js:728
-msgid ""
-"The domain this disclosure applies to, if this carbon.txt covers multiple "
-"domains."
-msgstr ""
-"El dominio al que se aplica esta divulgación, si este carbon.txt cubre "
-"varios dominios."
+msgid "The domain this disclosure applies to."
+msgstr "El dominio al que se aplica esta divulgación."
 
 #: build/index.js:6 src/index.js:740
 msgid "URL source"
@@ -345,6 +341,10 @@ msgstr "Título (opcional)"
 #: build/index.js:6 src/index.js:826
 msgid "Valid until (optional)"
 msgstr "Válido hasta (opcional)"
+
+#: build/index.js:6 src/index.js:958
+msgid "Optional fields"
+msgstr "Campos opcionales"
 
 #: build/index.js:6 src/index.js:981
 msgid ""

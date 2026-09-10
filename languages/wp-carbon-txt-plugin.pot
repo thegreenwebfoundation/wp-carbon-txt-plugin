@@ -313,7 +313,7 @@ msgstr ""
 
 #: build/index.js:6
 #: src/index.js:728
-msgid "The domain this disclosure applies to, if this carbon.txt covers multiple domains."
+msgid "The domain this disclosure applies to."
 msgstr ""
 
 #: build/index.js:6
@@ -344,6 +344,11 @@ msgstr ""
 #: build/index.js:6
 #: src/index.js:826
 msgid "Valid until (optional)"
+msgstr ""
+
+#: build/index.js:6
+#: src/index.js:958
+msgid "Optional fields"
 msgstr ""
 
 #: build/index.js:6

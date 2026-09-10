@@ -817,6 +817,11 @@ const modeFor = ( disclosure ) => {
 function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 	const [ mode, setMode ] = useState( modeFor( disclosure ) );
 
+	// Start the optional-fields panel open when data is already there, so
+	// previously saved values aren't hidden behind a collapsed panel.
+	const hasOptionalFields =
+		disclosure.domain || disclosure.title || disclosure.valid_until;
+
 	return (
 		<Card>
 			<CardHeader>
@@ -855,22 +860,6 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 							label: DOC_TYPE_LABELS[ type ] || type,
 						} ) ) }
 						onChange={ ( doc_type ) => onChange( { doc_type } ) }
-						__next40pxDefaultSize
-						__nextHasNoMarginBottom
-					/>
-
-					<TextControl
-						label={ __(
-							'Domain (optional)',
-							'wp-carbon-txt-plugin'
-						) }
-						help={ __(
-							'The domain this disclosure applies to, if this carbon.txt covers multiple domains.',
-							'wp-carbon-txt-plugin'
-						) }
-						placeholder="example.com"
-						value={ disclosure.domain || '' }
-						onChange={ ( domain ) => onChange( { domain } ) }
 						__next40pxDefaultSize
 						__nextHasNoMarginBottom
 					/>
@@ -950,30 +939,69 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 						/>
 					) }
 
-					<TextControl
-						label={ __(
-							'Title (optional)',
-							'wp-carbon-txt-plugin'
-						) }
-						value={ disclosure.title || '' }
-						onChange={ ( title ) => onChange( { title } ) }
-						__next40pxDefaultSize
-						__nextHasNoMarginBottom
-					/>
+					<div
+						style={ {
+							// PanelBody only renders top/bottom borders; these
+							// side borders close the rectangle.
+							borderLeft: '1px solid #e0e0e0',
+							borderRight: '1px solid #e0e0e0',
+						} }
+					>
+						<PanelBody
+							title={ __(
+								'Optional fields',
+								'wp-carbon-txt-plugin'
+							) }
+							initialOpen={ !! hasOptionalFields }
+						>
+							<VStack spacing={ 4 } alignment="left">
+								<TextControl
+									label={ __(
+										'Domain (optional)',
+										'wp-carbon-txt-plugin'
+									) }
+									help={ __(
+										'The domain this disclosure applies to.',
+										'wp-carbon-txt-plugin'
+									) }
+									placeholder="example.com"
+									value={ disclosure.domain || '' }
+									onChange={ ( domain ) =>
+										onChange( { domain } )
+									}
+									__next40pxDefaultSize
+									__nextHasNoMarginBottom
+								/>
 
-					<TextControl
-						label={ __(
-							'Valid until (optional)',
-							'wp-carbon-txt-plugin'
-						) }
-						type="date"
-						value={ disclosure.valid_until || '' }
-						onChange={ ( valid_until ) =>
-							onChange( { valid_until } )
-						}
-						__next40pxDefaultSize
-						__nextHasNoMarginBottom
-					/>
+								<TextControl
+									label={ __(
+										'Title (optional)',
+										'wp-carbon-txt-plugin'
+									) }
+									value={ disclosure.title || '' }
+									onChange={ ( title ) =>
+										onChange( { title } )
+									}
+									__next40pxDefaultSize
+									__nextHasNoMarginBottom
+								/>
+
+								<TextControl
+									label={ __(
+										'Valid until (optional)',
+										'wp-carbon-txt-plugin'
+									) }
+									type="date"
+									value={ disclosure.valid_until || '' }
+									onChange={ ( valid_until ) =>
+										onChange( { valid_until } )
+									}
+									__next40pxDefaultSize
+									__nextHasNoMarginBottom
+								/>
+							</VStack>
+						</PanelBody>
+					</div>
 				</VStack>
 			</CardBody>
 		</Card>
