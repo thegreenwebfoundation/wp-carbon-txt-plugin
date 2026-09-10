@@ -1230,6 +1230,14 @@ function App() {
 								? 'info'
 								: validation.status
 						}
+						spokenMessage={
+							'in_progress' === validation.status
+								? __(
+										'Asking the Green Web Foundation to validate your domain…',
+										'wp-carbon-txt-plugin'
+								  )
+								: validation.text
+						}
 						onRemove={ () => setValidation( null ) }
 					>
 						{ 'in_progress' === validation.status ? (
