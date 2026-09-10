@@ -330,7 +330,7 @@ class Importer {
 	private static function extract_disclosure( $text, $version = null ) {
 		$pairs = array();
 
-		if ( preg_match_all( '/([A-Za-z_][A-Za-z0-9_]*)\s*=\s*("(?:[^"\\\\]|\\\\.)*"|\d{4}-\d{2}-\d{2})/', $text, $matches, PREG_SET_ORDER ) ) {
+		if ( preg_match_all( '/([A-Za-z_][A-Za-z0-9_]*)\s*=\s*("(?:[^"\\\\]|\\\\.)*"|\'[^\']*\'|\d{4}-\d{2}-\d{2})/', $text, $matches, PREG_SET_ORDER ) ) {
 			foreach ( $matches as $match ) {
 				$key = $match[1];
 				$raw = $match[2];
@@ -338,6 +338,9 @@ class Importer {
 				if ( '"' === $raw[0] ) {
 					$value = substr( $raw, 1, -1 );
 					$value = str_replace( array( '\\"', '\\\\' ), array( '"', '\\' ), $value );
+				} elseif ( "'" === $raw[0] ) {
+					// TOML literal string: no escapes, taken verbatim.
+					$value = substr( $raw, 1, -1 );
 				} else {
 					$value = $raw;
 				}
