@@ -61,7 +61,7 @@ const FILE_LOCATIONS = {
 			'wp-carbon-txt-plugin'
 		),
 		explanation: __(
-			'Depending on your hosting configuration, your web server may keep serving that file directly instead of the version this plugin generates — saving here might not change what visitors see until the existing file is removed or renamed.',
+			'Depending on your hosting configuration, your web server may keep serving the existing file instead of the version this plugin generates — saving here might not change what visitors see until the existing file is removed or renamed.',
 			'wp-carbon-txt-plugin'
 		),
 		spokenMessage: __(
@@ -75,7 +75,7 @@ const FILE_LOCATIONS = {
 			'wp-carbon-txt-plugin'
 		),
 		explanation: __(
-			'A file at your domain root takes priority over this location, so it will typically be ignored as long as your root carbon.txt is reachable — you may still want to review or remove it to avoid confusion.',
+			'The carbon.txt file this plugin generates takes priority over the well-known location. To avoid confusion we recommend removing the existing file.',
 			'wp-carbon-txt-plugin'
 		),
 		spokenMessage: __(
@@ -283,7 +283,7 @@ function PagePicker( { value, pageId, onChange } ) {
 		<ComboboxControl
 			label={ __( 'Select a published page', 'wp-carbon-txt-plugin' ) }
 			help={ __(
-				'Search your pages by title. Its permalink is used as the disclosure URL.',
+				"Search your pages by title. We'll populate your carbon.txt file with its permalink.",
 				'wp-carbon-txt-plugin'
 			) }
 			value={ value }
@@ -667,7 +667,7 @@ function ExistingFileNotice( {
 								{ sprintf(
 									/* translators: 1: carbon.txt syntax version found in the file. 2: carbon.txt syntax version this plugin generates. */
 									__(
-										'This file uses carbon.txt version %1$s. Importing will bring it up to version %2$s, the version this plugin generates.',
+										'This file uses carbon.txt version %1$s. Importing will update it to version %2$s, the version this plugin generates.',
 										'wp-carbon-txt-plugin'
 									),
 									fileInfo.file_version,
@@ -748,7 +748,7 @@ function ExistingFileNotice( {
 							onClick={ () => setConfirming( true ) }
 						>
 							{ __(
-								'Delete existing file so this plugin is used',
+								"Delete existing file so this plugin's carbon.txt file is used instead.",
 								'wp-carbon-txt-plugin'
 							) }
 						</Button>
@@ -1018,7 +1018,7 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 										'wp-carbon-txt-plugin'
 									) }
 									help={ __(
-										'The domain this disclosure applies to.',
+										'If your disclosure also applies to another website domain, you can add that here.',
 										'wp-carbon-txt-plugin'
 									) }
 									placeholder="example.com"
@@ -1247,11 +1247,11 @@ function App() {
 			text: lastError?.message
 				? sprintf(
 						/* translators: %s: error message returned by the server. */
-						__( 'Saving failed: %s', 'wp-carbon-txt-plugin' ),
+						__( 'Save failed: %s', 'wp-carbon-txt-plugin' ),
 						lastError.message
 				  )
 				: __(
-						'Saving failed. Please try again.',
+						'Save failed. Please try again.',
 						'wp-carbon-txt-plugin'
 				  ),
 		} );
@@ -1265,16 +1265,13 @@ function App() {
 			<Text>
 				{ createInterpolateElement(
 					__(
-						'Publish organisational sustainability disclosures at your site’s <link>carbon.txt file</link>.',
+						'A carbon.txt file contains at least one disclosure, which is a link to a publicly available file typically sharing data reported in organisational sustainability reports. Find out more about <link>carbon.txt</link>.',
 						'wp-carbon-txt-plugin'
 					),
 					{
 						link: (
 							<ExternalLink href="https://carbontxt.org">
-								{ __(
-									'carbon.txt file',
-									'wp-carbon-txt-plugin'
-								) }
+								{ __( 'carbon.txt', 'wp-carbon-txt-plugin' ) }
 							</ExternalLink>
 						),
 					}
@@ -1371,7 +1368,7 @@ function App() {
 								<CardBody>
 									<Text>
 										{ __(
-											'No disclosures yet. Add your first sustainability document to publish it in your carbon.txt.',
+											'No disclosures yet. Add your first document link to get started.',
 											'wp-carbon-txt-plugin'
 										) }
 									</Text>
@@ -1466,7 +1463,7 @@ function App() {
 								<VStack spacing={ 2 } alignment="left">
 									<Text>
 										{ __(
-											'Removing this plugin also removes its saved settings. Save a copy of your current disclosures if you ever plan to deactivate or delete it.',
+											"Deactivating will unpublish your site's carbon.txt file but keep it and your settings in case you reactivate. If you plan to delete the plugin your carbon.txt file will be lost - we recommend you save a copy of your file.",
 											'wp-carbon-txt-plugin'
 										) }
 									</Text>

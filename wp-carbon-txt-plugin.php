@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       WP Carbon.txt
  * Plugin URI:        https://github.com/thegreenwebfoundation/wp-carbon-txt-plugin
- * Description:       Publish a carbon.txt file with your organisational sustainability disclosures.
+ * Description:       Carbon.txt is a single recognisable location on any web domain for public sustainability data relating to that organisation. It helps others find the information you share more easily.
  * Version:           0.4.1
  * Requires at least: 6.6
  * Requires PHP:      7.4

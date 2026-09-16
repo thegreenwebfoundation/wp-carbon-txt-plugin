@@ -56,7 +56,7 @@ class Api_Client {
 				'wp_carbon_txt_domain_not_public',
 				sprintf(
 					/* translators: %s: this site's domain. */
-					__( 'Validation skipped: %s doesn’t look like a publicly reachable domain. The Green Web Foundation fetches your carbon.txt from the live web, so it only validates public sites.', 'wp-carbon-txt-plugin' ),
+					__( 'Validation skipped: %s doesn’t look like a publicly reachable domain. For this to work, your carbon.txt file must be accessible on the live web.', 'wp-carbon-txt-plugin' ),
 					'' !== (string) $domain ? (string) $domain : __( 'this site', 'wp-carbon-txt-plugin' )
 				),
 				array( 'status' => 400 )
@@ -89,7 +89,7 @@ class Api_Client {
 		if ( 401 === $code || 403 === $code ) {
 			return new \WP_Error(
 				'wp_carbon_txt_api_unauthorized',
-				__( 'The configured API key was rejected. Check that it’s correct and still active.', 'wp-carbon-txt-plugin' ),
+				__( 'The configured API key was rejected. Check that it’s correct and still active. If you continue to experience problems get in touch with Green Web Foundation\'s support.', 'wp-carbon-txt-plugin' ),
 				array( 'status' => 401 )
 			);
 		}

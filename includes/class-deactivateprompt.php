@@ -63,7 +63,7 @@ class DeactivatePrompt {
 				'content'    => Renderer::render(),
 				'i18n'       => array(
 					'title'      => __( 'Keep a copy of your disclosures', 'wp-carbon-txt-plugin' ),
-					'message'    => __( 'Removing this plugin also removes its saved settings. Save a copy of your current disclosures if you ever plan to deactivate or delete it.', 'wp-carbon-txt-plugin' ),
+					'message'    => __( 'Deactivating will unpublish your site\'s carbon.txt file but keep it and your settings in case you reactivate. If you plan to delete the plugin your carbon.txt file will be lost - we recommend you save a copy of your file.', 'wp-carbon-txt-plugin' ),
 					'copy'       => __( 'Copy to clipboard', 'wp-carbon-txt-plugin' ),
 					'copied'     => __( 'Copied!', 'wp-carbon-txt-plugin' ),
 					'download'   => __( 'Download file', 'wp-carbon-txt-plugin' ),
