@@ -1,7 +1,13 @@
 /**
  * Carbon.txt settings screen.
  */
-import { createRoot, useState, useRef, useEffect } from '@wordpress/element';
+import {
+	createRoot,
+	createInterpolateElement,
+	useState,
+	useRef,
+	useEffect,
+} from '@wordpress/element';
 import { useEntityProp, store as coreStore } from '@wordpress/core-data';
 import { useSelect, useDispatch, select as dataSelect } from '@wordpress/data';
 import { useDebounce } from '@wordpress/compose';
@@ -300,8 +306,9 @@ function PagePicker( { value, pageId, onChange } ) {
  * @param {string}   props.value        Current URL (shown when no attachment title is available).
  * @param {?number}  props.attachmentId ID of the previously selected attachment, if any.
  * @param {Function} props.onChange     Called with { url, attachment_id }.
+ * @param {string}   [props.help]       Optional help text shown below the button.
  */
-function MediaPicker( { value, attachmentId, onChange } ) {
+function MediaPicker( { value, attachmentId, onChange, help } ) {
 	const selectedAttachment = useSelect(
 		( select ) =>
 			attachmentId
@@ -357,6 +364,7 @@ function MediaPicker( { value, attachmentId, onChange } ) {
 					? __( 'Choose a different file', 'wp-carbon-txt-plugin' )
 					: __( 'Choose a file', 'wp-carbon-txt-plugin' ) }
 			</Button>
+			{ help && <Text variant="muted">{ help }</Text> }
 		</VStack>
 	);
 }
@@ -794,7 +802,8 @@ function ExistingFileNotice( {
 
 /**
  * The URL-source mode a disclosure was last edited in, inferred from
- * which internal id field (if any) is set.
+ * which internal id field (if any) is set. A disclosure with no data at
+ * all (a fresh row) defaults to 'page', the first option in the UI.
  *
  * @param {Object} disclosure Disclosure data.
  * @return {string} One of 'url', 'page', or 'media'.
@@ -806,7 +815,10 @@ const modeFor = ( disclosure ) => {
 	if ( disclosure.attachment_id ) {
 		return 'media';
 	}
-	return 'url';
+	if ( disclosure.url ) {
+		return 'url';
+	}
+	return 'page';
 };
 
 /**
@@ -873,13 +885,6 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 						__nextHasNoMarginBottom
 					>
 						<ToggleGroupControlOption
-							value="url"
-							label={ __(
-								'Enter a URL',
-								'wp-carbon-txt-plugin'
-							) }
-						/>
-						<ToggleGroupControlOption
 							value="page"
 							label={ __(
 								'Select a page',
@@ -893,12 +898,23 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 								'wp-carbon-txt-plugin'
 							) }
 						/>
+						<ToggleGroupControlOption
+							value="url"
+							label={ __(
+								'Enter a URL',
+								'wp-carbon-txt-plugin'
+							) }
+						/>
 					</ToggleGroupControl>
 
 					{ 'url' === mode && (
 						<TextControl
 							label={ __(
 								'Disclosure URL',
+								'wp-carbon-txt-plugin'
+							) }
+							help={ __(
+								'Add a custom URL to point to another place on your site or a page on someone else’s website',
 								'wp-carbon-txt-plugin'
 							) }
 							type="url"
@@ -933,6 +949,10 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 						<MediaPicker
 							value={ disclosure.url || '' }
 							attachmentId={ disclosure.attachment_id }
+							help={ __(
+								'Find a file in your site’s media library. It’s best to link to pdfs or structured data files',
+								'wp-carbon-txt-plugin'
+							) }
 							onChange={ ( changes ) =>
 								onChange( { ...changes, page_id: undefined } )
 							}
@@ -954,10 +974,47 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 							) }
 							initialOpen={ !! hasOptionalFields }
 						>
-							<VStack spacing={ 4 } alignment="left">
+							<div
+								style={ {
+									// Fields sit side by side on wide panels and
+									// stack back into a column as space runs out —
+									// auto-fit handles the collapse, no breakpoints.
+									display: 'grid',
+									gridTemplateColumns:
+										'repeat( auto-fit, minmax( 240px, 1fr ) )',
+									gap: '24px',
+								} }
+							>
 								<TextControl
 									label={ __(
-										'Domain (optional)',
+										'Valid until',
+										'wp-carbon-txt-plugin'
+									) }
+									type="date"
+									value={ disclosure.valid_until || '' }
+									onChange={ ( valid_until ) =>
+										onChange( { valid_until } )
+									}
+									__next40pxDefaultSize
+									__nextHasNoMarginBottom
+								/>
+
+								<TextControl
+									label={ __(
+										'Title',
+										'wp-carbon-txt-plugin'
+									) }
+									value={ disclosure.title || '' }
+									onChange={ ( title ) =>
+										onChange( { title } )
+									}
+									__next40pxDefaultSize
+									__nextHasNoMarginBottom
+								/>
+
+								<TextControl
+									label={ __(
+										'Domain',
 										'wp-carbon-txt-plugin'
 									) }
 									help={ __(
@@ -972,34 +1029,7 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 									__next40pxDefaultSize
 									__nextHasNoMarginBottom
 								/>
-
-								<TextControl
-									label={ __(
-										'Title (optional)',
-										'wp-carbon-txt-plugin'
-									) }
-									value={ disclosure.title || '' }
-									onChange={ ( title ) =>
-										onChange( { title } )
-									}
-									__next40pxDefaultSize
-									__nextHasNoMarginBottom
-								/>
-
-								<TextControl
-									label={ __(
-										'Valid until (optional)',
-										'wp-carbon-txt-plugin'
-									) }
-									type="date"
-									value={ disclosure.valid_until || '' }
-									onChange={ ( valid_until ) =>
-										onChange( { valid_until } )
-									}
-									__next40pxDefaultSize
-									__nextHasNoMarginBottom
-								/>
-							</VStack>
+							</div>
 						</PanelBody>
 					</div>
 				</VStack>
@@ -1233,9 +1263,21 @@ function App() {
 				{ __( 'Carbon.txt', 'wp-carbon-txt-plugin' ) }
 			</Heading>
 			<Text>
-				{ __(
-					'Publish organisational sustainability disclosures at your site’s carbon.txt file.',
-					'wp-carbon-txt-plugin'
+				{ createInterpolateElement(
+					__(
+						'Publish organisational sustainability disclosures at your site’s <link>carbon.txt file</link>.',
+						'wp-carbon-txt-plugin'
+					),
+					{
+						link: (
+							<ExternalLink href="https://carbontxt.org">
+								{ __(
+									'carbon.txt file',
+									'wp-carbon-txt-plugin'
+								) }
+							</ExternalLink>
+						),
+					}
 				) }
 			</Text>
 
@@ -1368,7 +1410,10 @@ function App() {
 									isBusy={ isSaving }
 									disabled={ isSaving }
 								>
-									{ __( 'Save', 'wp-carbon-txt-plugin' ) }
+									{ __(
+										'Save and publish',
+										'wp-carbon-txt-plugin'
+									) }
 								</Button>
 							</FlexItem>
 						</Flex>
