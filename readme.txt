@@ -1,10 +1,10 @@
-=== WP Carbon.txt ===
+=== Carbon.txt ===
 Contributors: nahuai
 Tags: carbon.txt, sustainability, emissions, carbon, green web
 Requires at least: 6.6
-Tested up to: 6.9
+Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.4.1
+Stable tag: 0.5
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Publish a carbon.txt file with your organisational sustainability disclosures.
 
 == Description ==
 
-WP Carbon.txt lets you publish a carbon.txt file at your site root
+Carbon.txt lets you publish a carbon.txt file at your site root
 (https://your-site.com/carbon.txt) following the carbon.txt v0.5 syntax.
 
 You can declare one or more organisational disclosures. For each one,
@@ -53,6 +53,11 @@ Source lives in `src/`. Build the admin app with:
 `npm install && npm run build`
 
 == Changelog ==
+
+= 0.5 =
+* Rename the plugin to "Carbon.txt" with the `carbon-txt` slug and text domain, as required for WordPress.org hosting.
+* Remove the manual `load_plugin_textdomain()` call; WordPress loads translations automatically.
+* Update the "Tested up to" version to 7.1.
 
 = 0.4.1 =
 * Add an optional Green Web Foundation API key field: after each save, the plugin asks the Green Web Foundation's hosted validator to validate your domain (publicly reachable domains only).

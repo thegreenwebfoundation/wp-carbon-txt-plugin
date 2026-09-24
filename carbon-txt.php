@@ -1,15 +1,15 @@
 <?php
 /**
- * Plugin Name:       WP Carbon.txt
+ * Plugin Name:       Carbon.txt
  * Plugin URI:        https://github.com/thegreenwebfoundation/wp-carbon-txt-plugin
  * Description:       Carbon.txt is a single recognisable location on any web domain for public sustainability data relating to that organisation. It helps others find the information you share more easily.
- * Version:           0.4.1
+ * Version:           0.5
  * Requires at least: 6.6
  * Requires PHP:      7.4
  * Author:            Nahuai Badiola
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       wp-carbon-txt-plugin
+ * Text Domain:       carbon-txt
  * Domain Path:       /languages
  *
  * @package WpCarbonTxt
@@ -37,18 +37,6 @@ Settings::init();
 Endpoint::init();
 Admin::init();
 DeactivatePrompt::init();
-
-// Load bundled translations.
-add_action(
-	'init',
-	static function () {
-		load_plugin_textdomain(
-			'wp-carbon-txt-plugin',
-			false,
-			dirname( plugin_basename( __FILE__ ) ) . '/languages'
-		);
-	}
-);
 
 // Flush rewrite rules on activation/deactivation so /carbon.txt resolves.
 register_activation_hook(

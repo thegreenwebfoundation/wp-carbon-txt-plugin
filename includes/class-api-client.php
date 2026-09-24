@@ -46,7 +46,7 @@ class Api_Client {
 		if ( ! Api_Key::is_configured() ) {
 			return new \WP_Error(
 				'wp_carbon_txt_no_api_key',
-				__( 'No Green Web Foundation API key is configured.', 'wp-carbon-txt-plugin' ),
+				__( 'No Green Web Foundation API key is configured.', 'carbon-txt' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -56,8 +56,8 @@ class Api_Client {
 				'wp_carbon_txt_domain_not_public',
 				sprintf(
 					/* translators: %s: this site's domain. */
-					__( 'Validation skipped: %s doesn’t look like a publicly reachable domain. For this to work, your carbon.txt file must be accessible on the live web.', 'wp-carbon-txt-plugin' ),
-					'' !== (string) $domain ? (string) $domain : __( 'this site', 'wp-carbon-txt-plugin' )
+					__( 'Validation skipped: %s doesn’t look like a publicly reachable domain. For this to work, your carbon.txt file must be accessible on the live web.', 'carbon-txt' ),
+					'' !== (string) $domain ? (string) $domain : __( 'this site', 'carbon-txt' )
 				),
 				array( 'status' => 400 )
 			);
@@ -78,7 +78,7 @@ class Api_Client {
 		if ( is_wp_error( $response ) ) {
 			return new \WP_Error(
 				'wp_carbon_txt_api_unreachable',
-				__( 'Could not reach the carbon.txt validation service. Check your site’s outbound connectivity and try again.', 'wp-carbon-txt-plugin' ),
+				__( 'Could not reach the carbon.txt validation service. Check your site’s outbound connectivity and try again.', 'carbon-txt' ),
 				array( 'status' => 502 )
 			);
 		}
@@ -89,7 +89,7 @@ class Api_Client {
 		if ( 401 === $code || 403 === $code ) {
 			return new \WP_Error(
 				'wp_carbon_txt_api_unauthorized',
-				__( 'The configured API key was rejected. Check that it’s correct and still active. If you continue to experience problems get in touch with Green Web Foundation\'s support.', 'wp-carbon-txt-plugin' ),
+				__( 'The configured API key was rejected. Check that it’s correct and still active. If you continue to experience problems get in touch with Green Web Foundation\'s support.', 'carbon-txt' ),
 				array( 'status' => 401 )
 			);
 		}
@@ -97,7 +97,7 @@ class Api_Client {
 		if ( 429 === $code ) {
 			return new \WP_Error(
 				'wp_carbon_txt_api_rate_limited',
-				__( 'The validation service rate-limited this request. Please wait a moment and try again.', 'wp-carbon-txt-plugin' ),
+				__( 'The validation service rate-limited this request. Please wait a moment and try again.', 'carbon-txt' ),
 				array( 'status' => 429 )
 			);
 		}
@@ -107,7 +107,7 @@ class Api_Client {
 				'wp_carbon_txt_api_error',
 				sprintf(
 					/* translators: %d: HTTP status code returned by the validation service. */
-					__( 'The validation service returned an unexpected error (HTTP %d).', 'wp-carbon-txt-plugin' ),
+					__( 'The validation service returned an unexpected error (HTTP %d).', 'carbon-txt' ),
 					$code
 				),
 				array( 'status' => 502 )

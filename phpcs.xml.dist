@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<ruleset name="WP Carbon.txt">
-	<description>Coding standards for the WP Carbon.txt plugin.</description>
+<ruleset name="Carbon.txt">
+	<description>Coding standards for the Carbon.txt plugin.</description>
 
 	<file>.</file>
 
@@ -24,7 +24,7 @@
 	<rule ref="WordPress.WP.I18n">
 		<properties>
 			<property name="text_domain" type="array">
-				<element value="wp-carbon-txt-plugin"/>
+				<element value="carbon-txt"/>
 			</property>
 		</properties>
 	</rule>

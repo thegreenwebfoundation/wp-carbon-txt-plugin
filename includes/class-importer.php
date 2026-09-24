@@ -83,7 +83,7 @@ class Importer {
 		if ( ! file_exists( $path ) ) {
 			return new \WP_Error(
 				'wp_carbon_txt_no_file',
-				__( 'No existing carbon.txt file was found to delete.', 'wp-carbon-txt-plugin' ),
+				__( 'No existing carbon.txt file was found to delete.', 'carbon-txt' ),
 				array( 'status' => 404 )
 			);
 		}
@@ -91,7 +91,7 @@ class Importer {
 		if ( ! wp_delete_file_from_directory( $path, dirname( $path ) ) ) {
 			return new \WP_Error(
 				'wp_carbon_txt_delete_failed',
-				__( 'Could not delete the existing file. Check your server file permissions.', 'wp-carbon-txt-plugin' ),
+				__( 'Could not delete the existing file. Check your server file permissions.', 'carbon-txt' ),
 				array( 'status' => 500 )
 			);
 		}

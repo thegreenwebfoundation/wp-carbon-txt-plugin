@@ -1,5 +1,5 @@
 {
-	"name": "nahuai/wp-carbon-txt-plugin",
+	"name": "nahuai/carbon-txt",
 	"description": "Publish a carbon.txt file with your organisational sustainability disclosures.",
 	"type": "wordpress-plugin",
 	"license": "GPL-2.0-or-later",

@@ -222,7 +222,7 @@ class Admin {
 		$links[] = sprintf(
 			'<a href="%s">%s</a>',
 			esc_url( self::settings_url() ),
-			esc_html__( 'Settings', 'wp-carbon-txt-plugin' )
+			esc_html__( 'Settings', 'carbon-txt' )
 		);
 
 		return $links;
@@ -233,8 +233,8 @@ class Admin {
 	 */
 	public static function add_menu() {
 		add_options_page(
-			__( 'Carbon.txt', 'wp-carbon-txt-plugin' ),
-			__( 'Carbon.txt', 'wp-carbon-txt-plugin' ),
+			__( 'Carbon.txt', 'carbon-txt' ),
+			__( 'Carbon.txt', 'carbon-txt' ),
 			'manage_options',
 			self::SLUG,
 			array( __CLASS__, 'render_root' )
@@ -283,7 +283,7 @@ class Admin {
 
 		wp_set_script_translations(
 			'wp-carbon-txt-admin',
-			'wp-carbon-txt-plugin',
+			'carbon-txt',
 			plugin_dir_path( __DIR__ ) . 'languages'
 		);
 

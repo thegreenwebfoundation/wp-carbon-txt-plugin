@@ -1,4 +1,4 @@
-# WP Carbon.txt
+# Carbon.txt
 
 A user-friendly WordPress plugin to publish a
 [`carbon.txt`](https://carbontxt.org) file with your organisation's
@@ -69,7 +69,7 @@ npm install
 npm run build
 ```
 
-Activate **WP Carbon.txt**, then go to **Settings → Carbon.txt** to add your
+Activate **Carbon.txt**, then go to **Settings → Carbon.txt** to add your
 disclosures.
 
 ## Development
@@ -94,20 +94,20 @@ Source strings live in PHP and `src/index.js`. To regenerate the catalog and
 compile a locale (Spanish shown):
 
 ```sh
-wp i18n make-pot . languages/wp-carbon-txt-plugin.pot --exclude=build,node_modules,vendor
-wp i18n make-mo languages/wp-carbon-txt-plugin-es_ES.po languages/
-wp i18n make-json languages/wp-carbon-txt-plugin-es_ES.po --no-purge
+wp i18n make-pot . languages/carbon-txt.pot --exclude=build,node_modules,vendor
+wp i18n make-mo languages/carbon-txt-es_ES.po languages/
+wp i18n make-json languages/carbon-txt-es_ES.po --no-purge
 ```
 
 The JavaScript catalog is named after the script handle
-(`wp-carbon-txt-plugin-es_ES-wp-carbon-txt-admin.json`) so WordPress loads it
+(`carbon-txt-es_ES-wp-carbon-txt-admin.json`) so WordPress loads it
 without depending on a source-path hash.
 
 ## Contributing
 
 This plugin is developed in the open and contributions are welcome. Please
 open an issue or pull request on
-[GitHub](https://github.com/thegreenwebfoundation/wp-carbon-txt-plugin). Run
+[GitHub](https://github.com/thegreenwebfoundation/carbon-txt). Run
 the linters above before submitting.
 
 ## License

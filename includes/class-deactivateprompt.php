@@ -62,14 +62,14 @@ class DeactivatePrompt {
 				'pluginFile' => plugin_basename( PLUGIN_FILE ),
 				'content'    => Renderer::render(),
 				'i18n'       => array(
-					'title'      => __( 'Keep a copy of your disclosures', 'wp-carbon-txt-plugin' ),
-					'message'    => __( 'Deactivating will unpublish your site\'s carbon.txt file but keep it and your settings in case you reactivate. If you plan to delete the plugin your carbon.txt file will be lost - we recommend you save a copy of your file.', 'wp-carbon-txt-plugin' ),
-					'copy'       => __( 'Copy to clipboard', 'wp-carbon-txt-plugin' ),
-					'copied'     => __( 'Copied!', 'wp-carbon-txt-plugin' ),
-					'download'   => __( 'Download file', 'wp-carbon-txt-plugin' ),
-					'deactivate' => __( 'Deactivate', 'wp-carbon-txt-plugin' ),
-					'cancel'     => __( 'Cancel', 'wp-carbon-txt-plugin' ),
-					'copyError'  => __( 'Could not copy automatically — please select and copy the preview text manually.', 'wp-carbon-txt-plugin' ),
+					'title'      => __( 'Keep a copy of your disclosures', 'carbon-txt' ),
+					'message'    => __( 'Deactivating will unpublish your site\'s carbon.txt file but keep it and your settings in case you reactivate. If you plan to delete the plugin your carbon.txt file will be lost - we recommend you save a copy of your file.', 'carbon-txt' ),
+					'copy'       => __( 'Copy to clipboard', 'carbon-txt' ),
+					'copied'     => __( 'Copied!', 'carbon-txt' ),
+					'download'   => __( 'Download file', 'carbon-txt' ),
+					'deactivate' => __( 'Deactivate', 'carbon-txt' ),
+					'cancel'     => __( 'Cancel', 'carbon-txt' ),
+					'copyError'  => __( 'Could not copy automatically — please select and copy the preview text manually.', 'carbon-txt' ),
 				),
 			)
 		);

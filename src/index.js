@@ -58,41 +58,41 @@ const FILE_LOCATIONS = {
 	root: {
 		intro: __(
 			'An existing carbon.txt file was found on your server at:',
-			'wp-carbon-txt-plugin'
+			'carbon-txt'
 		),
 		explanation: __(
 			'Depending on your hosting configuration, your web server may keep serving the existing file instead of the version this plugin generates — saving here might not change what visitors see until the existing file is removed or renamed.',
-			'wp-carbon-txt-plugin'
+			'carbon-txt'
 		),
 		spokenMessage: __(
 			'An existing carbon.txt file was found on your server.',
-			'wp-carbon-txt-plugin'
+			'carbon-txt'
 		),
 	},
 	well_known: {
 		intro: __(
 			'A carbon.txt file was also found at the well-known location:',
-			'wp-carbon-txt-plugin'
+			'carbon-txt'
 		),
 		explanation: __(
 			'The carbon.txt file this plugin generates takes priority over the well-known location. To avoid confusion we recommend removing the existing file.',
-			'wp-carbon-txt-plugin'
+			'carbon-txt'
 		),
 		spokenMessage: __(
 			'A carbon.txt file was found at the well-known location.',
-			'wp-carbon-txt-plugin'
+			'carbon-txt'
 		),
 	},
 };
 
 const DOC_TYPE_LABELS = {
-	'web-page': __( 'Web page', 'wp-carbon-txt-plugin' ),
-	'annual-report': __( 'Annual report', 'wp-carbon-txt-plugin' ),
-	'sustainability-page': __( 'Sustainability page', 'wp-carbon-txt-plugin' ),
-	certificate: __( 'Certificate', 'wp-carbon-txt-plugin' ),
-	'csrd-report': __( 'CSRD report', 'wp-carbon-txt-plugin' ),
-	'ai-model-card': __( 'AI model card', 'wp-carbon-txt-plugin' ),
-	other: __( 'Other', 'wp-carbon-txt-plugin' ),
+	'web-page': __( 'Web page', 'carbon-txt' ),
+	'annual-report': __( 'Annual report', 'carbon-txt' ),
+	'sustainability-page': __( 'Sustainability page', 'carbon-txt' ),
+	certificate: __( 'Certificate', 'carbon-txt' ),
+	'csrd-report': __( 'CSRD report', 'carbon-txt' ),
+	'ai-model-card': __( 'AI model card', 'carbon-txt' ),
+	other: __( 'Other', 'carbon-txt' ),
 };
 
 /**
@@ -281,10 +281,10 @@ function PagePicker( { value, pageId, onChange } ) {
 
 	return (
 		<ComboboxControl
-			label={ __( 'Select a published page', 'wp-carbon-txt-plugin' ) }
+			label={ __( 'Select a published page', 'carbon-txt' ) }
 			help={ __(
 				"Search your pages by title. We'll populate your carbon.txt file with its permalink.",
-				'wp-carbon-txt-plugin'
+				'carbon-txt'
 			) }
 			value={ value }
 			options={ options }
@@ -323,8 +323,8 @@ function MediaPicker( { value, attachmentId, onChange, help } ) {
 
 	const openMediaLibrary = () => {
 		const frame = wp.media( {
-			title: __( 'Select a file', 'wp-carbon-txt-plugin' ),
-			button: { text: __( 'Use this file', 'wp-carbon-txt-plugin' ) },
+			title: __( 'Select a file', 'carbon-txt' ),
+			button: { text: __( 'Use this file', 'carbon-txt' ) },
 			multiple: false,
 		} );
 
@@ -354,15 +354,15 @@ function MediaPicker( { value, attachmentId, onChange, help } ) {
 				{ label
 					? sprintf(
 							/* translators: %s: selected file name or URL. */
-							__( 'Selected file: %s', 'wp-carbon-txt-plugin' ),
+							__( 'Selected file: %s', 'carbon-txt' ),
 							label
 					  )
-					: __( 'No file selected yet.', 'wp-carbon-txt-plugin' ) }
+					: __( 'No file selected yet.', 'carbon-txt' ) }
 			</Text>
 			<Button variant="secondary" onClick={ openMediaLibrary }>
 				{ value
-					? __( 'Choose a different file', 'wp-carbon-txt-plugin' )
-					: __( 'Choose a file', 'wp-carbon-txt-plugin' ) }
+					? __( 'Choose a different file', 'carbon-txt' )
+					: __( 'Choose a file', 'carbon-txt' ) }
 			</Button>
 			{ help && <Text variant="muted">{ help }</Text> }
 		</VStack>
@@ -404,21 +404,21 @@ function DnsRecordNotice( { dnsRecord } ) {
 				isDismissible={ false }
 				spokenMessage={ __(
 					'A DNS record was found delegating carbon.txt discovery to another location.',
-					'wp-carbon-txt-plugin'
+					'carbon-txt'
 				) }
 			>
 				<VStack spacing={ 2 } alignment="left">
 					<Text>
 						{ __(
 							'A DNS TXT record on your domain delegates carbon.txt discovery to:',
-							'wp-carbon-txt-plugin'
+							'carbon-txt'
 						) }{ ' ' }
 						<code>{ dnsRecord.location }</code>
 					</Text>
 					<Text>
 						{ __(
 							'A DNS record takes priority over any file this plugin generates — visitors and validators will follow it instead. If that’s intentional, no action is needed; otherwise, review or remove the carbon-txt-location TXT record on your domain so this plugin’s file is used.',
-							'wp-carbon-txt-plugin'
+							'carbon-txt'
 						) }
 					</Text>
 				</VStack>
@@ -463,7 +463,7 @@ function ApiKeySection( { configured, onChange } ) {
 		} catch ( err ) {
 			setError(
 				err?.message ||
-					__( 'Could not save the API key.', 'wp-carbon-txt-plugin' )
+					__( 'Could not save the API key.', 'carbon-txt' )
 			);
 		} finally {
 			setIsSaving( false );
@@ -485,7 +485,7 @@ function ApiKeySection( { configured, onChange } ) {
 				err?.message ||
 					__(
 						'Could not remove the API key.',
-						'wp-carbon-txt-plugin'
+						'carbon-txt'
 					)
 			);
 		} finally {
@@ -497,7 +497,7 @@ function ApiKeySection( { configured, onChange } ) {
 		<PanelBody
 			title={ __(
 				'Green Web Foundation API key',
-				'wp-carbon-txt-plugin'
+				'carbon-txt'
 			) }
 			initialOpen={ false }
 		>
@@ -505,10 +505,10 @@ function ApiKeySection( { configured, onChange } ) {
 				<Text>
 					{ __(
 						'Add a free Green Web Foundation API key and every save of this screen asks them to validate your domain — they fetch your live carbon.txt and register the domain in their dashboard when it passes.',
-						'wp-carbon-txt-plugin'
+						'carbon-txt'
 					) }{ ' ' }
 					<ExternalLink href="https://admin.thegreenwebfoundation.org">
-						{ __( 'Get an API key', 'wp-carbon-txt-plugin' ) }
+						{ __( 'Get an API key', 'carbon-txt' ) }
 					</ExternalLink>
 				</Text>
 
@@ -517,7 +517,7 @@ function ApiKeySection( { configured, onChange } ) {
 						<Text>
 							{ __(
 								'An API key is saved.',
-								'wp-carbon-txt-plugin'
+								'carbon-txt'
 							) }
 						</Text>
 						<Button
@@ -527,7 +527,7 @@ function ApiKeySection( { configured, onChange } ) {
 							isBusy={ isRemoving }
 							disabled={ isRemoving }
 						>
-							{ __( 'Remove key', 'wp-carbon-txt-plugin' ) }
+							{ __( 'Remove key', 'carbon-txt' ) }
 						</Button>
 					</Flex>
 				) : (
@@ -536,7 +536,7 @@ function ApiKeySection( { configured, onChange } ) {
 							<TextControl
 								label={ __(
 									'API key',
-									'wp-carbon-txt-plugin'
+									'carbon-txt'
 								) }
 								type="password"
 								value={ value }
@@ -551,7 +551,7 @@ function ApiKeySection( { configured, onChange } ) {
 							isBusy={ isSaving }
 							disabled={ isSaving || '' === value.trim() }
 						>
-							{ __( 'Save key', 'wp-carbon-txt-plugin' ) }
+							{ __( 'Save key', 'carbon-txt' ) }
 						</Button>
 					</Flex>
 				) }
@@ -606,7 +606,7 @@ function ExistingFileNotice( {
 				error?.message ||
 					__(
 						'Could not delete the existing file.',
-						'wp-carbon-txt-plugin'
+						'carbon-txt'
 					)
 			);
 		} finally {
@@ -668,7 +668,7 @@ function ExistingFileNotice( {
 									/* translators: 1: carbon.txt syntax version found in the file. 2: carbon.txt syntax version this plugin generates. */
 									__(
 										'This file uses carbon.txt version %1$s. Importing will update it to version %2$s, the version this plugin generates.',
-										'wp-carbon-txt-plugin'
+										'carbon-txt'
 									),
 									fileInfo.file_version,
 									carbonTxtVersion
@@ -682,7 +682,7 @@ function ExistingFileNotice( {
 								/* translators: %d: number of disclosures found in the existing file. */
 								__(
 									'Import %d disclosure(s) from this file',
-									'wp-carbon-txt-plugin'
+									'carbon-txt'
 								),
 								fileInfo.disclosures.length
 							) }
@@ -694,11 +694,11 @@ function ExistingFileNotice( {
 							{ isDeleting
 								? __(
 										'Removing the old file…',
-										'wp-carbon-txt-plugin'
+										'carbon-txt'
 								  )
 								: __(
 										'Imported. Once you save, this file will be permanently deleted — its data now lives in your plugin settings.',
-										'wp-carbon-txt-plugin'
+										'carbon-txt'
 								  ) }
 						</Text>
 					) }
@@ -709,7 +709,7 @@ function ExistingFileNotice( {
 								/* translators: %s: carbon.txt syntax version found in the file. */
 								__(
 									'This file uses carbon.txt version %s, which is newer than this plugin supports. Update the plugin, then reload this page to import it.',
-									'wp-carbon-txt-plugin'
+									'carbon-txt'
 								),
 								fileInfo.unsupported_version
 							) }
@@ -722,11 +722,11 @@ function ExistingFileNotice( {
 								{ fileInfo.unsupported_version
 									? __(
 											'View the raw file',
-											'wp-carbon-txt-plugin'
+											'carbon-txt'
 									  )
 									: __(
 											"We couldn't automatically read its disclosures — view the raw file",
-											'wp-carbon-txt-plugin'
+											'carbon-txt'
 									  ) }
 							</summary>
 							<pre
@@ -749,7 +749,7 @@ function ExistingFileNotice( {
 						>
 							{ __(
 								"Delete existing file so this plugin's carbon.txt file is used instead.",
-								'wp-carbon-txt-plugin'
+								'carbon-txt'
 							) }
 						</Button>
 					) }
@@ -759,7 +759,7 @@ function ExistingFileNotice( {
 							<Text>
 								{ __(
 									'This cannot be undone. Continue?',
-									'wp-carbon-txt-plugin'
+									'carbon-txt'
 								) }
 							</Text>
 							<Flex
@@ -776,7 +776,7 @@ function ExistingFileNotice( {
 								>
 									{ __(
 										'Yes, delete it',
-										'wp-carbon-txt-plugin'
+										'carbon-txt'
 									) }
 								</Button>
 								<Button
@@ -784,7 +784,7 @@ function ExistingFileNotice( {
 									disabled={ isDeleting }
 									onClick={ () => setConfirming( false ) }
 								>
-									{ __( 'Cancel', 'wp-carbon-txt-plugin' ) }
+									{ __( 'Cancel', 'carbon-txt' ) }
 								</Button>
 							</Flex>
 							{ deleteError && (
@@ -840,7 +840,7 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 				<Heading level={ 3 }>
 					{ sprintf(
 						/* translators: %d: disclosure number. */
-						__( 'Disclosure %d', 'wp-carbon-txt-plugin' ),
+						__( 'Disclosure %d', 'carbon-txt' ),
 						index + 1
 					) }
 				</Heading>
@@ -850,7 +850,7 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 					onClick={ onRemove }
 					size="small"
 				>
-					{ __( 'Remove', 'wp-carbon-txt-plugin' ) }
+					{ __( 'Remove', 'carbon-txt' ) }
 				</Button>
 			</CardHeader>
 			<CardBody>
@@ -859,13 +859,13 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 						<Notice status="warning" isDismissible={ false }>
 							{ __(
 								'This disclosure needs a URL, page, or file to be included in your carbon.txt.',
-								'wp-carbon-txt-plugin'
+								'carbon-txt'
 							) }
 						</Notice>
 					) }
 
 					<SelectControl
-						label={ __( 'Document type', 'wp-carbon-txt-plugin' ) }
+						label={ __( 'Document type', 'carbon-txt' ) }
 						value={ disclosure.doc_type || docTypes[ 0 ] }
 						options={ docTypes.map( ( type ) => ( {
 							value: type,
@@ -877,7 +877,7 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 					/>
 
 					<ToggleGroupControl
-						label={ __( 'URL source', 'wp-carbon-txt-plugin' ) }
+						label={ __( 'URL source', 'carbon-txt' ) }
 						value={ mode }
 						onChange={ setMode }
 						isBlock
@@ -888,21 +888,21 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 							value="page"
 							label={ __(
 								'Select a page',
-								'wp-carbon-txt-plugin'
+								'carbon-txt'
 							) }
 						/>
 						<ToggleGroupControlOption
 							value="media"
 							label={ __(
 								'Choose a file',
-								'wp-carbon-txt-plugin'
+								'carbon-txt'
 							) }
 						/>
 						<ToggleGroupControlOption
 							value="url"
 							label={ __(
 								'Enter a URL',
-								'wp-carbon-txt-plugin'
+								'carbon-txt'
 							) }
 						/>
 					</ToggleGroupControl>
@@ -911,11 +911,11 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 						<TextControl
 							label={ __(
 								'Disclosure URL',
-								'wp-carbon-txt-plugin'
+								'carbon-txt'
 							) }
 							help={ __(
 								'Add a custom URL to point to another place on your site or a page on someone else’s website',
-								'wp-carbon-txt-plugin'
+								'carbon-txt'
 							) }
 							type="url"
 							placeholder="https://example.com/sustainability"
@@ -951,7 +951,7 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 							attachmentId={ disclosure.attachment_id }
 							help={ __(
 								'Find a file in your site’s media library. It’s best to link to pdfs or structured data files',
-								'wp-carbon-txt-plugin'
+								'carbon-txt'
 							) }
 							onChange={ ( changes ) =>
 								onChange( { ...changes, page_id: undefined } )
@@ -970,7 +970,7 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 						<PanelBody
 							title={ __(
 								'Optional fields',
-								'wp-carbon-txt-plugin'
+								'carbon-txt'
 							) }
 							initialOpen={ !! hasOptionalFields }
 						>
@@ -988,7 +988,7 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 								<TextControl
 									label={ __(
 										'Valid until',
-										'wp-carbon-txt-plugin'
+										'carbon-txt'
 									) }
 									type="date"
 									value={ disclosure.valid_until || '' }
@@ -1002,7 +1002,7 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 								<TextControl
 									label={ __(
 										'Title',
-										'wp-carbon-txt-plugin'
+										'carbon-txt'
 									) }
 									value={ disclosure.title || '' }
 									onChange={ ( title ) =>
@@ -1015,11 +1015,11 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 								<TextControl
 									label={ __(
 										'Domain',
-										'wp-carbon-txt-plugin'
+										'carbon-txt'
 									) }
 									help={ __(
 										'If your disclosure also applies to another website domain, you can add that here.',
-										'wp-carbon-txt-plugin'
+										'carbon-txt'
 									) }
 									placeholder="example.com"
 									value={ disclosure.domain || '' }
@@ -1115,7 +1115,7 @@ function App() {
 			setBackupCopyError(
 				__(
 					'Could not copy automatically — please select and copy the preview text manually.',
-					'wp-carbon-txt-plugin'
+					'carbon-txt'
 				)
 			);
 		}
@@ -1156,7 +1156,7 @@ function App() {
 					status: 'success',
 					text: __(
 						'The Green Web Foundation validated your domain: your carbon.txt passed, and your domain is now registered in their dashboard.',
-						'wp-carbon-txt-plugin'
+						'carbon-txt'
 					),
 				} );
 				return;
@@ -1181,7 +1181,7 @@ function App() {
 				status: 'warning',
 				text: __(
 					'The Green Web Foundation could not validate your domain. Their report:',
-					'wp-carbon-txt-plugin'
+					'carbon-txt'
 				),
 				lines,
 			} );
@@ -1198,7 +1198,7 @@ function App() {
 					err?.message ||
 					__(
 						'Could not reach the validation service. Please try again.',
-						'wp-carbon-txt-plugin'
+						'carbon-txt'
 					),
 			} );
 		}
@@ -1214,7 +1214,7 @@ function App() {
 				status: 'success',
 				text: __(
 					'Saved. Your carbon.txt is up to date.',
-					'wp-carbon-txt-plugin'
+					'carbon-txt'
 				),
 			} );
 
@@ -1226,7 +1226,7 @@ function App() {
 					status: 'info',
 					text: __(
 						'Want the Green Web Foundation to check your carbon.txt? Add your free API key under “Green Web Foundation API key” on this screen — after that, every save is validated automatically.',
-						'wp-carbon-txt-plugin'
+						'carbon-txt'
 					),
 				} );
 			}
@@ -1247,12 +1247,12 @@ function App() {
 			text: lastError?.message
 				? sprintf(
 						/* translators: %s: error message returned by the server. */
-						__( 'Save failed: %s', 'wp-carbon-txt-plugin' ),
+						__( 'Save failed: %s', 'carbon-txt' ),
 						lastError.message
 				  )
 				: __(
 						'Save failed. Please try again.',
-						'wp-carbon-txt-plugin'
+						'carbon-txt'
 				  ),
 		} );
 	};
@@ -1260,18 +1260,18 @@ function App() {
 	return (
 		<>
 			<Heading level={ 1 }>
-				{ __( 'Carbon.txt', 'wp-carbon-txt-plugin' ) }
+				{ __( 'Carbon.txt', 'carbon-txt' ) }
 			</Heading>
 			<Text>
 				{ createInterpolateElement(
 					__(
 						'A carbon.txt file contains at least one disclosure, which is a link to a publicly available file typically sharing data reported in organisational sustainability reports. Find out more about <link>carbon.txt</link>.',
-						'wp-carbon-txt-plugin'
+						'carbon-txt'
 					),
 					{
 						link: (
 							<ExternalLink href="https://carbontxt.org">
-								{ __( 'carbon.txt', 'wp-carbon-txt-plugin' ) }
+								{ __( 'carbon.txt', 'carbon-txt' ) }
 							</ExternalLink>
 						),
 					}
@@ -1301,7 +1301,7 @@ function App() {
 							'in_progress' === validation.status
 								? __(
 										'Asking the Green Web Foundation to validate your domain…',
-										'wp-carbon-txt-plugin'
+										'carbon-txt'
 								  )
 								: validation.text
 						}
@@ -1313,7 +1313,7 @@ function App() {
 								<Text>
 									{ __(
 										'Asking the Green Web Foundation to validate your domain…',
-										'wp-carbon-txt-plugin'
+										'carbon-txt'
 									) }
 								</Text>
 							</Flex>
@@ -1369,7 +1369,7 @@ function App() {
 									<Text>
 										{ __(
 											'No disclosures yet. Add your first document link to get started.',
-											'wp-carbon-txt-plugin'
+											'carbon-txt'
 										) }
 									</Text>
 								</CardBody>
@@ -1396,7 +1396,7 @@ function App() {
 								>
 									{ __(
 										'Add disclosure',
-										'wp-carbon-txt-plugin'
+										'carbon-txt'
 									) }
 								</Button>
 							</FlexItem>
@@ -1409,7 +1409,7 @@ function App() {
 								>
 									{ __(
 										'Save and publish',
-										'wp-carbon-txt-plugin'
+										'carbon-txt'
 									) }
 								</Button>
 							</FlexItem>
@@ -1421,12 +1421,12 @@ function App() {
 					<Card>
 						<CardHeader>
 							<Heading level={ 2 }>
-								{ __( 'Preview', 'wp-carbon-txt-plugin' ) }
+								{ __( 'Preview', 'carbon-txt' ) }
 							</Heading>
 							<ExternalLink href={ carbonTxtUrl }>
 								{ __(
 									'View live file',
-									'wp-carbon-txt-plugin'
+									'carbon-txt'
 								) }
 							</ExternalLink>
 						</CardHeader>
@@ -1456,7 +1456,7 @@ function App() {
 							<PanelBody
 								title={ __(
 									'Keep a copy of your disclosures',
-									'wp-carbon-txt-plugin'
+									'carbon-txt'
 								) }
 								initialOpen={ false }
 							>
@@ -1464,7 +1464,7 @@ function App() {
 									<Text>
 										{ __(
 											"Deactivating will unpublish your site's carbon.txt file but keep it and your settings in case you reactivate. If you plan to delete the plugin your carbon.txt file will be lost - we recommend you save a copy of your file.",
-											'wp-carbon-txt-plugin'
+											'carbon-txt'
 										) }
 									</Text>
 									<Flex
@@ -1479,11 +1479,11 @@ function App() {
 											{ backupCopied
 												? __(
 														'Copied!',
-														'wp-carbon-txt-plugin'
+														'carbon-txt'
 												  )
 												: __(
 														'Copy to clipboard',
-														'wp-carbon-txt-plugin'
+														'carbon-txt'
 												  ) }
 										</Button>
 										<Button
@@ -1492,7 +1492,7 @@ function App() {
 										>
 											{ __(
 												'Download file',
-												'wp-carbon-txt-plugin'
+												'carbon-txt'
 											) }
 										</Button>
 									</Flex>
