@@ -17,6 +17,7 @@ import {
 	Card,
 	CardBody,
 	CardHeader,
+	CheckboxControl,
 	Flex,
 	FlexBlock,
 	FlexItem,
@@ -483,10 +484,7 @@ function ApiKeySection( { configured, onChange } ) {
 		} catch ( err ) {
 			setError(
 				err?.message ||
-					__(
-						'Could not remove the API key.',
-						'carbon-txt'
-					)
+					__( 'Could not remove the API key.', 'carbon-txt' )
 			);
 		} finally {
 			setIsRemoving( false );
@@ -495,10 +493,7 @@ function ApiKeySection( { configured, onChange } ) {
 
 	return (
 		<PanelBody
-			title={ __(
-				'Green Web Foundation API key',
-				'carbon-txt'
-			) }
+			title={ __( 'Green Web Foundation API key', 'carbon-txt' ) }
 			initialOpen={ false }
 		>
 			<VStack spacing={ 2 } alignment="left">
@@ -515,10 +510,7 @@ function ApiKeySection( { configured, onChange } ) {
 				{ configured ? (
 					<Flex expanded={ false } align="center" gap={ 2 }>
 						<Text>
-							{ __(
-								'An API key is saved.',
-								'carbon-txt'
-							) }
+							{ __( 'An API key is saved.', 'carbon-txt' ) }
 						</Text>
 						<Button
 							variant="tertiary"
@@ -534,10 +526,7 @@ function ApiKeySection( { configured, onChange } ) {
 					<Flex expanded={ false } align="flex-end" gap={ 2 }>
 						<FlexBlock>
 							<TextControl
-								label={ __(
-									'API key',
-									'carbon-txt'
-								) }
+								label={ __( 'API key', 'carbon-txt' ) }
 								type="password"
 								value={ value }
 								onChange={ setValue }
@@ -604,10 +593,7 @@ function ExistingFileNotice( {
 		} catch ( error ) {
 			setDeleteError(
 				error?.message ||
-					__(
-						'Could not delete the existing file.',
-						'carbon-txt'
-					)
+					__( 'Could not delete the existing file.', 'carbon-txt' )
 			);
 		} finally {
 			setIsDeleting( false );
@@ -692,10 +678,7 @@ function ExistingFileNotice( {
 					{ hasImported && (
 						<Text>
 							{ isDeleting
-								? __(
-										'Removing the old file…',
-										'carbon-txt'
-								  )
+								? __( 'Removing the old file…', 'carbon-txt' )
 								: __(
 										'Imported. Once you save, this file will be permanently deleted — its data now lives in your plugin settings.',
 										'carbon-txt'
@@ -720,10 +703,7 @@ function ExistingFileNotice( {
 						<details>
 							<summary>
 								{ fileInfo.unsupported_version
-									? __(
-											'View the raw file',
-											'carbon-txt'
-									  )
+									? __( 'View the raw file', 'carbon-txt' )
 									: __(
 											"We couldn't automatically read its disclosures — view the raw file",
 											'carbon-txt'
@@ -774,10 +754,7 @@ function ExistingFileNotice( {
 									disabled={ isDeleting }
 									onClick={ runDelete }
 								>
-									{ __(
-										'Yes, delete it',
-										'carbon-txt'
-									) }
+									{ __( 'Yes, delete it', 'carbon-txt' ) }
 								</Button>
 								<Button
 									variant="tertiary"
@@ -886,33 +863,21 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 					>
 						<ToggleGroupControlOption
 							value="page"
-							label={ __(
-								'Select a page',
-								'carbon-txt'
-							) }
+							label={ __( 'Select a page', 'carbon-txt' ) }
 						/>
 						<ToggleGroupControlOption
 							value="media"
-							label={ __(
-								'Choose a file',
-								'carbon-txt'
-							) }
+							label={ __( 'Choose a file', 'carbon-txt' ) }
 						/>
 						<ToggleGroupControlOption
 							value="url"
-							label={ __(
-								'Enter a URL',
-								'carbon-txt'
-							) }
+							label={ __( 'Enter a URL', 'carbon-txt' ) }
 						/>
 					</ToggleGroupControl>
 
 					{ 'url' === mode && (
 						<TextControl
-							label={ __(
-								'Disclosure URL',
-								'carbon-txt'
-							) }
+							label={ __( 'Disclosure URL', 'carbon-txt' ) }
 							help={ __(
 								'Add a custom URL to point to another place on your site or a page on someone else’s website',
 								'carbon-txt'
@@ -968,10 +933,7 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 						} }
 					>
 						<PanelBody
-							title={ __(
-								'Optional fields',
-								'carbon-txt'
-							) }
+							title={ __( 'Optional fields', 'carbon-txt' ) }
 							initialOpen={ !! hasOptionalFields }
 						>
 							<div
@@ -986,10 +948,7 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 								} }
 							>
 								<TextControl
-									label={ __(
-										'Valid until',
-										'carbon-txt'
-									) }
+									label={ __( 'Valid until', 'carbon-txt' ) }
 									type="date"
 									value={ disclosure.valid_until || '' }
 									onChange={ ( valid_until ) =>
@@ -1000,10 +959,7 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 								/>
 
 								<TextControl
-									label={ __(
-										'Title',
-										'carbon-txt'
-									) }
+									label={ __( 'Title', 'carbon-txt' ) }
 									value={ disclosure.title || '' }
 									onChange={ ( title ) =>
 										onChange( { title } )
@@ -1013,10 +969,7 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 								/>
 
 								<TextControl
-									label={ __(
-										'Domain',
-										'carbon-txt'
-									) }
+									label={ __( 'Domain', 'carbon-txt' ) }
 									help={ __(
 										'If your disclosure also applies to another website domain, you can add that here.',
 										'carbon-txt'
@@ -1082,6 +1035,12 @@ function App() {
 
 	const setDisclosures = ( next ) =>
 		setSettings( { ...( settings || {} ), disclosures: next } );
+
+	// Absent means opt-in: existing installs never stored this flag.
+	const validateOnSave = settings?.validate_on_save !== false;
+	const setValidateOnSave = ( next ) =>
+		setSettings( { ...( settings || {} ), validate_on_save: next } );
+	const [ moreValidation, setMoreValidation ] = useState( false );
 
 	const updateDisclosure = ( index, changes ) =>
 		setDisclosures(
@@ -1218,9 +1177,9 @@ function App() {
 				),
 			} );
 
-			if ( apiKeyConfigured ) {
+			if ( apiKeyConfigured && validateOnSave ) {
 				validateDomain();
-			} else if ( ! keyHintShownRef.current ) {
+			} else if ( ! apiKeyConfigured && ! keyHintShownRef.current ) {
 				keyHintShownRef.current = true;
 				setNotice( {
 					status: 'info',
@@ -1250,18 +1209,13 @@ function App() {
 						__( 'Save failed: %s', 'carbon-txt' ),
 						lastError.message
 				  )
-				: __(
-						'Save failed. Please try again.',
-						'carbon-txt'
-				  ),
+				: __( 'Save failed. Please try again.', 'carbon-txt' ),
 		} );
 	};
 
 	return (
 		<>
-			<Heading level={ 1 }>
-				{ __( 'Carbon.txt', 'carbon-txt' ) }
-			</Heading>
+			<Heading level={ 1 }>{ __( 'Carbon.txt', 'carbon-txt' ) }</Heading>
 			<Text>
 				{ createInterpolateElement(
 					__(
@@ -1388,16 +1342,61 @@ function App() {
 							/>
 						) ) }
 
+						{ apiKeyConfigured && (
+							<VStack spacing={ 2 } alignment="left">
+								<Flex
+									expanded={ false }
+									justify="flex-start"
+									align="center"
+									gap={ 2 }
+								>
+									<CheckboxControl
+										checked={ validateOnSave }
+										onChange={ setValidateOnSave }
+										label={ __(
+											'Validate with the Green Web Foundation after saving.',
+											'carbon-txt'
+										) }
+										__nextHasNoMarginBottom
+									/>
+									<Button
+										variant="link"
+										aria-expanded={ moreValidation }
+										aria-controls="carbon-txt-validation-details"
+										onClick={ () =>
+											setMoreValidation(
+												! moreValidation
+											)
+										}
+									>
+										{ __(
+											'More about validation',
+											'carbon-txt'
+										) }
+									</Button>
+								</Flex>
+								{ moreValidation && (
+									<Text
+										variant="muted"
+										style={ { fontSize: 12 } }
+										id="carbon-txt-validation-details"
+									>
+										{ __(
+											'They check that your disclosures resolve and the file follows the spec, and register your domain in your Green Web Foundation dashboard when it passes. Validation never blocks publishing — your file goes live either way, and the result shows up as a notice above.',
+											'carbon-txt'
+										) }
+									</Text>
+								) }
+							</VStack>
+						) }
+
 						<Flex justify="space-between">
 							<FlexItem>
 								<Button
 									variant="secondary"
 									onClick={ addDisclosure }
 								>
-									{ __(
-										'Add disclosure',
-										'carbon-txt'
-									) }
+									{ __( 'Add disclosure', 'carbon-txt' ) }
 								</Button>
 							</FlexItem>
 							<FlexItem>
@@ -1407,10 +1406,7 @@ function App() {
 									isBusy={ isSaving }
 									disabled={ isSaving }
 								>
-									{ __(
-										'Save and publish',
-										'carbon-txt'
-									) }
+									{ __( 'Save and publish', 'carbon-txt' ) }
 								</Button>
 							</FlexItem>
 						</Flex>
@@ -1424,10 +1420,7 @@ function App() {
 								{ __( 'Preview', 'carbon-txt' ) }
 							</Heading>
 							<ExternalLink href={ carbonTxtUrl }>
-								{ __(
-									'View live file',
-									'carbon-txt'
-								) }
+								{ __( 'View live file', 'carbon-txt' ) }
 							</ExternalLink>
 						</CardHeader>
 						<CardBody>
@@ -1477,10 +1470,7 @@ function App() {
 											onClick={ handleCopyBackup }
 										>
 											{ backupCopied
-												? __(
-														'Copied!',
-														'carbon-txt'
-												  )
+												? __( 'Copied!', 'carbon-txt' )
 												: __(
 														'Copy to clipboard',
 														'carbon-txt'

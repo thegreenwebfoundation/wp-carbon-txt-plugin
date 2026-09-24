@@ -7,7 +7,7 @@
 		"camelcase": [
 			"error",
 			{
-				"allow": [ "doc_type", "valid_until", "per_page", "page_id", "attachment_id", "well_known" ]
+				"allow": [ "doc_type", "valid_until", "per_page", "page_id", "attachment_id", "well_known", "validate_on_save" ]
 			}
 		]
 	}

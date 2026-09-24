@@ -68,10 +68,13 @@ class Settings {
 	/**
 	 * Default setting value.
 	 *
-	 * @return array{disclosures:array}
+	 * @return array{disclosures:array,validate_on_save:bool}
 	 */
 	public static function defaults() {
-		return array( 'disclosures' => array() );
+		return array(
+			'disclosures'      => array(),
+			'validate_on_save' => true,
+		);
 	}
 
 	/**
@@ -123,6 +126,10 @@ class Settings {
 									'additionalProperties' => false,
 								),
 							),
+							'validate_on_save' => array(
+								'type'    => 'boolean',
+								'default' => true,
+							),
 						),
 						'additionalProperties' => false,
 					),
@@ -138,7 +145,7 @@ class Settings {
 	 * Handles the v0.1.0 single-disclosure shape ({ doc_type, url }).
 	 *
 	 * @param mixed $value Raw value.
-	 * @return array{disclosures:array}
+	 * @return array{disclosures:array,validate_on_save:bool}
 	 */
 	public static function normalize( $value ) {
 		if ( ! is_array( $value ) ) {
@@ -146,22 +153,37 @@ class Settings {
 		}
 
 		if ( isset( $value['disclosures'] ) && is_array( $value['disclosures'] ) ) {
-			return array( 'disclosures' => array_values( $value['disclosures'] ) );
+			return array(
+				'disclosures'      => array_values( $value['disclosures'] ),
+				'validate_on_save' => self::validate_flag( $value ),
+			);
 		}
 
 		// Legacy single-disclosure shape.
 		if ( isset( $value['url'] ) || isset( $value['doc_type'] ) ) {
 			return array(
-				'disclosures' => array(
+				'disclosures'      => array(
 					array(
 						'doc_type' => isset( $value['doc_type'] ) ? $value['doc_type'] : 'web-page',
 						'url'      => isset( $value['url'] ) ? $value['url'] : '',
 					),
 				),
+				'validate_on_save' => self::validate_flag( $value ),
 			);
 		}
 
 		return self::defaults();
+	}
+
+	/**
+	 * The opt-out flag for validation, defaulting to on when absent
+	 * (pre-existing installs never stored it).
+	 *
+	 * @param array $value Raw value.
+	 * @return bool
+	 */
+	private static function validate_flag( $value ) {
+		return ! isset( $value['validate_on_save'] ) || (bool) $value['validate_on_save'];
 	}
 
 	/**
@@ -170,7 +192,7 @@ class Settings {
 	 * Drops rows without a URL and omits empty optional fields.
 	 *
 	 * @param mixed $value Raw value.
-	 * @return array{disclosures:array}
+	 * @return array{disclosures:array,validate_on_save:bool}
 	 */
 	public static function sanitize( $value ) {
 		$value = self::normalize( $value );
@@ -228,7 +250,10 @@ class Settings {
 			$clean[] = $entry;
 		}
 
-		return array( 'disclosures' => $clean );
+		return array(
+			'disclosures'      => $clean,
+			'validate_on_save' => self::validate_flag( $value ),
+		);
 	}
 
 	/**
