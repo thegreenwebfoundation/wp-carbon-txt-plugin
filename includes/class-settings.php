@@ -35,6 +35,18 @@ class Settings {
 					'other',
 				),
 			),
+			'0.6' => array(
+				'doc_types' => array(
+					'web-page',
+					'annual-report',
+					'sustainability-page',
+					'certificate',
+					'csrd-report',
+					'ai-model-card',
+					'measurement-data',
+					'other',
+				),
+			),
 		);
 	}
 
@@ -72,8 +84,10 @@ class Settings {
 	 */
 	public static function defaults() {
 		return array(
-			'disclosures'      => array(),
-			'validate_on_save' => true,
+			'last_updated'          => '',
+			'certification_schemes' => array(),
+			'disclosures'           => array(),
+			'validate_on_save'      => true,
 		);
 	}
 
@@ -104,7 +118,26 @@ class Settings {
 					'schema' => array(
 						'type'                 => 'object',
 						'properties'           => array(
-							'disclosures' => array(
+							'last_updated'          => array(
+								'type' => 'string',
+							),
+							'certification_schemes' => array(
+								'type'  => 'array',
+								'items' => array(
+									'type'                 => 'object',
+									'properties'           => array(
+										'id'          => array( 'type' => 'string' ),
+										'url'         => array(
+											'type'   => 'string',
+											'format' => 'uri',
+										),
+										'title'       => array( 'type' => 'string' ),
+										'description' => array( 'type' => 'string' ),
+									),
+									'additionalProperties' => false,
+								),
+							),
+							'disclosures'           => array(
 								'type'  => 'array',
 								'items' => array(
 									'type'                 => 'object',
@@ -120,13 +153,18 @@ class Settings {
 										'page_id'       => array( 'type' => 'integer' ),
 										'attachment_id' => array( 'type' => 'integer' ),
 										'title'         => array( 'type' => 'string' ),
+										'description'   => array( 'type' => 'string' ),
 										'valid_until'   => array( 'type' => 'string' ),
 										'domain'        => array( 'type' => 'string' ),
+										'certification_schemes' => array(
+											'type'  => 'array',
+											'items' => array( 'type' => 'string' ),
+										),
 									),
 									'additionalProperties' => false,
 								),
 							),
-							'validate_on_save' => array(
+							'validate_on_save'      => array(
 								'type'    => 'boolean',
 								'default' => true,
 							),
@@ -145,34 +183,37 @@ class Settings {
 	 * Handles the v0.1.0 single-disclosure shape ({ doc_type, url }).
 	 *
 	 * @param mixed $value Raw value.
-	 * @return array{disclosures:array,validate_on_save:bool}
+	 * @return array{last_updated:string,certification_schemes:array,disclosures:array,validate_on_save:bool}
 	 */
 	public static function normalize( $value ) {
 		if ( ! is_array( $value ) ) {
 			return self::defaults();
 		}
 
+		$normalized = array(
+			'last_updated'          => isset( $value['last_updated'] ) ? (string) $value['last_updated'] : '',
+			'certification_schemes' => array_values( isset( $value['certification_schemes'] ) && is_array( $value['certification_schemes'] ) ? $value['certification_schemes'] : array() ),
+			'validate_on_save'      => self::validate_flag( $value ),
+		);
+
 		if ( isset( $value['disclosures'] ) && is_array( $value['disclosures'] ) ) {
-			return array(
-				'disclosures'      => array_values( $value['disclosures'] ),
-				'validate_on_save' => self::validate_flag( $value ),
-			);
+			$normalized['disclosures'] = array_values( $value['disclosures'] );
+			return $normalized;
 		}
 
 		// Legacy single-disclosure shape.
 		if ( isset( $value['url'] ) || isset( $value['doc_type'] ) ) {
-			return array(
-				'disclosures'      => array(
-					array(
-						'doc_type' => isset( $value['doc_type'] ) ? $value['doc_type'] : 'web-page',
-						'url'      => isset( $value['url'] ) ? $value['url'] : '',
-					),
+			$normalized['disclosures'] = array(
+				array(
+					'doc_type' => isset( $value['doc_type'] ) ? $value['doc_type'] : 'web-page',
+					'url'      => isset( $value['url'] ) ? $value['url'] : '',
 				),
-				'validate_on_save' => self::validate_flag( $value ),
 			);
+			return $normalized;
 		}
 
-		return self::defaults();
+		$normalized['disclosures'] = array();
+		return $normalized;
 	}
 
 	/**
@@ -189,13 +230,22 @@ class Settings {
 	/**
 	 * Sanitize the setting before it is stored.
 	 *
-	 * Drops rows without a URL and omits empty optional fields.
+	 * Drops rows without the required fields, omits empty optional fields,
+	 * and enforces the references the 0.6 validator checks: scheme ids are
+	 * unique, and disclosure scheme refs must point at a known id — so the
+	 * file can't be saved in a state that would fail validation.
 	 *
 	 * @param mixed $value Raw value.
-	 * @return array{disclosures:array,validate_on_save:bool}
+	 * @return array{last_updated:string,certification_schemes:array,disclosures:array,validate_on_save:bool}
 	 */
 	public static function sanitize( $value ) {
-		$value = self::normalize( $value );
+		$value   = self::normalize( $value );
+		$schemes = self::sanitize_schemes( $value['certification_schemes'] );
+		$known   = array();
+
+		foreach ( $schemes as $scheme ) {
+			$known[ $scheme['id'] ] = true;
+		}
 		$clean = array();
 
 		foreach ( $value['disclosures'] as $disclosure ) {
@@ -237,6 +287,11 @@ class Settings {
 				$entry['title'] = $title;
 			}
 
+			$description = isset( $disclosure['description'] ) ? sanitize_textarea_field( $disclosure['description'] ) : '';
+			if ( '' !== $description ) {
+				$entry['description'] = $description;
+			}
+
 			$valid_until = isset( $disclosure['valid_until'] ) ? sanitize_text_field( $disclosure['valid_until'] ) : '';
 			if ( '' !== $valid_until ) {
 				$entry['valid_until'] = $valid_until;
@@ -247,13 +302,75 @@ class Settings {
 				$entry['domain'] = $domain;
 			}
 
+			$refs = array();
+			foreach ( (array) ( $disclosure['certification_schemes'] ?? array() ) as $ref ) {
+				$ref = sanitize_text_field( (string) $ref );
+				if ( '' !== $ref && isset( $known[ $ref ] ) && ! in_array( $ref, $refs, true ) ) {
+					$refs[] = $ref;
+				}
+			}
+			if ( ! empty( $refs ) ) {
+				$entry['certification_schemes'] = $refs;
+			}
+
 			$clean[] = $entry;
 		}
 
 		return array(
-			'disclosures'      => $clean,
-			'validate_on_save' => self::validate_flag( $value ),
+			'last_updated'          => gmdate( 'Y-m-d' ),
+			'certification_schemes' => $schemes,
+			'disclosures'           => $clean,
+			'validate_on_save'      => self::validate_flag( $value ),
 		);
+	}
+
+	/**
+	 * Sanitize the org-level certification scheme list: id and url are
+	 * required, later duplicates of an id lose.
+	 *
+	 * @param array $schemes Raw scheme rows.
+	 * @return array
+	 */
+	private static function sanitize_schemes( $schemes ) {
+		$clean = array();
+		$seen  = array();
+
+		foreach ( (array) $schemes as $scheme ) {
+			if ( ! is_array( $scheme ) ) {
+				continue;
+			}
+
+			$id = isset( $scheme['id'] ) ? sanitize_text_field( trim( (string) $scheme['id'] ) ) : '';
+			if ( '' === $id || isset( $seen[ $id ] ) ) {
+				continue;
+			}
+
+			$url = isset( $scheme['url'] ) ? esc_url_raw( trim( (string) $scheme['url'] ) ) : '';
+			if ( '' === $url ) {
+				continue;
+			}
+
+			$seen[ $id ] = true;
+
+			$entry = array(
+				'id'  => $id,
+				'url' => $url,
+			);
+
+			$title = isset( $scheme['title'] ) ? sanitize_text_field( $scheme['title'] ) : '';
+			if ( '' !== $title ) {
+				$entry['title'] = $title;
+			}
+
+			$description = isset( $scheme['description'] ) ? sanitize_textarea_field( $scheme['description'] ) : '';
+			if ( '' !== $description ) {
+				$entry['description'] = $description;
+			}
+
+			$clean[] = $entry;
+		}
+
+		return $clean;
 	}
 
 	/**

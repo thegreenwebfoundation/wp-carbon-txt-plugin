@@ -105,7 +105,7 @@ class Importer {
 	 * out of it, and (only when nothing could be parsed) its raw contents
 	 * to review.
 	 *
-	 * @return array{exists:bool,path:string,disclosures:array,raw:string,file_version:?string,unsupported_version:?string}
+	 * @return array{exists:bool,path:string,disclosures:array,schemes:array,raw:string,file_version:?string,unsupported_version:?string}
 	 */
 	public static function summary() {
 		return self::summary_for_path( self::file_path() );
@@ -114,7 +114,7 @@ class Importer {
 	/**
 	 * Same as summary(), for the file at the well-known location.
 	 *
-	 * @return array{exists:bool,path:string,disclosures:array,raw:string,file_version:?string,unsupported_version:?string}
+	 * @return array{exists:bool,path:string,disclosures:array,schemes:array,raw:string,file_version:?string,unsupported_version:?string}
 	 */
 	public static function well_known_summary() {
 		return self::summary_for_path( self::well_known_file_path() );
@@ -124,13 +124,14 @@ class Importer {
 	 * Build the existing-file summary for a given path.
 	 *
 	 * @param string $path Path to check.
-	 * @return array{exists:bool,path:string,disclosures:array,raw:string,file_version:?string,unsupported_version:?string}
+	 * @return array{exists:bool,path:string,disclosures:array,schemes:array,raw:string,file_version:?string,unsupported_version:?string}
 	 */
 	private static function summary_for_path( $path ) {
 		$summary = array(
 			'exists'              => false,
 			'path'                => $path,
 			'disclosures'         => array(),
+			'schemes'             => array(),
 			'raw'                 => '',
 			'file_version'        => null,
 			'unsupported_version' => null,
@@ -166,9 +167,11 @@ class Importer {
 		}
 
 		$disclosures = self::parse_disclosures( $content, $file_version );
+		$schemes     = self::parse_certification_schemes( $content );
 
-		if ( $disclosures ) {
+		if ( $disclosures || $schemes ) {
 			$summary['disclosures'] = $disclosures;
+			$summary['schemes']     = $schemes;
 		} else {
 			$summary['raw'] = $content;
 		}
@@ -208,6 +211,139 @@ class Importer {
 		}
 
 		return $disclosures;
+	}
+
+	/**
+	 * Parse the org-level certification schemes list (0.6 syntax), in
+	 * either form: repeated `[[org.certification_schemes]]` blocks, or an
+	 * inline `certification_schemes = [ { ... }, ... ]` array assigned in
+	 * the `[org]` table.
+	 *
+	 * @param string $content Raw file content.
+	 * @return array
+	 */
+	private static function parse_certification_schemes( $content ) {
+		$schemes = self::parse_scheme_array_of_tables( $content );
+
+		if ( ! $schemes ) {
+			$schemes = self::parse_scheme_inline_array( $content );
+		}
+
+		return $schemes;
+	}
+
+	/**
+	 * Parse repeated `[[org.certification_schemes]]` blocks.
+	 *
+	 * @param string $content Raw file content.
+	 * @return array
+	 */
+	private static function parse_scheme_array_of_tables( $content ) {
+		if ( ! preg_match_all( '/\[\[\s*org\.certification_schemes\s*\]\]/', $content, $headers, PREG_OFFSET_CAPTURE ) ) {
+			return array();
+		}
+
+		$schemes = array();
+		$count   = count( $headers[0] );
+
+		for ( $i = 0; $i < $count; $i++ ) {
+			$start = $headers[0][ $i ][1] + strlen( $headers[0][ $i ][0] );
+			$end   = ( $i + 1 < $count ) ? $headers[0][ $i + 1 ][1] : strlen( $content );
+
+			$block = substr( $content, $start, $end - $start );
+			if ( preg_match( '/^\s*\[/m', $block, $next_header, PREG_OFFSET_CAPTURE ) ) {
+				$block = substr( $block, 0, $next_header[0][1] );
+			}
+
+			$entry = self::extract_scheme( $block );
+			if ( $entry ) {
+				$schemes[] = $entry;
+			}
+		}
+
+		return $schemes;
+	}
+
+	/**
+	 * Parse an inline org-level `certification_schemes = [ { ... }, ... ]`
+	 * array. Disclosure-level scheme references (plain string arrays) also
+	 * live under `[org]`, so any inline `disclosures = [...]` array is
+	 * excised from the section text before searching — otherwise the first
+	 * `certification_schemes = [` match could be a disclosure's reference
+	 * list rather than the scheme definitions themselves.
+	 *
+	 * @param string $content Raw file content.
+	 * @return array
+	 */
+	private static function parse_scheme_inline_array( $content ) {
+		if ( ! preg_match( '/^\[org\]\s*$/m', $content, $org_header, PREG_OFFSET_CAPTURE ) ) {
+			return array();
+		}
+
+		$section_start = $org_header[0][1] + strlen( $org_header[0][0] );
+		$next_table    = preg_match( '/^\[/m', substr( $content, $section_start ), $next_header, PREG_OFFSET_CAPTURE )
+			? $section_start + $next_header[0][1]
+			: strlen( $content );
+		$section       = substr( $content, $section_start, $next_table - $section_start );
+
+		if ( preg_match( '/disclosures\s*=\s*\[/', $section, $disclosures_match, PREG_OFFSET_CAPTURE ) ) {
+			$open_index = $disclosures_match[0][1] + strlen( $disclosures_match[0][0] ) - 1;
+			$span       = self::extract_balanced_brackets( $section, $open_index );
+			if ( null !== $span ) {
+				$section = substr_replace( $section, '', $open_index, strlen( $span ) + 2 );
+			}
+		}
+
+		if ( ! preg_match( '/certification_schemes\s*=\s*\[/', $section, $match, PREG_OFFSET_CAPTURE ) ) {
+			return array();
+		}
+
+		$array_body = self::extract_balanced_brackets( $section, $match[0][1] + strlen( $match[0][0] ) - 1 );
+		if ( null === $array_body ) {
+			return array();
+		}
+
+		$schemes = array();
+
+		if ( preg_match_all( '/\{(.*?)\}/s', $array_body, $tables ) ) {
+			foreach ( $tables[1] as $table ) {
+				$entry = self::extract_scheme( $table );
+				if ( $entry ) {
+					$schemes[] = $entry;
+				}
+			}
+		}
+
+		return $schemes;
+	}
+
+	/**
+	 * Extract a certification scheme from a block of `key = value` pairs.
+	 * A scheme needs at least `id` and `url` to be usable.
+	 *
+	 * @param string $text Block of text.
+	 * @return array|null
+	 */
+	private static function extract_scheme( $text ) {
+		$pairs = self::extract_pairs( $text );
+
+		if ( empty( $pairs['id'] ) || empty( $pairs['url'] ) ) {
+			return null;
+		}
+
+		$entry = array(
+			'id'  => $pairs['id'],
+			'url' => $pairs['url'],
+		);
+
+		if ( ! empty( $pairs['title'] ) ) {
+			$entry['title'] = $pairs['title'];
+		}
+		if ( ! empty( $pairs['description'] ) ) {
+			$entry['description'] = $pairs['description'];
+		}
+
+		return $entry;
 	}
 
 	/**
@@ -317,17 +453,14 @@ class Importer {
 	}
 
 	/**
-	 * Extract the known disclosure fields from a block of `key = value`
-	 * pairs (either TOML inline-table body or array-of-tables body).
+	 * Extract scalar `key = value` pairs from a block of TOML text (either
+	 * an inline-table body or an array-of-tables body): quoted strings,
+	 * literal strings, and local dates.
 	 *
-	 * @param string      $text    Block of text containing key = value pairs.
-	 * @param string|null $version Spec version declared by the file, if any —
-	 *                              used to validate doc_type against the enum
-	 *                              that was actually valid for that version,
-	 *                              rather than always the newest one.
-	 * @return array|null Disclosure array, or null if no url was found.
+	 * @param string $text Block of text.
+	 * @return array<string,string> Key to decoded value.
 	 */
-	private static function extract_disclosure( $text, $version = null ) {
+	private static function extract_pairs( $text ) {
 		$pairs = array();
 
 		if ( preg_match_all( '/([A-Za-z_][A-Za-z0-9_]*)\s*=\s*("(?:[^"\\\\]|\\\\.)*"|\'[^\']*\'|\d{4}-\d{2}-\d{2})/', $text, $matches, PREG_SET_ORDER ) ) {
@@ -348,6 +481,49 @@ class Importer {
 				$pairs[ $key ] = $value;
 			}
 		}
+
+		return $pairs;
+	}
+
+	/**
+	 * Extract a quoted-string array (`key = [ "a", "b" ]`) value from a
+	 * block of TOML text, if present.
+	 *
+	 * @param string $text Block of text.
+	 * @param string $key  Key to read.
+	 * @return string[]|null
+	 */
+	private static function extract_string_array( $text, $key ) {
+		if ( ! preg_match( '/' . preg_quote( $key, '/' ) . '\s*=\s*\[\s*("(?:[^"\\\\]|\\\\.)*"\s*,?\s*)+\]/', $text, $match ) ) {
+			return null;
+		}
+
+		if ( ! preg_match_all( '/"(?:[^"\\\\]|\\\\.)*"/', $match[0], $strings ) ) {
+			return null;
+		}
+
+		return array_map(
+			static function ( $raw ) {
+				$value = substr( $raw, 1, -1 );
+				return str_replace( array( '\\"', '\\\\' ), array( '"', '\\' ), $value );
+			},
+			$strings[0]
+		);
+	}
+
+	/**
+	 * Extract the known disclosure fields from a block of `key = value`
+	 * pairs (either TOML inline-table body or array-of-tables body).
+	 *
+	 * @param string      $text    Block of text containing key = value pairs.
+	 * @param string|null $version Spec version declared by the file, if any —
+	 *                              used to validate doc_type against the enum
+	 *                              that was actually valid for that version,
+	 *                              rather than always the newest one.
+	 * @return array|null Disclosure array, or null if no url was found.
+	 */
+	private static function extract_disclosure( $text, $version = null ) {
+		$pairs = self::extract_pairs( $text );
 
 		if ( empty( $pairs['url'] ) ) {
 			return null;
@@ -371,12 +547,21 @@ class Importer {
 			$entry['title'] = $pairs['title'];
 		}
 
+		if ( ! empty( $pairs['description'] ) ) {
+			$entry['description'] = $pairs['description'];
+		}
+
 		if ( ! empty( $pairs['valid_until'] ) ) {
 			$entry['valid_until'] = $pairs['valid_until'];
 		}
 
 		if ( ! empty( $pairs['domain'] ) ) {
 			$entry['domain'] = $pairs['domain'];
+		}
+
+		$refs = self::extract_string_array( $text, 'certification_schemes' );
+		if ( ! empty( $refs ) ) {
+			$entry['certification_schemes'] = $refs;
 		}
 
 		return $entry;

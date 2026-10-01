@@ -23,6 +23,7 @@ import {
 	FlexItem,
 	SelectControl,
 	TextControl,
+	TextareaControl,
 	ComboboxControl,
 	Button,
 	Notice,
@@ -92,17 +93,49 @@ const DOC_TYPE_LABELS = {
 	certificate: __( 'Certificate', 'carbon-txt' ),
 	'csrd-report': __( 'CSRD report', 'carbon-txt' ),
 	'ai-model-card': __( 'AI model card', 'carbon-txt' ),
+	'measurement-data': __( 'Measurement data', 'carbon-txt' ),
 	other: __( 'Other', 'carbon-txt' ),
 };
 
 /**
- * Encode a value as a TOML basic string.
+ * Today's date as YYYY-MM-DD (UTC), shown in the preview as the
+ * `last_updated` stamp a save will write.
+ */
+const today = () => new Date().toISOString().slice( 0, 10 );
+
+/**
+ * Encode a value as a TOML basic string. Control characters (line breaks
+ * above all) must be escaped — a raw newline would make the file invalid
+ * TOML.
  *
  * @param {string} value Value.
  * @return {string} Quoted string.
  */
+const TOML_ESCAPES = {
+	'\b': '\\b',
+	'\t': '\\t',
+	'\n': '\\n',
+	'\f': '\\f',
+	'\r': '\\r',
+};
+
 const tomlString = ( value ) =>
-	'"' + String( value ).replace( /\\/g, '\\\\' ).replace( /"/g, '\\"' ) + '"';
+	'"' +
+	String( value )
+		.replace( /\\/g, '\\\\' )
+		.replace( /"/g, '\\"' )
+		.replace(
+			/[\x00-\x1F\x7F]/g,
+			( c ) =>
+				TOML_ESCAPES[ c ] ??
+				'\\u' +
+					c
+						.charCodeAt( 0 )
+						.toString( 16 )
+						.padStart( 4, '0' )
+						.toUpperCase()
+		) +
+	'"';
 
 /**
  * Encode a date as a native TOML local date when it is a plain YYYY-MM-DD.
@@ -131,11 +164,21 @@ const renderDisclosure = ( disclosure ) => {
 	if ( disclosure.title ) {
 		pairs.push( `title = ${ tomlString( disclosure.title ) }` );
 	}
+	if ( disclosure.description ) {
+		pairs.push( `description = ${ tomlString( disclosure.description ) }` );
+	}
 	if ( disclosure.valid_until ) {
 		pairs.push( `valid_until = ${ tomlDate( disclosure.valid_until ) }` );
 	}
 	if ( disclosure.domain ) {
 		pairs.push( `domain = ${ tomlString( disclosure.domain ) }` );
+	}
+	if ( disclosure.certification_schemes?.length ) {
+		pairs.push(
+			`certification_schemes = [ ${ disclosure.certification_schemes
+				.map( tomlString )
+				.join( ', ' ) } ]`
+		);
 	}
 	return `{ ${ pairs.join( ', ' ) } }`;
 };
@@ -179,17 +222,50 @@ const copyToClipboard = ( text ) => {
 };
 
 /**
+ * Render a single certification scheme as a TOML inline table.
+ *
+ * @param {Object} scheme Scheme data.
+ * @return {string} Inline table.
+ */
+const renderScheme = ( scheme ) => {
+	const pairs = [
+		`id = ${ tomlString( scheme.id ) }`,
+		`url = ${ tomlString( scheme.url ) }`,
+	];
+	if ( scheme.title ) {
+		pairs.push( `title = ${ tomlString( scheme.title ) }` );
+	}
+	if ( scheme.description ) {
+		pairs.push( `description = ${ tomlString( scheme.description ) }` );
+	}
+	return `{ ${ pairs.join( ', ' ) } }`;
+};
+
+/**
  * Mirror of the PHP renderer for the live preview.
  *
  * @param {Array} disclosures Disclosure list.
+ * @param {Array} schemes     Org-level certification scheme list.
  * @return {string} carbon.txt body.
  */
-const renderCarbonTxt = ( disclosures ) => {
+const renderCarbonTxt = ( disclosures, schemes = [] ) => {
 	const entries = disclosures.filter(
 		( disclosure ) => disclosure.url && disclosure.url.trim()
 	);
+	const schemeEntries = schemes.filter(
+		( scheme ) =>
+			scheme.id && scheme.id.trim() && scheme.url && scheme.url.trim()
+	);
 
-	let out = `version = "${ carbonTxtVersion }"\n\n[org]\n`;
+	let out = `version = "${ carbonTxtVersion }"\nlast_updated = ${ today() }\n\n[org]\n`;
+	if ( schemeEntries.length ) {
+		out +=
+			'certification_schemes = [\n' +
+			schemeEntries
+				.map( ( s ) => '    ' + renderScheme( s ) + ',' )
+				.join( '\n' ) +
+			'\n]\n';
+	}
 	if ( ! entries.length ) {
 		out += 'disclosures = []\n';
 	} else {
@@ -496,11 +572,13 @@ function ExistingFileNotice( {
 	const text = FILE_LOCATIONS[ location ];
 
 	const handleImport = () => {
-		onImport( fileInfo.disclosures );
+		onImport( fileInfo.disclosures, fileInfo.schemes );
 		setHasImported( true );
 		setSaveCountAtImport( saveCount );
 	};
 
+	const importableCount =
+		fileInfo.disclosures.length + fileInfo.schemes.length;
 	const canImport = ! hasImported;
 	// Once imported, deletion happens automatically on the next save; the
 	// manual button is only a fallback if that automatic attempt failed.
@@ -536,16 +614,25 @@ function ExistingFileNotice( {
 							</Text>
 						) }
 
-					{ canImport && fileInfo.disclosures.length > 0 && (
+					{ canImport && importableCount > 0 && (
 						<Button variant="secondary" onClick={ handleImport }>
-							{ sprintf(
-								/* translators: %d: number of disclosures found in the existing file. */
-								__(
-									'Import %d disclosure(s) from this file',
-									'carbon-txt'
-								),
-								fileInfo.disclosures.length
-							) }
+							{ fileInfo.disclosures.length
+								? sprintf(
+										/* translators: %d: number of disclosures found in the existing file. */
+										__(
+											'Import %d disclosure(s) from this file',
+											'carbon-txt'
+										),
+										fileInfo.disclosures.length
+								  )
+								: sprintf(
+										/* translators: %d: number of certification schemes found in the existing file. */
+										__(
+											'Import %d certification scheme(s) from this file',
+											'carbon-txt'
+										),
+										fileInfo.schemes.length
+								  ) }
 						</Button>
 					) }
 
@@ -673,17 +760,168 @@ const modeFor = ( disclosure ) => {
 };
 
 /**
+ * Editor for the org-level certification schemes (carbon.txt 0.6). Each
+ * scheme defines a reusable id that "Certificate" disclosures reference
+ * in their `certification_schemes` list, so this section must come first
+ * — a disclosure can't cite a scheme that doesn't exist yet.
+ *
+ * @param {Object}   props          Props.
+ * @param {Array}    props.schemes  Current scheme list.
+ * @param {Function} props.onChange Called with the next scheme list.
+ */
+function SchemesSection( { schemes, onChange } ) {
+	const updateScheme = ( index, changes ) =>
+		onChange(
+			schemes.map( ( scheme, i ) =>
+				i === index ? { ...scheme, ...changes } : scheme
+			)
+		);
+
+	const removeScheme = ( index ) =>
+		onChange( schemes.filter( ( _, i ) => i !== index ) );
+
+	const addScheme = () => onChange( [ ...schemes, { id: '', url: '' } ] );
+
+	return (
+		<PanelBody
+			title={ __(
+				'Do you have an official certification?',
+				'carbon-txt'
+			) }
+			initialOpen={ schemes.length > 0 }
+		>
+			<VStack spacing={ 4 }>
+				<Text>
+					{ __(
+						'Add a certification scheme (like a B Corp or an ecolabel) and its website. Schemes are defined once here; disclosures can then reference them by id.',
+						'carbon-txt'
+					) }
+				</Text>
+
+				{ schemes.map( ( scheme, index ) => (
+					<Card key={ index }>
+						<CardHeader>
+							<Heading level={ 3 }>
+								{ sprintf(
+									/* translators: %d: certification scheme number. */
+									__(
+										'Certification scheme %d',
+										'carbon-txt'
+									),
+									index + 1
+								) }
+							</Heading>
+							<Button
+								isDestructive
+								variant="tertiary"
+								onClick={ () => removeScheme( index ) }
+								size="small"
+							>
+								{ __( 'Remove', 'carbon-txt' ) }
+							</Button>
+						</CardHeader>
+						<CardBody>
+							<VStack spacing={ 4 }>
+								<div
+									style={ {
+										display: 'grid',
+										gridTemplateColumns:
+											'repeat( auto-fit, minmax( 240px, 1fr ) )',
+										gap: '24px',
+									} }
+								>
+									<TextControl
+										label={ __( 'Id', 'carbon-txt' ) }
+										help={ __(
+											'Short identifier used to link the certification to disclosures, e.g. b-corp.',
+											'carbon-txt'
+										) }
+										value={ scheme.id || '' }
+										onChange={ ( id ) =>
+											updateScheme( index, { id } )
+										}
+										__next40pxDefaultSize
+										__nextHasNoMarginBottom
+									/>
+									<TextControl
+										label={ __( 'URL', 'carbon-txt' ) }
+										help={ __(
+											'Where the certification’s requirements and verifying organisation are described.',
+											'carbon-txt'
+										) }
+										type="url"
+										placeholder="https://example.com/certification"
+										value={ scheme.url || '' }
+										onChange={ ( url ) =>
+											updateScheme( index, { url } )
+										}
+										__next40pxDefaultSize
+										__nextHasNoMarginBottom
+									/>
+								</div>
+								<TextControl
+									label={ __( 'Title', 'carbon-txt' ) }
+									value={ scheme.title || '' }
+									onChange={ ( title ) =>
+										updateScheme( index, { title } )
+									}
+									__next40pxDefaultSize
+									__nextHasNoMarginBottom
+								/>
+								<TextareaControl
+									label={ __( 'Description', 'carbon-txt' ) }
+									value={ scheme.description || '' }
+									onChange={ ( description ) =>
+										updateScheme( index, { description } )
+									}
+									__nextHasNoMarginBottom
+								/>
+								{ ! ( scheme.id && scheme.id.trim() ) ||
+								! ( scheme.url && scheme.url.trim() ) ? (
+									<Notice
+										status="warning"
+										isDismissible={ false }
+									>
+										{ __(
+											'This scheme needs an id and a URL to be included in your carbon.txt.',
+											'carbon-txt'
+										) }
+									</Notice>
+								) : null }
+							</VStack>
+						</CardBody>
+					</Card>
+				) ) }
+
+				<Flex justify="flex-start">
+					<FlexItem>
+						<Button variant="secondary" onClick={ addScheme }>
+							{ __( 'Add scheme', 'carbon-txt' ) }
+						</Button>
+					</FlexItem>
+				</Flex>
+			</VStack>
+		</PanelBody>
+	);
+}
+
+/**
  * A single editable disclosure.
  *
- * @param {{disclosure:Object,index:number,onChange:Function,onRemove:Function}} props Props.
+ * @param {{disclosure:Object,index:number,schemes:Array,onChange:Function,onRemove:Function}} props Props.
  */
-function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
+function DisclosureRow( { disclosure, index, schemes, onChange, onRemove } ) {
 	const [ mode, setMode ] = useState( modeFor( disclosure ) );
 
 	// Start the optional-fields panel open when data is already there, so
 	// previously saved values aren't hidden behind a collapsed panel.
 	const hasOptionalFields =
-		disclosure.domain || disclosure.title || disclosure.valid_until;
+		disclosure.domain ||
+		disclosure.title ||
+		disclosure.description ||
+		disclosure.valid_until;
+
+	const schemeId = disclosure.certification_schemes?.[ 0 ] || '';
 
 	return (
 		<Card>
@@ -726,6 +964,45 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 						__next40pxDefaultSize
 						__nextHasNoMarginBottom
 					/>
+
+					{ 'certificate' === disclosure.doc_type &&
+						( schemes.length ? (
+							<SelectControl
+								label={ __(
+									'Certification scheme',
+									'carbon-txt'
+								) }
+								help={ __(
+									'The certification this disclosure documents, from the “Do you have an official certification?” section.',
+									'carbon-txt'
+								) }
+								value={ schemeId }
+								options={ [
+									{
+										value: '',
+										label: __( 'None', 'carbon-txt' ),
+									},
+									...schemes.map( ( scheme ) => ( {
+										value: scheme.id,
+										label: scheme.title || scheme.id,
+									} ) ),
+								] }
+								onChange={ ( id ) =>
+									onChange( {
+										certification_schemes: id ? [ id ] : [],
+									} )
+								}
+								__next40pxDefaultSize
+								__nextHasNoMarginBottom
+							/>
+						) : (
+							<Text variant="muted">
+								{ __(
+									'To link a certification to this disclosure, first add it under “Do you have an official certification?” above.',
+									'carbon-txt'
+								) }
+							</Text>
+						) ) }
 
 					<ToggleGroupControl
 						label={ __( 'URL source', 'carbon-txt' ) }
@@ -812,26 +1089,16 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 						>
 							<div
 								style={ {
-									// Fields sit side by side on wide panels and
-									// stack back into a column as space runs out —
-									// auto-fit handles the collapse, no breakpoints.
+									// Fixed rows: the short fields pair up; the textarea and
+									// one-line domain span the full width, so no row mixes
+									// short fields with tall ones.
 									display: 'grid',
 									gridTemplateColumns:
-										'repeat( auto-fit, minmax( 240px, 1fr ) )',
+										'repeat( 2, minmax( 0, 1fr ) )',
 									gap: '24px',
+									alignItems: 'start',
 								} }
 							>
-								<TextControl
-									label={ __( 'Valid until', 'carbon-txt' ) }
-									type="date"
-									value={ disclosure.valid_until || '' }
-									onChange={ ( valid_until ) =>
-										onChange( { valid_until } )
-									}
-									__next40pxDefaultSize
-									__nextHasNoMarginBottom
-								/>
-
 								<TextControl
 									label={ __( 'Title', 'carbon-txt' ) }
 									value={ disclosure.title || '' }
@@ -842,20 +1109,71 @@ function DisclosureRow( { disclosure, index, onChange, onRemove } ) {
 									__nextHasNoMarginBottom
 								/>
 
-								<TextControl
-									label={ __( 'Domain', 'carbon-txt' ) }
-									help={ __(
-										'If your disclosure also applies to another website domain, you can add that here.',
-										'carbon-txt'
+								<div
+									style={ {
+										display: 'flex',
+										gap: '8px',
+										alignItems: 'end',
+									} }
+								>
+									<TextControl
+										label={ __(
+											'Valid until',
+											'carbon-txt'
+										) }
+										type="date"
+										value={ disclosure.valid_until || '' }
+										onChange={ ( valid_until ) =>
+											onChange( { valid_until } )
+										}
+										__next40pxDefaultSize
+										__nextHasNoMarginBottom
+									/>
+
+									{ disclosure.valid_until && (
+										<Button
+											variant="tertiary"
+											size="small"
+											onClick={ () =>
+												onChange( { valid_until: '' } )
+											}
+											style={ { marginBottom: '8px' } }
+										>
+											{ __( 'Clear', 'carbon-txt' ) }
+										</Button>
 									) }
-									placeholder="example.com"
-									value={ disclosure.domain || '' }
-									onChange={ ( domain ) =>
-										onChange( { domain } )
-									}
-									__next40pxDefaultSize
-									__nextHasNoMarginBottom
-								/>
+								</div>
+
+								<div style={ { gridColumn: '1 / -1' } }>
+									<TextareaControl
+										label={ __(
+											'Description',
+											'carbon-txt'
+										) }
+										value={ disclosure.description || '' }
+										onChange={ ( description ) =>
+											onChange( { description } )
+										}
+										__nextHasNoMarginBottom
+									/>
+								</div>
+
+								<div style={ { gridColumn: '1 / -1' } }>
+									<TextControl
+										label={ __( 'Domain', 'carbon-txt' ) }
+										help={ __(
+											'If your disclosure also applies to another website domain, you can add that here.',
+											'carbon-txt'
+										) }
+										placeholder="example.com"
+										value={ disclosure.domain || '' }
+										onChange={ ( domain ) =>
+											onChange( { domain } )
+										}
+										__next40pxDefaultSize
+										__nextHasNoMarginBottom
+									/>
+								</div>
 							</div>
 						</PanelBody>
 					</div>
@@ -893,6 +1211,7 @@ function App() {
 	);
 
 	const disclosures = settings?.disclosures || [];
+	const schemes = settings?.certification_schemes || [];
 
 	// Stable React keys for the rows, kept outside the saved data so the
 	// REST schema (additionalProperties: false) never sees them.
@@ -930,6 +1249,30 @@ function App() {
 		setDisclosures( disclosures.filter( ( _, i ) => i !== index ) );
 	};
 
+	// Scheme edits (including removals and id renames) also scrub the
+	// disclosure refs they touched, so the preview never shows a reference
+	// the validator would reject.
+	const updateSchemes = ( nextSchemes ) => {
+		const known = new Set(
+			nextSchemes.map( ( s ) => s.id ).filter( Boolean )
+		);
+		setSettings( {
+			...( settings || {} ),
+			certification_schemes: nextSchemes,
+			disclosures: disclosures.map( ( d ) =>
+				d.certification_schemes?.some( ( id ) => ! known.has( id ) )
+					? {
+							...d,
+							certification_schemes:
+								d.certification_schemes.filter( ( id ) =>
+									known.has( id )
+								),
+					  }
+					: d
+			),
+		} );
+	};
+
 	// Always exports the *current* on-screen disclosures (same content as
 	// the Preview pane), not a server round trip — so it's accurate even
 	// with unsaved edits, and needs no backend support of its own.
@@ -937,7 +1280,7 @@ function App() {
 		setBackupCopyError( null );
 
 		try {
-			await copyToClipboard( renderCarbonTxt( disclosures ) );
+			await copyToClipboard( renderCarbonTxt( disclosures, schemes ) );
 			setBackupCopied( true );
 			setTimeout( () => setBackupCopied( false ), 2000 );
 		} catch ( error ) {
@@ -951,7 +1294,7 @@ function App() {
 	};
 
 	const handleDownloadBackup = () => {
-		const blob = new Blob( [ renderCarbonTxt( disclosures ) ], {
+		const blob = new Blob( [ renderCarbonTxt( disclosures, schemes ) ], {
 			type: 'text/plain',
 		} );
 		const url = URL.createObjectURL( blob );
@@ -962,8 +1305,21 @@ function App() {
 		URL.revokeObjectURL( url );
 	};
 
-	const importDisclosures = ( toImport ) =>
-		setDisclosures( [ ...disclosures, ...toImport ] );
+	const importDisclosures = ( toImport, importedSchemes = [] ) => {
+		const known = new Set( schemes.map( ( s ) => s.id ).filter( Boolean ) );
+		const mergedSchemes = [ ...schemes ];
+		importedSchemes.forEach( ( scheme ) => {
+			if ( scheme?.id && scheme.url && ! known.has( scheme.id ) ) {
+				known.add( scheme.id );
+				mergedSchemes.push( scheme );
+			}
+		} );
+		setSettings( {
+			...( settings || {} ),
+			disclosures: [ ...disclosures, ...toImport ],
+			certification_schemes: mergedSchemes,
+		} );
+	};
 
 	// Not awaited by save(): the Foundation's fetch can run the full
 	// request timeout, and blocking the primary action on a third-party
@@ -1178,6 +1534,13 @@ function App() {
 			<Flex align="flex-start" gap={ 6 } style={ { marginTop: 16 } }>
 				<FlexBlock>
 					<VStack spacing={ 4 }>
+						<Panel>
+							<SchemesSection
+								schemes={ schemes }
+								onChange={ updateSchemes }
+							/>
+						</Panel>
+
 						{ ! disclosures.length && (
 							<Card>
 								<CardBody>
@@ -1196,6 +1559,7 @@ function App() {
 								key={ rowIds[ index ] }
 								disclosure={ disclosure }
 								index={ index }
+								schemes={ schemes }
 								onChange={ ( changes ) =>
 									updateDisclosure( index, changes )
 								}
@@ -1292,7 +1656,7 @@ function App() {
 									lineHeight: 1.6,
 								} }
 							>
-								{ renderCarbonTxt( disclosures ) }
+								{ renderCarbonTxt( disclosures, schemes ) }
 							</pre>
 						</CardBody>
 					</Card>
