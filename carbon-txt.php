@@ -28,7 +28,6 @@ require_once __DIR__ . '/includes/class-renderer.php';
 require_once __DIR__ . '/includes/class-endpoint.php';
 require_once __DIR__ . '/includes/class-importer.php';
 require_once __DIR__ . '/includes/class-dns.php';
-require_once __DIR__ . '/includes/class-api-key.php';
 require_once __DIR__ . '/includes/class-api-client.php';
 require_once __DIR__ . '/includes/class-admin.php';
 require_once __DIR__ . '/includes/class-deactivateprompt.php';

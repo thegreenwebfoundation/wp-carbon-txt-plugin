@@ -47,7 +47,6 @@ const {
 	existingFile: initialExistingFile,
 	wellKnownFile: initialWellKnownFile,
 	dnsRecord: initialDnsRecord,
-	apiKeyConfigured: initialApiKeyConfigured,
 } = window.wpCarbonTxt;
 
 /**
@@ -425,131 +424,6 @@ function DnsRecordNotice( { dnsRecord } ) {
 				</VStack>
 			</Notice>
 		</div>
-	);
-}
-
-/**
- * Write-only field for the Green Web Foundation API key used to validate
- * carbon.txt content. The key is never sent back to the browser once
- * saved — this component only ever knows whether one is configured.
- *
- * @param {Object}   props
- * @param {boolean}  props.configured Whether a key is currently stored.
- * @param {Function} props.onChange   Called with the new configured state.
- */
-function ApiKeySection( { configured, onChange } ) {
-	const [ value, setValue ] = useState( '' );
-	const [ isSaving, setIsSaving ] = useState( false );
-	const [ isRemoving, setIsRemoving ] = useState( false );
-	const [ error, setError ] = useState( null );
-
-	const handleSave = async () => {
-		const trimmed = value.trim();
-		if ( '' === trimmed ) {
-			return;
-		}
-
-		setIsSaving( true );
-		setError( null );
-
-		try {
-			await apiFetch( {
-				path: '/wp-carbon-txt/v1/api-key',
-				method: 'POST',
-				// eslint-disable-next-line camelcase -- REST arg name, not a JS identifier.
-				data: { api_key: trimmed },
-			} );
-			setValue( '' );
-			onChange( true );
-		} catch ( err ) {
-			setError(
-				err?.message ||
-					__( 'Could not save the API key.', 'carbon-txt' )
-			);
-		} finally {
-			setIsSaving( false );
-		}
-	};
-
-	const handleRemove = async () => {
-		setIsRemoving( true );
-		setError( null );
-
-		try {
-			await apiFetch( {
-				path: '/wp-carbon-txt/v1/api-key',
-				method: 'DELETE',
-			} );
-			onChange( false );
-		} catch ( err ) {
-			setError(
-				err?.message ||
-					__( 'Could not remove the API key.', 'carbon-txt' )
-			);
-		} finally {
-			setIsRemoving( false );
-		}
-	};
-
-	return (
-		<PanelBody
-			title={ __( 'Green Web Foundation API key', 'carbon-txt' ) }
-			initialOpen={ false }
-		>
-			<VStack spacing={ 2 } alignment="left">
-				<Text>
-					{ __(
-						'Add a free Green Web Foundation API key and every save of this screen asks them to validate your domain — they fetch your live carbon.txt and register the domain in their dashboard when it passes.',
-						'carbon-txt'
-					) }{ ' ' }
-					<ExternalLink href="https://admin.thegreenwebfoundation.org">
-						{ __( 'Get an API key', 'carbon-txt' ) }
-					</ExternalLink>
-				</Text>
-
-				{ configured ? (
-					<Flex expanded={ false } align="center" gap={ 2 }>
-						<Text>
-							{ __( 'An API key is saved.', 'carbon-txt' ) }
-						</Text>
-						<Button
-							variant="tertiary"
-							isDestructive
-							onClick={ handleRemove }
-							isBusy={ isRemoving }
-							disabled={ isRemoving }
-						>
-							{ __( 'Remove key', 'carbon-txt' ) }
-						</Button>
-					</Flex>
-				) : (
-					<Flex expanded={ false } align="flex-end" gap={ 2 }>
-						<FlexBlock>
-							<TextControl
-								label={ __( 'API key', 'carbon-txt' ) }
-								type="password"
-								value={ value }
-								onChange={ setValue }
-								__next40pxDefaultSize
-								__nextHasNoMarginBottom
-							/>
-						</FlexBlock>
-						<Button
-							variant="secondary"
-							onClick={ handleSave }
-							isBusy={ isSaving }
-							disabled={ isSaving || '' === value.trim() }
-						>
-							{ __( 'Save key', 'carbon-txt' ) }
-						</Button>
-					</Flex>
-				) }
-
-				{ error && (
-					<Text style={ { color: '#cc1818' } }>{ error }</Text>
-				) }
-			</VStack>
-		</PanelBody>
 	);
 }
 
@@ -1007,13 +881,9 @@ function App() {
 	const [ saveCount, setSaveCount ] = useState( 0 );
 	const [ backupCopied, setBackupCopied ] = useState( false );
 	const [ backupCopyError, setBackupCopyError ] = useState( null );
-	const [ apiKeyConfigured, setApiKeyConfigured ] = useState(
-		initialApiKeyConfigured
-	);
 	// Own state — must never clobber the save notice, since a validation
 	// result arrives after "Saved." and describes a different thing.
 	const [ validation, setValidation ] = useState( null );
-	const keyHintShownRef = useRef( false );
 
 	const { saveEditedEntityRecord } = useDispatch( coreStore );
 	const isSaving = useSelect(
@@ -1177,17 +1047,8 @@ function App() {
 				),
 			} );
 
-			if ( apiKeyConfigured && validateOnSave ) {
+			if ( validateOnSave ) {
 				validateDomain();
-			} else if ( ! apiKeyConfigured && ! keyHintShownRef.current ) {
-				keyHintShownRef.current = true;
-				setNotice( {
-					status: 'info',
-					text: __(
-						'Want the Green Web Foundation to check your carbon.txt? Add your free API key under “Green Web Foundation API key” on this screen — after that, every save is validated automatically.',
-						'carbon-txt'
-					),
-				} );
 			}
 			return;
 		}
@@ -1342,53 +1203,49 @@ function App() {
 							/>
 						) ) }
 
-						{ apiKeyConfigured && (
-							<VStack spacing={ 2 } alignment="left">
-								<Flex
-									expanded={ false }
-									justify="flex-start"
-									align="center"
-									gap={ 2 }
+						<VStack spacing={ 2 } alignment="left">
+							<Flex
+								expanded={ false }
+								justify="flex-start"
+								align="center"
+								gap={ 2 }
+							>
+								<CheckboxControl
+									checked={ validateOnSave }
+									onChange={ setValidateOnSave }
+									label={ __(
+										'Validate with the Green Web Foundation after saving.',
+										'carbon-txt'
+									) }
+									__nextHasNoMarginBottom
+								/>
+								<Button
+									variant="link"
+									aria-expanded={ moreValidation }
+									aria-controls="carbon-txt-validation-details"
+									onClick={ () =>
+										setMoreValidation( ! moreValidation )
+									}
 								>
-									<CheckboxControl
-										checked={ validateOnSave }
-										onChange={ setValidateOnSave }
-										label={ __(
-											'Validate with the Green Web Foundation after saving.',
-											'carbon-txt'
-										) }
-										__nextHasNoMarginBottom
-									/>
-									<Button
-										variant="link"
-										aria-expanded={ moreValidation }
-										aria-controls="carbon-txt-validation-details"
-										onClick={ () =>
-											setMoreValidation(
-												! moreValidation
-											)
-										}
-									>
-										{ __(
-											'More about validation',
-											'carbon-txt'
-										) }
-									</Button>
-								</Flex>
-								{ moreValidation && (
-									<Text
-										variant="muted"
-										style={ { fontSize: 12 } }
-										id="carbon-txt-validation-details"
-									>
-										{ __(
-											'They check that your disclosures resolve and the file follows the spec, and register your domain in your Green Web Foundation dashboard when it passes. Validation never blocks publishing — your file goes live either way, and the result shows up as a notice above.',
-											'carbon-txt'
-										) }
-									</Text>
-								) }
-							</VStack>
-						) }
+									{ __(
+										'More about validation',
+										'carbon-txt'
+									) }
+								</Button>
+							</Flex>
+							{ moreValidation && (
+								<Text
+									variant="muted"
+									style={ { fontSize: 12 } }
+									id="carbon-txt-validation-details"
+								>
+									{ __(
+										'They check that your disclosures resolve and the file follows the spec, and register your domain in your Green Web Foundation dashboard when it passes. Validation never blocks publishing — your file goes live either way, and the result shows up as a notice above.',
+										'carbon-txt'
+									) }
+								</Text>
+							) }
+						</VStack>
 
 						<Flex justify="space-between">
 							<FlexItem>
@@ -1442,10 +1299,6 @@ function App() {
 
 					<div style={ { marginTop: 16 } }>
 						<Panel>
-							<ApiKeySection
-								configured={ apiKeyConfigured }
-								onChange={ setApiKeyConfigured }
-							/>
 							<PanelBody
 								title={ __(
 									'Keep a copy of your disclosures',

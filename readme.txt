@@ -32,11 +32,12 @@ Removing the plugin also removes its saved settings, so it offers to copy
 or download your disclosures before you deactivate it — and a "Keep a
 copy" section is always available, collapsed, on the settings screen.
 
-Add your free Green Web Foundation API key in Settings, and every save
-automatically asks their hosted validator to validate your domain. Their
-validator fetches your live carbon.txt from the web, so this needs a
-publicly reachable site — local and staging domains are skipped — and a
-passing domain is registered in your Green Web Foundation dashboard.
+Every save automatically asks the Green Web Foundation's hosted validator
+to validate your domain — no key or setup required. Their validator
+fetches your live carbon.txt from the web, so this needs a publicly
+reachable site — local and staging domains are skipped — and a passing
+domain is registered in your Green Web Foundation dashboard. Validation
+can be turned off per site from a toggle on the settings screen.
 
 The settings screen also checks your domain for a `carbon-txt-location`
 DNS TXT record (see https://carbontxt.org/faq). If one is set, it takes
@@ -58,6 +59,8 @@ Source lives in `src/`. Build the admin app with:
 * Rename the plugin to "Carbon.txt" with the `carbon-txt` slug and text domain, as required for WordPress.org hosting.
 * Remove the manual `load_plugin_textdomain()` call; WordPress loads translations automatically.
 * Update the "Tested up to" version to 7.1.
+* Validate your domain against the Green Web Foundation's hosted validator automatically after every save — no API key or setup required, with a settings-screen toggle to turn validation off.
+* Remove the per-site Green Web Foundation API key field; the shared key validation now uses ships with the plugin.
 
 = 0.4.1 =
 * Add an optional Green Web Foundation API key field: after each save, the plugin asks the Green Web Foundation's hosted validator to validate your domain (publicly reachable domains only).

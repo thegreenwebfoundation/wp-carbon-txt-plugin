@@ -37,9 +37,11 @@ sustainability data relating to that organisation.
   file — since removing the plugin also removes its saved settings.
   Offered proactively when you deactivate it from the Plugins screen, and
   always available from a collapsed section on the settings screen.
-- Add your **Green Web Foundation API key** in Settings — the first step
-  toward validating your carbon.txt against their hosted validator, coming
-  in an upcoming release.
+- **Validates automatically** — after each save, the plugin asks the Green
+  Web Foundation's hosted validator to check your domain (publicly
+  reachable domains only), and registers it in your Green Web Foundation
+  dashboard when it passes. No key or setup required; a settings-screen
+  toggle turns validation off.
 - Detects a **DNS-based delegation record** (a `carbon-txt-location` TXT
   record, per [carbontxt.org/faq](https://carbontxt.org/faq)) on your
   domain, and warns that it takes priority over any file this plugin

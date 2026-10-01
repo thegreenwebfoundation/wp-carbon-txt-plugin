@@ -22,6 +22,14 @@ class Api_Client {
 	const BASE_URL = 'https://carbon-txt-api.greenweb.org';
 
 	/**
+	 * Shared key issued by the Green Web Foundation, embedded so site
+	 * owners never need to request one. Accepted tradeoff of being in a
+	 * public repository: if it is ever abused, the fallback is rotating it
+	 * — or moving to a proxy that keeps it out of the plugin.
+	 */
+	const API_KEY = 'gwf_YsYJD0ja.uzYyOpxwsqVWEjBZiAL03kRFvMBcXI02';
+
+	/**
 	 * Request timeout, in seconds.
 	 */
 	const TIMEOUT = 15;
@@ -43,14 +51,6 @@ class Api_Client {
 	 * @return array|\WP_Error Decoded response body, or an error.
 	 */
 	public static function validate_domain( $domain ) {
-		if ( ! Api_Key::is_configured() ) {
-			return new \WP_Error(
-				'wp_carbon_txt_no_api_key',
-				__( 'No Green Web Foundation API key is configured.', 'carbon-txt' ),
-				array( 'status' => 400 )
-			);
-		}
-
 		if ( ! Dns::is_public_domain( $domain ) ) {
 			return new \WP_Error(
 				'wp_carbon_txt_domain_not_public',
@@ -69,7 +69,7 @@ class Api_Client {
 				'timeout' => self::TIMEOUT,
 				'headers' => array(
 					'Content-Type' => 'application/json',
-					'X-Api-Key'    => Api_Key::get(),
+					'X-Api-Key'    => self::API_KEY,
 				),
 				'body'    => wp_json_encode( array( 'domain' => (string) $domain ) ),
 			)
@@ -89,7 +89,7 @@ class Api_Client {
 		if ( 401 === $code || 403 === $code ) {
 			return new \WP_Error(
 				'wp_carbon_txt_api_unauthorized',
-				__( 'The configured API key was rejected. Check that it’s correct and still active. If you continue to experience problems get in touch with Green Web Foundation\'s support.', 'carbon-txt' ),
+				__( 'The validation service rejected the request. This points to a plugin configuration problem rather than anything on your site — please get in touch with the plugin author.', 'carbon-txt' ),
 				array( 'status' => 401 )
 			);
 		}
