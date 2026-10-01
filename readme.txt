@@ -60,7 +60,7 @@ Source lives in `src/`. Build the admin app with:
 * Remove the manual `load_plugin_textdomain()` call; WordPress loads translations automatically.
 * Update the "Tested up to" version to 7.1.
 * Validate your domain against the Green Web Foundation's hosted validator automatically after every save — no API key or setup required, with a settings-screen toggle to turn validation off.
-* Remove the per-site Green Web Foundation API key field; the shared key validation now uses ships with the plugin.
+* Remove the per-site Green Web Foundation API key field; the shared key used for validation now ships with the plugin.
 
 = 0.4.1 =
 * Add an optional Green Web Foundation API key field: after each save, the plugin asks the Green Web Foundation's hosted validator to validate your domain (publicly reachable domains only).
