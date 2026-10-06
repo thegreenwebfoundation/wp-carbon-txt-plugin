@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-01T14:28:33+00:00\n"
+"POT-Creation-Date: 2026-10-06T14:48:42+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: carbon-txt\n"
@@ -18,7 +18,8 @@ msgstr ""
 #: carbon-txt.php
 #: includes/class-admin.php:185
 #: includes/class-admin.php:186
-#: src/index.js:1428
+#: build/index.js:8
+#: src/index.js:1434
 msgid "Carbon.txt"
 msgstr ""
 
@@ -70,27 +71,32 @@ msgid "The validation service returned an unexpected error (HTTP %d)."
 msgstr ""
 
 #: includes/class-deactivateprompt.php:65
-#: src/index.js:1660
+#: build/index.js:8
+#: src/index.js:1571
 msgid "Keep a copy of your disclosures"
 msgstr ""
 
 #: includes/class-deactivateprompt.php:66
-#: src/index.js:1668
+#: build/index.js:8
+#: src/index.js:1579
 msgid "Deactivating will unpublish your site's carbon.txt file but keep it and your settings in case you reactivate. If you plan to delete the plugin your carbon.txt file will be lost - we recommend you save a copy of your file."
 msgstr ""
 
 #: includes/class-deactivateprompt.php:67
-#: src/index.js:1684
+#: build/index.js:8
+#: src/index.js:1598
 msgid "Copy to clipboard"
 msgstr ""
 
 #: includes/class-deactivateprompt.php:68
-#: src/index.js:1683
+#: build/index.js:8
+#: src/index.js:1594
 msgid "Copied!"
 msgstr ""
 
 #: includes/class-deactivateprompt.php:69
-#: src/index.js:1693
+#: build/index.js:8
+#: src/index.js:1607
 msgid "Download file"
 msgstr ""
 
@@ -99,12 +105,14 @@ msgid "Deactivate"
 msgstr ""
 
 #: includes/class-deactivateprompt.php:71
-#: src/index.js:718
+#: build/index.js:6
+#: src/index.js:765
 msgid "Cancel"
 msgstr ""
 
 #: includes/class-deactivateprompt.php:72
-#: src/index.js:1281
+#: build/index.js:8
+#: src/index.js:1340
 msgid "Could not copy automatically — please select and copy the preview text manually."
 msgstr ""
 
@@ -116,359 +124,427 @@ msgstr ""
 msgid "Could not delete the existing file. Check your server file permissions."
 msgstr ""
 
-#: src/index.js:60
+#: build/index.js:1
+#: src/index.js:59
 msgid "An existing carbon.txt file was found on your server at:"
 msgstr ""
 
-#: src/index.js:64
+#: build/index.js:1
+#: src/index.js:63
 msgid "Depending on your hosting configuration, your web server may keep serving the existing file instead of the version this plugin generates — saving here might not change what visitors see until the existing file is removed or renamed."
 msgstr ""
 
-#: src/index.js:68
+#: build/index.js:1
+#: src/index.js:67
 msgid "An existing carbon.txt file was found on your server."
 msgstr ""
 
-#: src/index.js:74
+#: build/index.js:1
+#: src/index.js:73
 msgid "A carbon.txt file was also found at the well-known location:"
 msgstr ""
 
-#: src/index.js:78
+#: build/index.js:1
+#: src/index.js:77
 msgid "The carbon.txt file this plugin generates takes priority over the well-known location. To avoid confusion we recommend removing the existing file."
 msgstr ""
 
-#: src/index.js:82
+#: build/index.js:1
+#: src/index.js:81
 msgid "A carbon.txt file was found at the well-known location."
 msgstr ""
 
-#: src/index.js:90
+#: build/index.js:1
+#: src/index.js:89
 msgid "Web page"
 msgstr ""
 
-#: src/index.js:91
+#: build/index.js:1
+#: src/index.js:90
 msgid "Annual report"
 msgstr ""
 
-#: src/index.js:92
+#: build/index.js:1
+#: src/index.js:91
 msgid "Sustainability page"
 msgstr ""
 
-#: src/index.js:93
+#: build/index.js:1
+#: src/index.js:92
 msgid "Certificate"
 msgstr ""
 
-#: src/index.js:94
+#: build/index.js:1
+#: src/index.js:93
 msgid "CSRD report"
 msgstr ""
 
-#: src/index.js:95
+#: build/index.js:1
+#: src/index.js:94
 msgid "AI model card"
 msgstr ""
 
-#: src/index.js:96
+#: build/index.js:1
+#: src/index.js:95
 msgid "Measurement data"
 msgstr ""
 
-#: src/index.js:97
+#: build/index.js:1
+#: src/index.js:96
 msgid "Other"
 msgstr ""
 
-#: src/index.js:353
+#: build/index.js:1
+#: src/index.js:400
 msgid "Select a published page"
 msgstr ""
 
-#: src/index.js:354
+#: build/index.js:1
+#: src/index.js:401
 msgid "Search your pages by title. We'll populate your carbon.txt file with its permalink."
 msgstr ""
 
-#: src/index.js:395
-msgid "Select a file"
-msgstr ""
-
-#: src/index.js:396
-msgid "Use this file"
-msgstr ""
-
 #. translators: %s: selected file name or URL.
-#: src/index.js:426
+#: build/index.js:2
+#: src/index.js:473
 #, js-format
 msgid "Selected file: %s"
 msgstr ""
 
-#: src/index.js:429
+#: build/index.js:2
+#: src/index.js:476
 msgid "No file selected yet."
 msgstr ""
 
-#: src/index.js:433
+#: build/index.js:2
+#: src/index.js:442
+msgid "Select a file"
+msgstr ""
+
+#: build/index.js:2
+#: src/index.js:443
+msgid "Use this file"
+msgstr ""
+
+#: build/index.js:2
+#: src/index.js:480
 msgid "Choose a different file"
 msgstr ""
 
-#: src/index.js:434
-#: src/index.js:1014
+#: build/index.js:2
+#: build/index.js:8
+#: src/index.js:481
+#: src/index.js:1068
 msgid "Choose a file"
 msgstr ""
 
-#: src/index.js:474
+#: build/index.js:2
+#: src/index.js:521
 msgid "A DNS record was found delegating carbon.txt discovery to another location."
 msgstr ""
 
-#: src/index.js:481
+#: build/index.js:2
+#: src/index.js:528
 msgid "A DNS TXT record on your domain delegates carbon.txt discovery to:"
 msgstr ""
 
-#: src/index.js:488
+#: build/index.js:2
+#: src/index.js:535
 msgid "A DNS record takes priority over any file this plugin generates — visitors and validators will follow it instead. If that’s intentional, no action is needed; otherwise, review or remove the carbon-txt-location TXT record on your domain so this plugin’s file is used."
 msgstr ""
 
-#: src/index.js:539
+#: build/index.js:2
+#: src/index.js:586
 msgid "Could not delete the existing file."
 msgstr ""
 
 #. translators: 1: carbon.txt syntax version found in the file. 2: carbon.txt syntax version this plugin generates.
-#: src/index.js:600
+#: build/index.js:3
+#: src/index.js:647
 #, js-format
 msgid "This file uses carbon.txt version %1$s. Importing will update it to version %2$s, the version this plugin generates."
 msgstr ""
 
 #. translators: %d: number of disclosures found in the existing file.
-#: src/index.js:615
+#: build/index.js:4
+#: src/index.js:662
 #, js-format
 msgid "Import %d disclosure(s) from this file"
 msgstr ""
 
 #. translators: %d: number of certification schemes found in the existing file.
-#: src/index.js:623
+#: build/index.js:5
+#: src/index.js:670
 #, js-format
 msgid "Import %d certification scheme(s) from this file"
 msgstr ""
 
-#: src/index.js:635
+#: build/index.js:5
+#: src/index.js:682
 msgid "Removing the old file…"
 msgstr ""
 
-#: src/index.js:636
+#: build/index.js:5
+#: src/index.js:683
 msgid "Imported. Once you save, this file will be permanently deleted — its data now lives in your plugin settings."
 msgstr ""
 
 #. translators: %s: carbon.txt syntax version found in the file.
-#: src/index.js:647
+#: build/index.js:6
+#: src/index.js:694
 #, js-format
 msgid "This file uses carbon.txt version %s, which is newer than this plugin supports. Update the plugin, then reload this page to import it."
 msgstr ""
 
-#: src/index.js:660
+#: build/index.js:6
+#: src/index.js:707
 msgid "View the raw file"
 msgstr ""
 
-#: src/index.js:661
+#: build/index.js:6
+#: src/index.js:708
 msgid "We couldn't automatically read its disclosures — view the raw file"
 msgstr ""
 
-#: src/index.js:684
+#: build/index.js:6
+#: src/index.js:731
 msgid "Delete existing file so this plugin's carbon.txt file is used instead."
 msgstr ""
 
-#: src/index.js:694
+#: build/index.js:6
+#: src/index.js:741
 msgid "This cannot be undone. Continue?"
 msgstr ""
 
-#: src/index.js:711
+#: build/index.js:6
+#: src/index.js:758
 msgid "Yes, delete it"
 msgstr ""
 
-#: src/index.js:780
+#: build/index.js:6
+#: src/index.js:841
 msgid "Do you have an official certification?"
 msgstr ""
 
-#: src/index.js:788
-msgid "Add a certification scheme (like a B Corp or an ecolabel) and its website. Schemes are defined once here; disclosures can then reference them by id."
+#: build/index.js:6
+#: src/index.js:849
+msgid "Add a certification scheme (like a B Corp or an ecolabel) and its website. Schemes are defined once here; disclosures can then link to them."
 msgstr ""
 
 #. translators: %d: certification scheme number.
-#: src/index.js:800
+#: build/index.js:7
+#: src/index.js:861
 #, js-format
 msgid "Certification scheme %d"
 msgstr ""
 
-#: src/index.js:813
-#: src/index.js:935
+#: build/index.js:7
+#: build/index.js:8
+#: src/index.js:874
+#: src/index.js:993
 msgid "Remove"
 msgstr ""
 
-#: src/index.js:827
-msgid "Id"
+#: build/index.js:7
+#: src/index.js:888
+msgid "Title (required)"
 msgstr ""
 
-#: src/index.js:828
-msgid "Short identifier used to link the certification to disclosures, e.g. b-corp."
+#: build/index.js:7
+#: src/index.js:892
+msgid "A short name for the scheme, e.g. B Corp. Used as its unique identifier in carbon.txt."
 msgstr ""
 
-#: src/index.js:840
+#: build/index.js:7
+#: src/index.js:904
 msgid "URL"
 msgstr ""
 
-#: src/index.js:841
+#: build/index.js:7
+#: src/index.js:905
 msgid "Where the certification’s requirements and verifying organisation are described."
 msgstr ""
 
-#: src/index.js:856
-#: src/index.js:1096
-msgid "Title"
+#: build/index.js:7
+#: src/index.js:920
+msgid "Description (optional)"
 msgstr ""
 
-#: src/index.js:865
-#: src/index.js:1142
-msgid "Description"
+#: build/index.js:7
+#: src/index.js:936
+msgid "This scheme needs a title and a URL to be included in your carbon.txt."
 msgstr ""
 
-#: src/index.js:878
-msgid "This scheme needs an id and a URL to be included in your carbon.txt."
-msgstr ""
-
-#: src/index.js:892
+#: build/index.js:7
+#: src/index.js:950
 msgid "Add scheme"
 msgstr ""
 
 #. translators: %d: disclosure number.
-#: src/index.js:925
+#: build/index.js:8
+#: src/index.js:983
 #, js-format
 msgid "Disclosure %d"
 msgstr ""
 
-#: src/index.js:942
+#: build/index.js:8
+#: src/index.js:1000
 msgid "This disclosure needs a URL, page, or file to be included in your carbon.txt."
 msgstr ""
 
-#: src/index.js:950
+#: build/index.js:8
+#: src/index.js:1008
 msgid "Document type"
 msgstr ""
 
-#: src/index.js:964
+#: build/index.js:8
+#: src/index.js:1021
 msgid "Certification scheme"
 msgstr ""
 
-#: src/index.js:968
-msgid "The certification this disclosure documents, from the “Do you have an official certification?” section."
+#: build/index.js:8
+#: src/index.js:1022
+msgid "The certification linked to this disclosure, from the “Do you have an official certification?” section."
 msgstr ""
 
-#: src/index.js:976
+#: build/index.js:8
+#: src/index.js:1030
 msgid "None"
 msgstr ""
 
-#: src/index.js:993
+#: build/index.js:8
+#: src/index.js:1047
 msgid "To link a certification to this disclosure, first add it under “Do you have an official certification?” above."
 msgstr ""
 
-#: src/index.js:1001
+#: build/index.js:8
+#: src/index.js:1055
 msgid "URL source"
 msgstr ""
 
-#: src/index.js:1010
+#: build/index.js:8
+#: src/index.js:1064
 msgid "Select a page"
 msgstr ""
 
-#: src/index.js:1018
+#: build/index.js:8
+#: src/index.js:1072
 msgid "Enter a URL"
 msgstr ""
 
-#: src/index.js:1024
+#: build/index.js:8
+#: src/index.js:1078
 msgid "Disclosure URL"
 msgstr ""
 
-#: src/index.js:1025
+#: build/index.js:8
+#: src/index.js:1079
 msgid "Add a custom URL to point to another place on your site or a page on someone else’s website"
 msgstr ""
 
-#: src/index.js:1061
+#: build/index.js:8
+#: src/index.js:1115
 msgid "Find a file in your site’s media library. It’s best to link to pdfs or structured data files"
 msgstr ""
 
-#: src/index.js:1080
+#: build/index.js:8
+#: src/index.js:1134
 msgid "Optional fields"
 msgstr ""
 
-#: src/index.js:1113
+#: build/index.js:8
+#: src/index.js:1150
+msgid "Title"
+msgstr ""
+
+#: build/index.js:8
+#: src/index.js:1167
 msgid "Valid until"
 msgstr ""
 
-#: src/index.js:1135
+#: build/index.js:8
+#: src/index.js:1189
 msgid "Clear"
 msgstr ""
 
-#: src/index.js:1156
+#: build/index.js:8
+#: src/index.js:1196
+msgid "Description"
+msgstr ""
+
+#: build/index.js:8
+#: src/index.js:1210
 msgid "Domain"
 msgstr ""
 
-#: src/index.js:1157
+#: build/index.js:8
+#: src/index.js:1211
 msgid "If your disclosure also applies to another website domain, you can add that here."
 msgstr ""
 
-#: src/index.js:1335
-msgid "The Green Web Foundation validated your domain: your carbon.txt passed, and your domain is now registered in their dashboard."
+#: build/index.js:8
+#: src/index.js:1437
+msgid "A carbon.txt file contains at least one disclosure, which is a link to a publicly available file typically sharing data reported in organisational sustainability reports. Find out more about <link>carbon.txt</link>."
 msgstr ""
 
-#: src/index.js:1360
-msgid "The Green Web Foundation could not validate your domain. Their report:"
+#: build/index.js:8
+#: src/index.js:1444
+msgid "carbon.txt"
 msgstr ""
 
-#: src/index.js:1377
-msgid "Could not reach the validation service. Please try again."
+#: build/index.js:8
+#: src/index.js:1496
+msgid "No disclosures yet. Add your first document link to get started."
 msgstr ""
 
-#: src/index.js:1393
+#: build/index.js:8
+#: src/index.js:1524
+msgid "Add disclosure"
+msgstr ""
+
+#: build/index.js:8
+#: src/index.js:1545
+msgid "Preview"
+msgstr ""
+
+#: build/index.js:8
+#: src/index.js:1548
+msgid "View live file"
+msgstr ""
+
+#: build/index.js:8
+#: src/index.js:1639
+msgid "Validate with the Green Web Foundation after saving."
+msgstr ""
+
+#: build/index.js:8
+#: src/index.js:1653
+msgid "More about validation"
+msgstr ""
+
+#: build/index.js:8
+#: src/index.js:1665
+msgid "They check that your disclosures resolve and the file follows the spec, and register your domain in your Green Web Foundation dashboard when it passes. Validation runs quietly after each save and never blocks publishing — your file goes live either way."
+msgstr ""
+
+#: build/index.js:8
+#: src/index.js:1399
 msgid "Saved. Your carbon.txt is up to date."
 msgstr ""
 
 #. translators: %s: error message returned by the server.
-#: src/index.js:1419
+#: build/index.js:9
+#: src/index.js:1425
 #, js-format
 msgid "Save failed: %s"
 msgstr ""
 
-#: src/index.js:1422
+#: build/index.js:9
+#: src/index.js:1428
 msgid "Save failed. Please try again."
 msgstr ""
 
-#: src/index.js:1431
-msgid "A carbon.txt file contains at least one disclosure, which is a link to a publicly available file typically sharing data reported in organisational sustainability reports. Find out more about <link>carbon.txt</link>."
-msgstr ""
-
-#: src/index.js:1438
-msgid "carbon.txt"
-msgstr ""
-
-#: src/index.js:1466
-#: src/index.js:1478
-msgid "Asking the Green Web Foundation to validate your domain…"
-msgstr ""
-
-#: src/index.js:1541
-msgid "No disclosures yet. Add your first document link to get started."
-msgstr ""
-
-#: src/index.js:1573
-msgid "Validate with the Green Web Foundation after saving."
-msgstr ""
-
-#: src/index.js:1587
-msgid "More about validation"
-msgstr ""
-
-#: src/index.js:1599
-msgid "They check that your disclosures resolve and the file follows the spec, and register your domain in your Green Web Foundation dashboard when it passes. Validation never blocks publishing — your file goes live either way, and the result shows up as a notice above."
-msgstr ""
-
-#: src/index.js:1613
-msgid "Add disclosure"
-msgstr ""
-
-#: src/index.js:1623
+#: build/index.js:9
+#: src/index.js:1678
 msgid "Save and publish"
-msgstr ""
-
-#: src/index.js:1634
-msgid "Preview"
-msgstr ""
-
-#: src/index.js:1637
-msgid "View live file"
 msgstr ""
