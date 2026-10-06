@@ -1423,7 +1423,7 @@ function App() {
 				/>
 			) }
 
-			<Flex align="flex-start" gap={ 6 } style={ { marginTop: 16 } }>
+			<Flex align="stretch" gap={ 6 } style={ { marginTop: 16 } }>
 				<FlexBlock>
 					<VStack spacing={ 4 }>
 						<Panel>
@@ -1459,7 +1459,118 @@ function App() {
 							/>
 						) ) }
 
-						<VStack spacing={ 2 } alignment="left">
+						<Flex justify="flex-start">
+							<FlexItem>
+								<Button
+									variant="secondary"
+									onClick={ addDisclosure }
+								>
+									{ __( 'Add disclosure', 'carbon-txt' ) }
+								</Button>
+							</FlexItem>
+						</Flex>
+					</VStack>
+				</FlexBlock>
+
+				<FlexBlock>
+					<div
+						style={ {
+							// The whole right column stays pinned while the
+							// (often much taller) left column scrolls. The
+							// wrapping FlexBlock must stretch for this to
+							// have any travel, hence no `align` on the Flex.
+							position: 'sticky',
+							top: 'var(--wp-admin--admin-bar--height, 32px)',
+						} }
+					>
+						<Card>
+							<CardHeader>
+								<Heading level={ 2 }>
+									{ __( 'Preview', 'carbon-txt' ) }
+								</Heading>
+								<ExternalLink href={ carbonTxtUrl }>
+									{ __( 'View live file', 'carbon-txt' ) }
+								</ExternalLink>
+							</CardHeader>
+							<CardBody>
+								<pre
+									style={ {
+										margin: 0,
+										padding: 16,
+										background: '#f6f7f7',
+										borderRadius: 4,
+										overflowX: 'auto',
+										fontSize: 13,
+										lineHeight: 1.6,
+									} }
+								>
+									{ renderCarbonTxt( disclosures, schemes ) }
+								</pre>
+							</CardBody>
+						</Card>
+
+						<div style={ { marginTop: 16 } }>
+							<Panel>
+								<PanelBody
+									title={ __(
+										'Keep a copy of your disclosures',
+										'carbon-txt'
+									) }
+									initialOpen={ false }
+								>
+									<VStack spacing={ 2 } alignment="left">
+										<Text>
+											{ __(
+												"Deactivating will unpublish your site's carbon.txt file but keep it and your settings in case you reactivate. If you plan to delete the plugin your carbon.txt file will be lost - we recommend you save a copy of your file.",
+												'carbon-txt'
+											) }
+										</Text>
+										<Flex
+											expanded={ false }
+											justify="flex-start"
+											gap={ 2 }
+										>
+											<Button
+												variant="secondary"
+												onClick={ handleCopyBackup }
+											>
+												{ backupCopied
+													? __(
+															'Copied!',
+															'carbon-txt'
+													  )
+													: __(
+															'Copy to clipboard',
+															'carbon-txt'
+													  ) }
+											</Button>
+											<Button
+												variant="secondary"
+												onClick={ handleDownloadBackup }
+											>
+												{ __(
+													'Download file',
+													'carbon-txt'
+												) }
+											</Button>
+										</Flex>
+										{ backupCopyError && (
+											<Text
+												style={ { color: '#cc1818' } }
+											>
+												{ backupCopyError }
+											</Text>
+										) }
+									</VStack>
+								</PanelBody>
+							</Panel>
+						</div>
+
+						<VStack
+							spacing={ 4 }
+							alignment="left"
+							style={ { marginTop: 16 } }
+						>
 							<Flex
 								expanded={ false }
 								justify="flex-start"
@@ -1501,18 +1612,7 @@ function App() {
 									) }
 								</Text>
 							) }
-						</VStack>
-
-						<Flex justify="space-between">
-							<FlexItem>
-								<Button
-									variant="secondary"
-									onClick={ addDisclosure }
-								>
-									{ __( 'Add disclosure', 'carbon-txt' ) }
-								</Button>
-							</FlexItem>
-							<FlexItem>
+							<Flex justify="flex-start">
 								<Button
 									variant="primary"
 									onClick={ save }
@@ -1521,88 +1621,8 @@ function App() {
 								>
 									{ __( 'Save and publish', 'carbon-txt' ) }
 								</Button>
-							</FlexItem>
-						</Flex>
-					</VStack>
-				</FlexBlock>
-
-				<FlexBlock>
-					<Card>
-						<CardHeader>
-							<Heading level={ 2 }>
-								{ __( 'Preview', 'carbon-txt' ) }
-							</Heading>
-							<ExternalLink href={ carbonTxtUrl }>
-								{ __( 'View live file', 'carbon-txt' ) }
-							</ExternalLink>
-						</CardHeader>
-						<CardBody>
-							<pre
-								style={ {
-									margin: 0,
-									padding: 16,
-									background: '#f6f7f7',
-									borderRadius: 4,
-									overflowX: 'auto',
-									fontSize: 13,
-									lineHeight: 1.6,
-								} }
-							>
-								{ renderCarbonTxt( disclosures, schemes ) }
-							</pre>
-						</CardBody>
-					</Card>
-
-					<div style={ { marginTop: 16 } }>
-						<Panel>
-							<PanelBody
-								title={ __(
-									'Keep a copy of your disclosures',
-									'carbon-txt'
-								) }
-								initialOpen={ false }
-							>
-								<VStack spacing={ 2 } alignment="left">
-									<Text>
-										{ __(
-											"Deactivating will unpublish your site's carbon.txt file but keep it and your settings in case you reactivate. If you plan to delete the plugin your carbon.txt file will be lost - we recommend you save a copy of your file.",
-											'carbon-txt'
-										) }
-									</Text>
-									<Flex
-										expanded={ false }
-										justify="flex-start"
-										gap={ 2 }
-									>
-										<Button
-											variant="secondary"
-											onClick={ handleCopyBackup }
-										>
-											{ backupCopied
-												? __( 'Copied!', 'carbon-txt' )
-												: __(
-														'Copy to clipboard',
-														'carbon-txt'
-												  ) }
-										</Button>
-										<Button
-											variant="secondary"
-											onClick={ handleDownloadBackup }
-										>
-											{ __(
-												'Download file',
-												'carbon-txt'
-											) }
-										</Button>
-									</Flex>
-									{ backupCopyError && (
-										<Text style={ { color: '#cc1818' } }>
-											{ backupCopyError }
-										</Text>
-									) }
-								</VStack>
-							</PanelBody>
-						</Panel>
+							</Flex>
+						</VStack>
 					</div>
 				</FlexBlock>
 			</Flex>
