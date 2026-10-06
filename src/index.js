@@ -964,44 +964,40 @@ function DisclosureRow( { disclosure, index, schemes, onChange, onRemove } ) {
 						__nextHasNoMarginBottom
 					/>
 
-					{ 'certificate' === disclosure.doc_type &&
-						( schemes.length ? (
-							<SelectControl
-								label={ __(
-									'Certification scheme',
-									'carbon-txt'
-								) }
-								help={ __(
-									'The certification this disclosure documents, from the “Do you have an official certification?” section.',
-									'carbon-txt'
-								) }
-								value={ schemeId }
-								options={ [
-									{
-										value: '',
-										label: __( 'None', 'carbon-txt' ),
-									},
-									...schemes.map( ( scheme ) => ( {
-										value: scheme.id,
-										label: scheme.title || scheme.id,
-									} ) ),
-								] }
-								onChange={ ( id ) =>
-									onChange( {
-										certification_schemes: id ? [ id ] : [],
-									} )
-								}
-								__next40pxDefaultSize
-								__nextHasNoMarginBottom
-							/>
-						) : (
-							<Text variant="muted">
-								{ __(
-									'To link a certification to this disclosure, first add it under “Do you have an official certification?” above.',
-									'carbon-txt'
-								) }
-							</Text>
-						) ) }
+					{ schemes.length ? (
+						<SelectControl
+							label={ __( 'Certification scheme', 'carbon-txt' ) }
+							help={ __(
+								'The certification linked to this disclosure, from the “Do you have an official certification?” section.',
+								'carbon-txt'
+							) }
+							value={ schemeId }
+							options={ [
+								{
+									value: '',
+									label: __( 'None', 'carbon-txt' ),
+								},
+								...schemes.map( ( scheme ) => ( {
+									value: scheme.id,
+									label: scheme.title || scheme.id,
+								} ) ),
+							] }
+							onChange={ ( id ) =>
+								onChange( {
+									certification_schemes: id ? [ id ] : [],
+								} )
+							}
+							__next40pxDefaultSize
+							__nextHasNoMarginBottom
+						/>
+					) : (
+						<Text variant="muted">
+							{ __(
+								'To link a certification to this disclosure, first add it under “Do you have an official certification?” above.',
+								'carbon-txt'
+							) }
+						</Text>
+					) }
 
 					<ToggleGroupControl
 						label={ __( 'URL source', 'carbon-txt' ) }
