@@ -244,6 +244,9 @@ class Admin {
 					'docTypes'         => Settings::doc_types(),
 					'carbonTxtUrl'     => home_url( '/carbon.txt' ),
 					'carbonTxtVersion' => Settings::latest_version(),
+					// Same clock the save will stamp with (GMdate UTC), so the
+					// preview can't drift from the server on a skewed client.
+					'today'            => gmdate( 'Y-m-d' ),
 					'existingFile'     => Importer::summary(),
 					'wellKnownFile'    => Importer::well_known_summary(),
 					'dnsRecord'        => Dns::summary(),

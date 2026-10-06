@@ -44,6 +44,9 @@ const {
 	docTypes,
 	carbonTxtUrl,
 	carbonTxtVersion,
+	// Today's date from the server's clock (UTC) — the same stamp a save
+	// will write — not the browser's clock.
+	today: serverToday,
 	existingFile: initialExistingFile,
 	wellKnownFile: initialWellKnownFile,
 	dnsRecord: initialDnsRecord,
@@ -95,12 +98,6 @@ const DOC_TYPE_LABELS = {
 	'measurement-data': __( 'Measurement data', 'carbon-txt' ),
 	other: __( 'Other', 'carbon-txt' ),
 };
-
-/**
- * Today's date as YYYY-MM-DD (UTC), shown in the preview as the
- * `last_updated` stamp a save will write.
- */
-const today = () => new Date().toISOString().slice( 0, 10 );
 
 /**
  * Encode a value as a TOML basic string. Control characters (line breaks
@@ -297,7 +294,7 @@ const renderCarbonTxt = ( disclosures, schemes = [] ) => {
 			scheme.id && scheme.id.trim() && scheme.url && scheme.url.trim()
 	);
 
-	let out = `version = "${ carbonTxtVersion }"\nlast_updated = ${ today() }\n\n[org]\n`;
+	let out = `version = "${ carbonTxtVersion }"\nlast_updated = ${ serverToday }\n\n[org]\n`;
 	if ( schemeEntries.length ) {
 		out +=
 			'certification_schemes = [\n' +
@@ -855,7 +852,9 @@ function SchemesSection( { schemes, onChange } ) {
 				{ schemes.map( ( scheme, index ) => (
 					<Card key={ index }>
 						<CardHeader>
-							<Heading level={ 3 }>
+							{ /* h2 semantics at the level-3 size, so the
+							appearance doesn't change. */ }
+							<Heading as="h2" level={ 3 }>
 								{ sprintf(
 									/* translators: %d: certification scheme number. */
 									__(
@@ -977,7 +976,7 @@ function DisclosureRow( { disclosure, index, schemes, onChange, onRemove } ) {
 	return (
 		<Card>
 			<CardHeader>
-				<Heading level={ 3 }>
+				<Heading as="h2" level={ 3 }>
 					{ sprintf(
 						/* translators: %d: disclosure number. */
 						__( 'Disclosure %d', 'carbon-txt' ),
@@ -1258,13 +1257,26 @@ function App() {
 	const schemes = settings?.certification_schemes || [];
 
 	// Stable React keys for the rows, kept outside the saved data so the
-	// REST schema (additionalProperties: false) never sees them.
-	const rowIdsRef = useRef( { next: 1, list: [] } );
-	const rowIds = rowIdsRef.current.list;
-	while ( rowIds.length < disclosures.length ) {
-		rowIds.push( rowIdsRef.current.next++ );
-	}
-	rowIds.length = disclosures.length;
+	// REST schema (additionalProperties: false) never sees them. The list
+	// is only mutated here (first render) and by the effect below — never
+	// during render.
+	const nextRowIdRef = useRef( 0 );
+	const [ rowIds, setRowIds ] = useState( () =>
+		disclosures.map( () => nextRowIdRef.current++ )
+	);
+
+	useEffect( () => {
+		setRowIds( ( ids ) => {
+			if ( ids.length === disclosures.length ) {
+				return ids;
+			}
+			const next = ids.slice( 0, disclosures.length );
+			while ( next.length < disclosures.length ) {
+				next.push( nextRowIdRef.current++ );
+			}
+			return next;
+		} );
+	}, [ disclosures.length ] );
 
 	const setDisclosures = ( next ) =>
 		setSettings( { ...( settings || {} ), disclosures: next } );
@@ -1288,10 +1300,8 @@ function App() {
 			{ doc_type: docTypes[ 0 ], url: '' },
 		] );
 
-	const removeDisclosure = ( index ) => {
-		rowIds.splice( index, 1 );
+	const removeDisclosure = ( index ) =>
 		setDisclosures( disclosures.filter( ( _, i ) => i !== index ) );
-	};
 
 	// Scheme edits keep the preview consistent: when a row's derived id
 	// changes (title re-typed), disclosure refs that pointed at the old id
@@ -1504,7 +1514,7 @@ function App() {
 
 						{ disclosures.map( ( disclosure, index ) => (
 							<DisclosureRow
-								key={ rowIds[ index ] }
+								key={ rowIds[ index ] ?? index }
 								disclosure={ disclosure }
 								index={ index }
 								schemes={ schemes }
