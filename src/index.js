@@ -27,7 +27,6 @@ import {
 	ComboboxControl,
 	Button,
 	Notice,
-	Spinner,
 	ExternalLink,
 	Panel,
 	PanelBody,
@@ -1199,9 +1198,6 @@ function App() {
 	const [ saveCount, setSaveCount ] = useState( 0 );
 	const [ backupCopied, setBackupCopied ] = useState( false );
 	const [ backupCopyError, setBackupCopyError ] = useState( null );
-	// Own state — must never clobber the save notice, since a validation
-	// result arrives after "Saved." and describes a different thing.
-	const [ validation, setValidation ] = useState( null );
 
 	const { saveEditedEntityRecord } = useDispatch( coreStore );
 	const isSaving = useSelect(
@@ -1323,69 +1319,16 @@ function App() {
 
 	// Not awaited by save(): the Foundation's fetch can run the full
 	// request timeout, and blocking the primary action on a third-party
-	// round trip would make Save feel broken.
+	// round trip would make Save feel broken. Results stay off the UI —
+	// the outcome is visible in the Foundation's dashboard only.
 	const validateDomain = async () => {
-		setValidation( { status: 'in_progress' } );
-
 		try {
-			const result = await apiFetch( {
+			await apiFetch( {
 				path: '/wp-carbon-txt/v1/validate-domain',
 				method: 'POST',
 			} );
-
-			// Only an explicit `success === true` counts as passing — the
-			// API's response shape isn't documented, so anything else falls
-			// to the failure branch.
-			if ( result.success === true ) {
-				setValidation( {
-					status: 'success',
-					text: __(
-						'The Green Web Foundation validated your domain: your carbon.txt passed, and your domain is now registered in their dashboard.',
-						'carbon-txt'
-					),
-				} );
-				return;
-			}
-
-			// Observed failure shape: { success: false, errors: [...] },
-			// with `logs` kept as a fallback — take whichever exists, a
-			// handful of lines at most.
-			const lines = [
-				...( Array.isArray( result?.errors ) ? result.errors : [] ),
-				...( Array.isArray( result?.logs ) ? result.logs : [] ),
-			]
-				.map( ( line ) =>
-					'object' === typeof line && null !== line
-						? JSON.stringify( line )
-						: String( line )
-				)
-				.filter( Boolean )
-				.slice( 0, 5 );
-
-			setValidation( {
-				status: 'warning',
-				text: __(
-					'The Green Web Foundation could not validate your domain. Their report:',
-					'carbon-txt'
-				),
-				lines,
-			} );
-		} catch ( err ) {
-			// Expected skip for non-public domains — explain it, don't alarm.
-			if ( 'wp_carbon_txt_domain_not_public' === err?.code ) {
-				setValidation( { status: 'warning', text: err.message } );
-				return;
-			}
-
-			setValidation( {
-				status: 'error',
-				text:
-					err?.message ||
-					__(
-						'Could not reach the validation service. Please try again.',
-						'carbon-txt'
-					),
-			} );
+		} catch {
+			// Silent by design — see above.
 		}
 	};
 
@@ -1456,57 +1399,6 @@ function App() {
 						onRemove={ () => setNotice( null ) }
 					>
 						{ notice.text }
-					</Notice>
-				</div>
-			) }
-
-			{ validation && (
-				<div style={ { margin: '16px 0' } }>
-					<Notice
-						status={
-							'in_progress' === validation.status
-								? 'info'
-								: validation.status
-						}
-						spokenMessage={
-							'in_progress' === validation.status
-								? __(
-										'Asking the Green Web Foundation to validate your domain…',
-										'carbon-txt'
-								  )
-								: validation.text
-						}
-						onRemove={ () => setValidation( null ) }
-					>
-						{ 'in_progress' === validation.status ? (
-							<Flex expanded={ false } align="center" gap={ 2 }>
-								<Spinner />
-								<Text>
-									{ __(
-										'Asking the Green Web Foundation to validate your domain…',
-										'carbon-txt'
-									) }
-								</Text>
-							</Flex>
-						) : (
-							<VStack spacing={ 2 } alignment="left">
-								<Text>{ validation.text }</Text>
-								{ validation.lines?.length > 0 && (
-									<ul
-										style={ {
-											margin: 0,
-											paddingLeft: 20,
-											fontSize: 13,
-											lineHeight: 1.6,
-										} }
-									>
-										{ validation.lines.map( ( line, i ) => (
-											<li key={ i }>{ line }</li>
-										) ) }
-									</ul>
-								) }
-							</VStack>
-						) }
 					</Notice>
 				</div>
 			) }
@@ -1604,7 +1496,7 @@ function App() {
 									id="carbon-txt-validation-details"
 								>
 									{ __(
-										'They check that your disclosures resolve and the file follows the spec, and register your domain in your Green Web Foundation dashboard when it passes. Validation never blocks publishing — your file goes live either way, and the result shows up as a notice above.',
+										'They check that your disclosures resolve and the file follows the spec, and register your domain in your Green Web Foundation dashboard when it passes. Validation runs quietly after each save and never blocks publishing — your file goes live either way.',
 										'carbon-txt'
 									) }
 								</Text>
