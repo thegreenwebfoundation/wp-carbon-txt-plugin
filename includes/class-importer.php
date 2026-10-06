@@ -319,7 +319,9 @@ class Importer {
 
 	/**
 	 * Extract a certification scheme from a block of `key = value` pairs.
-	 * A scheme needs at least `id` and `url` to be usable.
+	 * A scheme needs `url` plus either `id` or `title` to be usable; ids
+	 * are generated from the title when absent, and titles are backfilled
+	 * from the id when missing.
 	 *
 	 * @param string $text Block of text.
 	 * @return array|null
@@ -327,18 +329,26 @@ class Importer {
 	private static function extract_scheme( $text ) {
 		$pairs = self::extract_pairs( $text );
 
-		if ( empty( $pairs['id'] ) || empty( $pairs['url'] ) ) {
+		if ( empty( $pairs['url'] ) || ( empty( $pairs['id'] ) && empty( $pairs['title'] ) ) ) {
 			return null;
 		}
 
+		$id    = isset( $pairs['id'] ) ? $pairs['id'] : '';
+		$title = isset( $pairs['title'] ) ? $pairs['title'] : '';
+
+		if ( '' === $title ) {
+			$title = $id;
+		}
+		if ( '' === $id ) {
+			$id = Settings::scheme_slug( $title );
+		}
+
 		$entry = array(
-			'id'  => $pairs['id'],
-			'url' => $pairs['url'],
+			'id'    => $id,
+			'url'   => $pairs['url'],
+			'title' => $title,
 		);
 
-		if ( ! empty( $pairs['title'] ) ) {
-			$entry['title'] = $pairs['title'];
-		}
 		if ( ! empty( $pairs['description'] ) ) {
 			$entry['description'] = $pairs['description'];
 		}

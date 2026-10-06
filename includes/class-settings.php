@@ -190,9 +190,20 @@ class Settings {
 			return self::defaults();
 		}
 
+		$schemes = isset( $value['certification_schemes'] ) && is_array( $value['certification_schemes'] ) ? $value['certification_schemes'] : array();
+
+		// Schemes stored before titles were required identify by id alone;
+		// backfill the title so they survive the stricter sanitize rules.
+		foreach ( $schemes as &$scheme ) {
+			if ( is_array( $scheme ) && empty( $scheme['title'] ) && ! empty( $scheme['id'] ) ) {
+				$scheme['title'] = $scheme['id'];
+			}
+		}
+		unset( $scheme );
+
 		$normalized = array(
 			'last_updated'          => isset( $value['last_updated'] ) ? (string) $value['last_updated'] : '',
-			'certification_schemes' => array_values( isset( $value['certification_schemes'] ) && is_array( $value['certification_schemes'] ) ? $value['certification_schemes'] : array() ),
+			'certification_schemes' => array_values( $schemes ),
 			'validate_on_save'      => self::validate_flag( $value ),
 		);
 
@@ -325,23 +336,43 @@ class Settings {
 	}
 
 	/**
-	 * Sanitize the org-level certification scheme list: id and url are
-	 * required, later duplicates of an id lose.
+	 * Slugify a scheme title into a stable id, avoiding ids already taken.
+	 * Mirrors what the block editor generates client-side.
+	 *
+	 * @param string   $title Scheme title.
+	 * @param string[] $taken Ids already in use.
+	 * @return string
+	 */
+	public static function scheme_slug( $title, $taken = array() ) {
+		$slug = sanitize_title( $title );
+		if ( '' === $slug ) {
+			$slug = 'scheme';
+		}
+
+		$id = $slug;
+		$n  = 2;
+		while ( isset( $taken[ $id ] ) ) {
+			$id = $slug . '-' . $n;
+			++$n;
+		}
+
+		return $id;
+	}
+
+	/**
+	 * Sanitize the org-level certification scheme list: url and title are
+	 * required, ids are generated from the title when absent or colliding,
+	 * and rows without the required fields are dropped.
 	 *
 	 * @param array $schemes Raw scheme rows.
 	 * @return array
 	 */
 	private static function sanitize_schemes( $schemes ) {
 		$clean = array();
-		$seen  = array();
+		$taken = array();
 
 		foreach ( (array) $schemes as $scheme ) {
 			if ( ! is_array( $scheme ) ) {
-				continue;
-			}
-
-			$id = isset( $scheme['id'] ) ? sanitize_text_field( trim( (string) $scheme['id'] ) ) : '';
-			if ( '' === $id || isset( $seen[ $id ] ) ) {
 				continue;
 			}
 
@@ -350,17 +381,23 @@ class Settings {
 				continue;
 			}
 
-			$seen[ $id ] = true;
+			$title = isset( $scheme['title'] ) ? sanitize_text_field( $scheme['title'] ) : '';
+			if ( '' === $title ) {
+				continue;
+			}
+
+			$id = isset( $scheme['id'] ) ? sanitize_text_field( trim( (string) $scheme['id'] ) ) : '';
+			if ( '' === $id || isset( $taken[ $id ] ) ) {
+				$id = self::scheme_slug( $title, $taken );
+			}
+
+			$taken[ $id ] = true;
 
 			$entry = array(
-				'id'  => $id,
-				'url' => $url,
+				'id'    => $id,
+				'url'   => $url,
+				'title' => $title,
 			);
-
-			$title = isset( $scheme['title'] ) ? sanitize_text_field( $scheme['title'] ) : '';
-			if ( '' !== $title ) {
-				$entry['title'] = $title;
-			}
 
 			$description = isset( $scheme['description'] ) ? sanitize_textarea_field( $scheme['description'] ) : '';
 			if ( '' !== $description ) {

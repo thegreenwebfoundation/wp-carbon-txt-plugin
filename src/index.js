@@ -221,6 +221,47 @@ const copyToClipboard = ( text ) => {
 };
 
 /**
+ * Slugify a scheme title into a TOML-friendly id, mirroring the PHP side
+ * (which uses WordPress's sanitize_title). Falls back to a generic id for
+ * titles with no latin characters.
+ *
+ * @param {string} value Title.
+ * @return {string} Slug.
+ */
+const slugify = ( value ) =>
+	String( value )
+		.toLowerCase()
+		.normalize( 'NFKD' )
+		.replace( /[\u0300-\u036f]/g, '' )
+		.replace( /[^a-z0-9]+/g, '-' )
+		.replace( /^-+|-+$/g, '' )
+		.slice( 0, 100 );
+
+/**
+ * Pick an id for a scheme derived from its title, suffixing -2, -3… when
+ * another scheme already uses the slug.
+ *
+ * @param {string} title     Scheme title.
+ * @param {Array}  schemes   Current scheme list (may include the target row).
+ * @param {number} selfIndex Index of the target row, excluded from the set.
+ * @return {string} Unused id.
+ */
+const uniqueSchemeId = ( title, schemes, selfIndex ) => {
+	const taken = new Set(
+		schemes
+			.filter( ( _, i ) => i !== selfIndex )
+			.map( ( scheme ) => scheme.id )
+			.filter( Boolean )
+	);
+	const base = slugify( title ) || 'scheme';
+	let id = base;
+	for ( let n = 2; taken.has( id ); n++ ) {
+		id = `${ base }-${ n }`;
+	}
+	return id;
+};
+
+/**
  * Render a single certification scheme as a TOML inline table.
  *
  * @param {Object} scheme Scheme data.
@@ -771,15 +812,29 @@ const modeFor = ( disclosure ) => {
 function SchemesSection( { schemes, onChange } ) {
 	const updateScheme = ( index, changes ) =>
 		onChange(
-			schemes.map( ( scheme, i ) =>
-				i === index ? { ...scheme, ...changes } : scheme
-			)
+			schemes.map( ( scheme, i ) => {
+				if ( i !== index ) {
+					return scheme;
+				}
+				const next = { ...scheme, ...changes };
+				// The id is managed automatically: derived from the title and
+				// kept in sync as it's typed. updateSchemes() remaps the
+				// disclosure refs when the id changes, so links survive.
+				if ( 'title' in changes ) {
+					next.id =
+						next.title && next.title.trim()
+							? uniqueSchemeId( next.title, schemes, index )
+							: '';
+				}
+				return next;
+			} )
 		);
 
 	const removeScheme = ( index ) =>
 		onChange( schemes.filter( ( _, i ) => i !== index ) );
 
-	const addScheme = () => onChange( [ ...schemes, { id: '', url: '' } ] );
+	const addScheme = () =>
+		onChange( [ ...schemes, { id: '', url: '', title: '' } ] );
 
 	return (
 		<PanelBody
@@ -792,7 +847,7 @@ function SchemesSection( { schemes, onChange } ) {
 			<VStack spacing={ 4 }>
 				<Text>
 					{ __(
-						'Add a certification scheme (like a B Corp or an ecolabel) and its website. Schemes are defined once here; disclosures can then reference them by id.',
+						'Add a certification scheme (like a B Corp or an ecolabel) and its website. Schemes are defined once here; disclosures can then link to them.',
 						'carbon-txt'
 					) }
 				</Text>
@@ -830,14 +885,17 @@ function SchemesSection( { schemes, onChange } ) {
 									} }
 								>
 									<TextControl
-										label={ __( 'Id', 'carbon-txt' ) }
-										help={ __(
-											'Short identifier used to link the certification to disclosures, e.g. b-corp.',
+										label={ __(
+											'Title (required)',
 											'carbon-txt'
 										) }
-										value={ scheme.id || '' }
-										onChange={ ( id ) =>
-											updateScheme( index, { id } )
+										help={ __(
+											'A short name for the scheme, e.g. B Corp. Used as its unique identifier in carbon.txt.',
+											'carbon-txt'
+										) }
+										value={ scheme.title || '' }
+										onChange={ ( title ) =>
+											updateScheme( index, { title } )
 										}
 										__next40pxDefaultSize
 										__nextHasNoMarginBottom
@@ -858,31 +916,25 @@ function SchemesSection( { schemes, onChange } ) {
 										__nextHasNoMarginBottom
 									/>
 								</div>
-								<TextControl
-									label={ __( 'Title', 'carbon-txt' ) }
-									value={ scheme.title || '' }
-									onChange={ ( title ) =>
-										updateScheme( index, { title } )
-									}
-									__next40pxDefaultSize
-									__nextHasNoMarginBottom
-								/>
 								<TextareaControl
-									label={ __( 'Description', 'carbon-txt' ) }
+									label={ __(
+										'Description (optional)',
+										'carbon-txt'
+									) }
 									value={ scheme.description || '' }
 									onChange={ ( description ) =>
 										updateScheme( index, { description } )
 									}
 									__nextHasNoMarginBottom
 								/>
-								{ ! ( scheme.id && scheme.id.trim() ) ||
+								{ ! ( scheme.title && scheme.title.trim() ) ||
 								! ( scheme.url && scheme.url.trim() ) ? (
 									<Notice
 										status="warning"
 										isDismissible={ false }
 									>
 										{ __(
-											'This scheme needs an id and a URL to be included in your carbon.txt.',
+											'This scheme needs a title and a URL to be included in your carbon.txt.',
 											'carbon-txt'
 										) }
 									</Notice>
@@ -1241,10 +1293,19 @@ function App() {
 		setDisclosures( disclosures.filter( ( _, i ) => i !== index ) );
 	};
 
-	// Scheme edits (including removals and id renames) also scrub the
-	// disclosure refs they touched, so the preview never shows a reference
-	// the validator would reject.
+	// Scheme edits keep the preview consistent: when a row's derived id
+	// changes (title re-typed), disclosure refs that pointed at the old id
+	// follow it; refs to schemes that no longer exist are scrubbed.
 	const updateSchemes = ( nextSchemes ) => {
+		const renamed = {};
+		if ( nextSchemes.length === schemes.length ) {
+			schemes.forEach( ( scheme, i ) => {
+				const nextId = nextSchemes[ i ]?.id;
+				if ( scheme.id && nextId && scheme.id !== nextId ) {
+					renamed[ scheme.id ] = nextId;
+				}
+			} );
+		}
 		const known = new Set(
 			nextSchemes.map( ( s ) => s.id ).filter( Boolean )
 		);
@@ -1255,10 +1316,9 @@ function App() {
 				d.certification_schemes?.some( ( id ) => ! known.has( id ) )
 					? {
 							...d,
-							certification_schemes:
-								d.certification_schemes.filter( ( id ) =>
-									known.has( id )
-								),
+							certification_schemes: d.certification_schemes
+								.map( ( id ) => renamed[ id ] || id )
+								.filter( ( id ) => known.has( id ) ),
 					  }
 					: d
 			),
