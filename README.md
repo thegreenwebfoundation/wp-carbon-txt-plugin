@@ -56,7 +56,7 @@ core REST settings endpoint (no custom REST controller for that part), and
 the file picker uses the classic `wp.media()` frame rather than pulling in
 `@wordpress/block-editor` as a dependency.
 
-The output follows the [carbon.txt v0.5 syntax](https://carbontxt.org/syntax).
+The output follows the [carbon.txt v0.6 syntax](https://carbontxt.org/syntax).
 
 ## Installation
 

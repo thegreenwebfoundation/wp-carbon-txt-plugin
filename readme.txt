@@ -1,5 +1,5 @@
 === Carbon.txt ===
-Contributors: nahuai
+Contributors: nahuai, greenwebfoundation, timcowlishaw, hanopcan
 Tags: carbon.txt, sustainability, emissions, carbon, green web
 Requires at least: 6.6
 Tested up to: 7.1
@@ -13,14 +13,20 @@ Publish a carbon.txt file with your organisational sustainability disclosures.
 == Description ==
 
 Carbon.txt lets you publish a carbon.txt file at your site root
-(https://your-site.com/carbon.txt) following the carbon.txt v0.5 syntax.
+(https://your-site.com/carbon.txt) following the carbon.txt v0.6 syntax.
 
 You can declare one or more organisational disclosures. For each one,
 choose a document type and point to it by pasting a URL, selecting an
 existing published page, or choosing a file from your media library —
-plus an optional title, valid-until date, and domain (for disclosures
-that apply to more than one domain). A live preview shows the exact
-file that will be served.
+plus an optional title, description, valid-until date, and domain (for
+disclosures that apply to more than one domain), and references to the
+certification schemes you hold. A live preview shows the exact file
+that will be served.
+
+At the org level you can also list the certification schemes your
+organisation holds — each with a title, a URL, and an optional
+description, with ids generated for you. Every save re-stamps the
+org-level last_updated date.
 
 If a carbon.txt file already exists on your server — at the domain root or
 the well-known location — the settings screen warns you about it and
