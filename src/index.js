@@ -901,7 +901,7 @@ function SchemesSection( { schemes, onChange } ) {
 	return (
 		<PanelBody
 			title={ __(
-				'Do you have an official certification?',
+				'Does your organisation hold any sustainability certifications?',
 				'carbon-txt'
 			) }
 			initialOpen={ schemes.length > 0 }
@@ -909,7 +909,7 @@ function SchemesSection( { schemes, onChange } ) {
 			<VStack spacing={ 4 }>
 				<Text>
 					{ __(
-						'Add a certification scheme (like a B Corp or an ecolabel) and its website. Schemes are defined once here; disclosures can then link to them.',
+						'Add any current certifications that demonstrate your organisation’s commitment to sustainability, for example through schemes like B Corp or ecolabels. Schemes are defined once in this section, and then lower down you can link one or more disclosure documents to them, such as your certificate or other supporting evidence.',
 						'carbon-txt'
 					) }
 				</Text>
@@ -969,7 +969,7 @@ function SchemesSection( { schemes, onChange } ) {
 												</>
 											}
 											help={ __(
-												'A short name for the scheme, e.g. B Corp. Used as its unique identifier in carbon.txt.',
+												'What is the name of the certification? Try and keep it short but meaningful, eg B Corp. You will use this name to link disclosure documents to this certification later on.',
 												'carbon-txt'
 											) }
 											value={ scheme.title || '' }
@@ -990,7 +990,7 @@ function SchemesSection( { schemes, onChange } ) {
 												</>
 											}
 											help={ __(
-												'Where the certification’s requirements and verifying organisation are described.',
+												'Where can someone find more information about the scheme? Link to the certifying organisation’s website.',
 												'carbon-txt'
 											) }
 											type="url"
@@ -1032,7 +1032,7 @@ function SchemesSection( { schemes, onChange } ) {
 						<Button variant="secondary" onClick={ addScheme }>
 							{ schemes.length
 								? __( 'Add another scheme', 'carbon-txt' )
-								: __( 'Add scheme', 'carbon-txt' ) }
+								: __( 'Add another scheme', 'carbon-txt' ) }
 						</Button>
 					</FlexItem>
 				</Flex>
@@ -1116,7 +1116,7 @@ function DisclosureRow( { disclosure, index, schemes, onChange, onRemove } ) {
 								</>
 							}
 							help={ __(
-								'The certification linked to this disclosure, from the “Do you have an official certification?” section.',
+								'We recommend you have at least one disclosure per certification from your list above, but it’s optional.',
 								'carbon-txt'
 							) }
 							value={ schemeId }
@@ -1141,7 +1141,7 @@ function DisclosureRow( { disclosure, index, schemes, onChange, onRemove } ) {
 					) : (
 						<Text variant="muted">
 							{ __(
-								'To link a certification to this disclosure, first add it under “Do you have an official certification?” above.',
+								'To link a certification to this disclosure, first add it under “Does your organisation hold any sustainability certifications?” above.',
 								'carbon-txt'
 							) }
 						</Text>
@@ -1572,7 +1572,7 @@ function App() {
 			<Text>
 				{ createInterpolateElement(
 					__(
-						'A carbon.txt file contains at least one disclosure, which is a link to a publicly available file typically sharing data reported in organisational sustainability reports. Find out more about <link>carbon.txt</link>.',
+						'A carbon.txt file must contain at least one disclosure. A disclosure is a link to a publicly available file which contains sustainability data about your organisation. You can also optionally add information about certification schemes your organisation complies with. Find out more about <link>carbon.txt</link>.',
 						'carbon-txt'
 					),
 					{
@@ -1663,7 +1663,10 @@ function App() {
 												'Add another disclosure',
 												'carbon-txt'
 										  )
-										: __( 'Add disclosure', 'carbon-txt' ) }
+										: __(
+												'Add another disclosure',
+												'carbon-txt'
+										  ) }
 								</Button>
 							</FlexItem>
 						</Flex>
@@ -1779,7 +1782,7 @@ function App() {
 									checked={ validateOnSave }
 									onChange={ setValidateOnSave }
 									label={ __(
-										'Validate with the Green Web Foundation after saving.',
+										'Validate with Green Web Foundation after saving.',
 										'carbon-txt'
 									) }
 									__nextHasNoMarginBottom
@@ -1805,7 +1808,7 @@ function App() {
 									id="carbon-txt-validation-details"
 								>
 									{ __(
-										'They check that your disclosures resolve and the file follows the spec, and register your domain in your Green Web Foundation dashboard when it passes. Validation runs quietly after each save and never blocks publishing — your file goes live either way.',
+										'Validating double-checks your syntax is correct through the carbon.txt API - run by Green Web Foundation (GWF), a European non-profit organisation working towards a fossil-free internet. Validation also logs your use of this plugin which supports GWF’s ability to report on its impact to funders. Validation runs quietly after each save and never blocks publishing. You can opt out from validation by unchecking the box above.',
 										'carbon-txt'
 									) }
 								</Text>

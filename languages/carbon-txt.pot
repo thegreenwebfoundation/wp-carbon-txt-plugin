@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-20T10:36:51+00:00\n"
+"POT-Creation-Date: 2026-10-20T10:53:19+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: carbon-txt\n"
@@ -72,31 +72,31 @@ msgstr ""
 
 #: includes/class-deactivateprompt.php:65
 #: build/index.js:8
-#: src/index.js:1713
+#: src/index.js:1716
 msgid "Keep a copy of your disclosures"
 msgstr ""
 
 #: includes/class-deactivateprompt.php:66
 #: build/index.js:8
-#: src/index.js:1721
+#: src/index.js:1724
 msgid "Deactivating will unpublish your site's carbon.txt file but keep it and your settings in case you reactivate. If you plan to delete the plugin your carbon.txt file will be lost - we recommend you save a copy of your file."
 msgstr ""
 
 #: includes/class-deactivateprompt.php:67
 #: build/index.js:8
-#: src/index.js:1740
+#: src/index.js:1743
 msgid "Copy to clipboard"
 msgstr ""
 
 #: includes/class-deactivateprompt.php:68
 #: build/index.js:8
-#: src/index.js:1736
+#: src/index.js:1739
 msgid "Copied!"
 msgstr ""
 
 #: includes/class-deactivateprompt.php:69
 #: build/index.js:8
-#: src/index.js:1749
+#: src/index.js:1752
 msgid "Download file"
 msgstr ""
 
@@ -333,12 +333,12 @@ msgstr ""
 
 #: build/index.js:6
 #: src/index.js:903
-msgid "Do you have an official certification?"
+msgid "Does your organisation hold any sustainability certifications?"
 msgstr ""
 
 #: build/index.js:6
 #: src/index.js:911
-msgid "Add a certification scheme (like a B Corp or an ecolabel) and its website. Schemes are defined once here; disclosures can then link to them."
+msgid "Add any current certifications that demonstrate your organisation’s commitment to sustainability, for example through schemes like B Corp or ecolabels. Schemes are defined once in this section, and then lower down you can link one or more disclosure documents to them, such as your certificate or other supporting evidence."
 msgstr ""
 
 #. translators: %d: certification scheme number.
@@ -364,7 +364,7 @@ msgstr ""
 
 #: build/index.js:7
 #: src/index.js:971
-msgid "A short name for the scheme, e.g. B Corp. Used as its unique identifier in carbon.txt."
+msgid "What is the name of the certification? Try and keep it short but meaningful, eg B Corp. You will use this name to link disclosure documents to this certification later on."
 msgstr ""
 
 #: build/index.js:7
@@ -374,7 +374,7 @@ msgstr ""
 
 #: build/index.js:7
 #: src/index.js:992
-msgid "Where the certification’s requirements and verifying organisation are described."
+msgid "Where can someone find more information about the scheme? Link to the certifying organisation’s website."
 msgstr ""
 
 #: build/index.js:7
@@ -386,12 +386,8 @@ msgstr ""
 
 #: build/index.js:7
 #: src/index.js:1034
-msgid "Add another scheme"
-msgstr ""
-
-#: build/index.js:7
 #: src/index.js:1035
-msgid "Add scheme"
+msgid "Add another scheme"
 msgstr ""
 
 #. translators: %d: disclosure number.
@@ -413,7 +409,7 @@ msgstr ""
 
 #: build/index.js:8
 #: src/index.js:1118
-msgid "The certification linked to this disclosure, from the “Do you have an official certification?” section."
+msgid "We recommend you have at least one disclosure per certification from your list above, but it’s optional."
 msgstr ""
 
 #: build/index.js:8
@@ -423,7 +419,7 @@ msgstr ""
 
 #: build/index.js:8
 #: src/index.js:1143
-msgid "To link a certification to this disclosure, first add it under “Do you have an official certification?” above."
+msgid "To link a certification to this disclosure, first add it under “Does your organisation hold any sustainability certifications?” above."
 msgstr ""
 
 #: build/index.js:8
@@ -483,7 +479,7 @@ msgstr ""
 
 #: build/index.js:8
 #: src/index.js:1574
-msgid "A carbon.txt file contains at least one disclosure, which is a link to a publicly available file typically sharing data reported in organisational sustainability reports. Find out more about <link>carbon.txt</link>."
+msgid "A carbon.txt file must contain at least one disclosure. A disclosure is a link to a publicly available file which contains sustainability data about your organisation. You can also optionally add information about certification schemes your organisation complies with. Find out more about <link>carbon.txt</link>."
 msgstr ""
 
 #: build/index.js:8
@@ -498,37 +494,33 @@ msgstr ""
 
 #: build/index.js:8
 #: src/index.js:1662
+#: src/index.js:1666
 msgid "Add another disclosure"
 msgstr ""
 
 #: build/index.js:8
-#: src/index.js:1666
-msgid "Add disclosure"
-msgstr ""
-
-#: build/index.js:8
-#: src/index.js:1687
+#: src/index.js:1690
 msgid "Preview"
 msgstr ""
 
 #: build/index.js:8
-#: src/index.js:1690
+#: src/index.js:1693
 msgid "View live file"
 msgstr ""
 
 #: build/index.js:8
-#: src/index.js:1781
-msgid "Validate with the Green Web Foundation after saving."
+#: src/index.js:1784
+msgid "Validate with Green Web Foundation after saving."
 msgstr ""
 
 #: build/index.js:8
-#: src/index.js:1795
+#: src/index.js:1798
 msgid "More about validation"
 msgstr ""
 
 #: build/index.js:8
-#: src/index.js:1807
-msgid "They check that your disclosures resolve and the file follows the spec, and register your domain in your Green Web Foundation dashboard when it passes. Validation runs quietly after each save and never blocks publishing — your file goes live either way."
+#: src/index.js:1810
+msgid "Validating double-checks your syntax is correct through the carbon.txt API - run by Green Web Foundation (GWF), a European non-profit organisation working towards a fossil-free internet. Validation also logs your use of this plugin which supports GWF’s ability to report on its impact to funders. Validation runs quietly after each save and never blocks publishing. You can opt out from validation by unchecking the box above."
 msgstr ""
 
 #: build/index.js:8
@@ -549,6 +541,6 @@ msgid "Save failed. Please try again."
 msgstr ""
 
 #: build/index.js:9
-#: src/index.js:1820
+#: src/index.js:1823
 msgid "Save and publish"
 msgstr ""
