@@ -78,6 +78,27 @@ class Settings {
 	}
 
 	/**
+	 * Document types offered in the disclosure editor.
+	 *
+	 * The spec still deems "web page" valid, but the Green Web Foundation
+	 * has deprecated it in favour of "sustainability page", so it is kept
+	 * out of the picker: existing disclosures with web-page keep validating
+	 * and rendering as-is, we just stop steering new ones toward it.
+	 *
+	 * "sustainability-page" is listed first so it is also the default type
+	 * for newly added disclosures.
+	 *
+	 * @return string[]
+	 */
+	public static function doc_types_ui() {
+		$types   = self::doc_types();
+		$types   = array_values( array_diff( $types, array( 'web-page' ) ) );
+		$primary = array( 'sustainability-page' );
+
+		return array_values( array_unique( array_merge( $primary, $types ) ) );
+	}
+
+	/**
 	 * Default setting value.
 	 *
 	 * @return array{disclosures:array,validate_on_save:bool}
@@ -216,7 +237,7 @@ class Settings {
 		if ( isset( $value['url'] ) || isset( $value['doc_type'] ) ) {
 			$normalized['disclosures'] = array(
 				array(
-					'doc_type' => isset( $value['doc_type'] ) ? $value['doc_type'] : 'web-page',
+					'doc_type' => isset( $value['doc_type'] ) ? $value['doc_type'] : 'sustainability-page',
 					'url'      => isset( $value['url'] ) ? $value['url'] : '',
 				),
 			);
@@ -269,9 +290,9 @@ class Settings {
 				continue;
 			}
 
-			$doc_type = isset( $disclosure['doc_type'] ) ? sanitize_text_field( $disclosure['doc_type'] ) : 'web-page';
+			$doc_type = isset( $disclosure['doc_type'] ) ? sanitize_text_field( $disclosure['doc_type'] ) : 'sustainability-page';
 			if ( ! in_array( $doc_type, self::doc_types(), true ) ) {
-				$doc_type = 'web-page';
+				$doc_type = 'sustainability-page';
 			}
 
 			$entry = array(

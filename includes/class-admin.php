@@ -241,7 +241,7 @@ class Admin {
 			'window.wpCarbonTxt = ' . wp_json_encode(
 				array(
 					'optionName'       => OPTION_NAME,
-					'docTypes'         => Settings::doc_types(),
+					'docTypes'         => Settings::doc_types_ui(),
 					'carbonTxtUrl'     => home_url( '/carbon.txt' ),
 					'carbonTxtVersion' => Settings::latest_version(),
 					// Same clock the save will stamp with (GMdate UTC), so the

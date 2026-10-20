@@ -110,7 +110,7 @@ class Renderer {
 	private static function render_disclosure( $disclosure, $url ) {
 		$doc_type = ( isset( $disclosure['doc_type'] ) && '' !== $disclosure['doc_type'] )
 			? $disclosure['doc_type']
-			: 'web-page';
+			: 'sustainability-page';
 
 		$pairs   = array();
 		$pairs[] = 'doc_type = ' . self::toml_string( $doc_type );

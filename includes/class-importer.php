@@ -543,9 +543,9 @@ class Importer {
 		// (a different tool or version may use different values); fall
 		// back rather than let an invalid value reach the REST schema,
 		// which would reject the whole save.
-		$doc_type = isset( $pairs['doc_type'] ) ? $pairs['doc_type'] : 'web-page';
+		$doc_type = isset( $pairs['doc_type'] ) ? $pairs['doc_type'] : 'sustainability-page';
 		if ( ! in_array( $doc_type, Settings::doc_types( $version ), true ) ) {
-			$doc_type = 'web-page';
+			$doc_type = 'sustainability-page';
 		}
 
 		$entry = array(

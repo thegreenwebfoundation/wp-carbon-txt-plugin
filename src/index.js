@@ -88,6 +88,10 @@ const FILE_LOCATIONS = {
 	},
 };
 
+// "web-page" is still valid in the carbon.txt syntax but deprecated by the
+// Green Web Foundation in favour of "sustainability-page", so it isn't
+// offered in the picker (see Settings::doc_types_ui()). The label is kept
+// only so legacy disclosures that already use it display correctly.
 const DOC_TYPE_LABELS = {
 	'web-page': __( 'Web page', 'carbon-txt' ),
 	'annual-report': __( 'Annual report', 'carbon-txt' ),
@@ -170,7 +174,7 @@ const tomlDate = ( value ) => {
  */
 const renderDisclosure = ( disclosure ) => {
 	const pairs = [
-		`doc_type = ${ tomlString( disclosure.doc_type || 'web-page' ) }`,
+		`doc_type = ${ tomlString( disclosure.doc_type || 'sustainability-page' ) }`,
 		`url = ${ tomlString( disclosure.url ) }`,
 	];
 	if ( disclosure.title ) {
@@ -1093,10 +1097,21 @@ function DisclosureRow( { disclosure, index, schemes, onChange, onRemove } ) {
 							</>
 						}
 						value={ disclosure.doc_type || docTypes[ 0 ] }
-						options={ docTypes.map( ( type ) => ( {
-							value: type,
-							label: DOC_TYPE_LABELS[ type ] || type,
-						} ) ) }
+						options={
+							// A legacy row may use a type no longer offered
+							// (e.g. the deprecated "web-page"); surface it so
+							// the select keeps matching its value instead of
+							// showing an empty first option.
+							(
+								! disclosure.doc_type ||
+								docTypes.includes( disclosure.doc_type )
+									? docTypes
+									: [ disclosure.doc_type, ...docTypes ]
+							).map( ( type ) => ( {
+								value: type,
+								label: DOC_TYPE_LABELS[ type ] || type,
+							} ) )
+						}
 						onChange={ ( doc_type ) => onChange( { doc_type } ) }
 						__next40pxDefaultSize
 						__nextHasNoMarginBottom
