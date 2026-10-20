@@ -99,6 +99,22 @@ const DOC_TYPE_LABELS = {
 	other: __( 'Other', 'carbon-txt' ),
 };
 
+// Label suffixes for required/optional fields. Deliberately normal weight,
+// so they contrast with the (bold) label text, not compete with it — and
+// exempt from the site's uppercase label styling, so "(Required)" reads as
+// written.
+const Required = () => (
+	<span style={ { fontWeight: 400, textTransform: 'none' } }>
+		({ __( 'Required', 'carbon-txt' ) })
+	</span>
+);
+
+const Optional = () => (
+	<span style={ { fontWeight: 400, textTransform: 'none' } }>
+		({ __( 'Optional', 'carbon-txt' ) })
+	</span>
+);
+
 /**
  * Encode a value as a TOML basic string. Control characters (line breaks
  * above all) must be escaped — a raw newline would make the file invalid
@@ -259,6 +275,17 @@ const uniqueSchemeId = ( title, schemes, selfIndex ) => {
 };
 
 /**
+ * A row qualifies for the generated file (and for the disclosure picker)
+ * only once it has both an id and a URL — mirrors the PHP sanitizer, which
+ * drops rows missing either field.
+ *
+ * @param {Object} scheme Scheme data.
+ * @return {boolean} Whether the row is complete.
+ */
+const isCompleteScheme = ( scheme ) =>
+	!! ( scheme.id && scheme.id.trim() && scheme.url && scheme.url.trim() );
+
+/**
  * Render a single certification scheme as a TOML inline table.
  *
  * @param {Object} scheme Scheme data.
@@ -289,10 +316,7 @@ const renderCarbonTxt = ( disclosures, schemes = [] ) => {
 	const entries = disclosures.filter(
 		( disclosure ) => disclosure.url && disclosure.url.trim()
 	);
-	const schemeEntries = schemes.filter(
-		( scheme ) =>
-			scheme.id && scheme.id.trim() && scheme.url && scheme.url.trim()
-	);
+	const schemeEntries = schemes.filter( isCompleteScheme );
 
 	let out = `version = "${ carbonTxtVersion }"\nlast_updated = ${ serverToday }\n\n[org]\n`;
 	if ( schemeEntries.length ) {
@@ -394,7 +418,12 @@ function PagePicker( { value, pageId, onChange } ) {
 
 	return (
 		<ComboboxControl
-			label={ __( 'Select a published page', 'carbon-txt' ) }
+			label={
+				<>
+					{ __( 'Select a published page', 'carbon-txt' ) }{ ' ' }
+					<Required />
+				</>
+			}
 			help={ __(
 				"Search your pages by title. We'll populate your carbon.txt file with its permalink.",
 				'carbon-txt'
@@ -807,6 +836,28 @@ const modeFor = ( disclosure ) => {
  * @param {Function} props.onChange Called with the next scheme list.
  */
 function SchemesSection( { schemes, onChange } ) {
+	// Plain wrapper divs holding callback refs per card, so a freshly added
+	// row can be focused: Card itself doesn't reliably forward refs.
+	const cardRefs = useRef( {} );
+	const [ focusIndex, setFocusIndex ] = useState( null );
+
+	// Runs after the row is committed, so a just-added card exists in the
+	// DOM.
+	useEffect( () => {
+		if ( focusIndex === null ) {
+			return;
+		}
+		const card = cardRefs.current[ focusIndex ];
+		if ( card ) {
+			const input = card.querySelector( 'input' );
+			if ( input ) {
+				input.focus();
+			}
+			card.scrollIntoView( { block: 'nearest' } );
+		}
+		setFocusIndex( null );
+	}, [ focusIndex ] );
+
 	const updateScheme = ( index, changes ) =>
 		onChange(
 			schemes.map( ( scheme, i ) => {
@@ -830,8 +881,22 @@ function SchemesSection( { schemes, onChange } ) {
 	const removeScheme = ( index ) =>
 		onChange( schemes.filter( ( _, i ) => i !== index ) );
 
-	const addScheme = () =>
+	const addScheme = () => {
+		// If the last row is still blank, don't stack another empty one —
+		// steer the reader back to it instead.
+		const last = schemes[ schemes.length - 1 ];
+		const lastIsBlank =
+			last &&
+			! ( last.title || '' ).trim() &&
+			! ( last.url || '' ).trim() &&
+			! ( last.description || '' ).trim();
+		if ( lastIsBlank ) {
+			setFocusIndex( schemes.length - 1 );
+			return;
+		}
 		onChange( [ ...schemes, { id: '', url: '', title: '' } ] );
+		setFocusIndex( schemes.length );
+	};
 
 	return (
 		<PanelBody
@@ -850,103 +915,124 @@ function SchemesSection( { schemes, onChange } ) {
 				</Text>
 
 				{ schemes.map( ( scheme, index ) => (
-					<Card key={ index }>
-						<CardHeader>
-							{ /* h2 semantics at the level-3 size, so the
+					<div
+						key={ index }
+						ref={ ( el ) => {
+							if ( el ) {
+								cardRefs.current[ index ] = el;
+							} else {
+								delete cardRefs.current[ index ];
+							}
+						} }
+					>
+						<Card>
+							<CardHeader>
+								{ /* h2 semantics at the level-3 size, so the
 							appearance doesn't change. */ }
-							<Heading as="h2" level={ 3 }>
-								{ sprintf(
-									/* translators: %d: certification scheme number. */
-									__(
-										'Certification scheme %d',
-										'carbon-txt'
-									),
-									index + 1
-								) }
-							</Heading>
-							<Button
-								isDestructive
-								variant="tertiary"
-								onClick={ () => removeScheme( index ) }
-								size="small"
-							>
-								{ __( 'Remove', 'carbon-txt' ) }
-							</Button>
-						</CardHeader>
-						<CardBody>
-							<VStack spacing={ 4 }>
-								<div
-									style={ {
-										display: 'grid',
-										gridTemplateColumns:
-											'repeat( auto-fit, minmax( 240px, 1fr ) )',
-										gap: '24px',
-									} }
-								>
-									<TextControl
-										label={ __(
-											'Title (required)',
+								<Heading as="h2" level={ 3 }>
+									{ sprintf(
+										/* translators: %d: certification scheme number. */
+										__(
+											'Certification scheme %d',
 											'carbon-txt'
-										) }
-										help={ __(
-											'A short name for the scheme, e.g. B Corp. Used as its unique identifier in carbon.txt.',
-											'carbon-txt'
-										) }
-										value={ scheme.title || '' }
-										onChange={ ( title ) =>
-											updateScheme( index, { title } )
-										}
-										__next40pxDefaultSize
-										__nextHasNoMarginBottom
-									/>
-									<TextControl
-										label={ __( 'URL', 'carbon-txt' ) }
-										help={ __(
-											'Where the certification’s requirements and verifying organisation are described.',
-											'carbon-txt'
-										) }
-										type="url"
-										placeholder="https://example.com/certification"
-										value={ scheme.url || '' }
-										onChange={ ( url ) =>
-											updateScheme( index, { url } )
-										}
-										__next40pxDefaultSize
-										__nextHasNoMarginBottom
-									/>
-								</div>
-								<TextareaControl
-									label={ __(
-										'Description (optional)',
-										'carbon-txt'
+										),
+										index + 1
 									) }
-									value={ scheme.description || '' }
-									onChange={ ( description ) =>
-										updateScheme( index, { description } )
-									}
-									__nextHasNoMarginBottom
-								/>
-								{ ! ( scheme.title && scheme.title.trim() ) ||
-								! ( scheme.url && scheme.url.trim() ) ? (
-									<Notice
-										status="warning"
-										isDismissible={ false }
+								</Heading>
+								<Button
+									isDestructive
+									variant="tertiary"
+									onClick={ () => removeScheme( index ) }
+									size="small"
+								>
+									{ __( 'Remove', 'carbon-txt' ) }
+								</Button>
+							</CardHeader>
+							<CardBody>
+								<VStack spacing={ 4 }>
+									<div
+										style={ {
+											display: 'grid',
+											gridTemplateColumns:
+												'repeat( auto-fit, minmax( 240px, 1fr ) )',
+											gap: '24px',
+										} }
 									>
-										{ __(
-											'This scheme needs a title and a URL to be included in your carbon.txt.',
-											'carbon-txt'
-										) }
-									</Notice>
-								) : null }
-							</VStack>
-						</CardBody>
-					</Card>
+										<TextControl
+											label={
+												<>
+													{ __(
+														'Title',
+														'carbon-txt'
+													) }{ ' ' }
+													<Required />
+												</>
+											}
+											help={ __(
+												'A short name for the scheme, e.g. B Corp. Used as its unique identifier in carbon.txt.',
+												'carbon-txt'
+											) }
+											value={ scheme.title || '' }
+											onChange={ ( title ) =>
+												updateScheme( index, { title } )
+											}
+											__next40pxDefaultSize
+											__nextHasNoMarginBottom
+										/>
+										<TextControl
+											label={
+												<>
+													{ __(
+														'URL',
+														'carbon-txt'
+													) }{ ' ' }
+													<Required />
+												</>
+											}
+											help={ __(
+												'Where the certification’s requirements and verifying organisation are described.',
+												'carbon-txt'
+											) }
+											type="url"
+											placeholder="https://example.com/certification"
+											value={ scheme.url || '' }
+											onChange={ ( url ) =>
+												updateScheme( index, { url } )
+											}
+											__next40pxDefaultSize
+											__nextHasNoMarginBottom
+										/>
+									</div>
+									<TextareaControl
+										label={
+											<>
+												{ __(
+													'Description',
+													'carbon-txt'
+												) }{ ' ' }
+												<Optional />
+											</>
+										}
+										value={ scheme.description || '' }
+										onChange={ ( description ) =>
+											updateScheme( index, {
+												description,
+											} )
+										}
+										__nextHasNoMarginBottom
+									/>
+								</VStack>
+							</CardBody>
+						</Card>
+					</div>
 				) ) }
 
 				<Flex justify="flex-start">
 					<FlexItem>
 						<Button variant="secondary" onClick={ addScheme }>
-							{ __( 'Add scheme', 'carbon-txt' ) }
+							{ schemes.length
+								? __( 'Add another scheme', 'carbon-txt' )
+								: __( 'Add scheme', 'carbon-txt' ) }
 						</Button>
 					</FlexItem>
 				</Flex>
@@ -973,6 +1059,11 @@ function DisclosureRow( { disclosure, index, schemes, onChange, onRemove } ) {
 
 	const schemeId = disclosure.certification_schemes?.[ 0 ] || '';
 
+	// Incomplete schemes (id and URL not filled in yet) are dropped from the
+	// generated file, so they must not appear as selectable options here —
+	// otherwise a blank row shows up as a blank dropdown entry.
+	const completeSchemes = schemes.filter( isCompleteScheme );
+
 	return (
 		<Card>
 			<CardHeader>
@@ -994,17 +1085,13 @@ function DisclosureRow( { disclosure, index, schemes, onChange, onRemove } ) {
 			</CardHeader>
 			<CardBody>
 				<VStack spacing={ 4 }>
-					{ ! ( disclosure.url && disclosure.url.trim() ) && (
-						<Notice status="warning" isDismissible={ false }>
-							{ __(
-								'This disclosure needs a URL, page, or file to be included in your carbon.txt.',
-								'carbon-txt'
-							) }
-						</Notice>
-					) }
-
 					<SelectControl
-						label={ __( 'Document type', 'carbon-txt' ) }
+						label={
+							<>
+								{ __( 'Document type', 'carbon-txt' ) }{ ' ' }
+								<Required />
+							</>
+						}
 						value={ disclosure.doc_type || docTypes[ 0 ] }
 						options={ docTypes.map( ( type ) => ( {
 							value: type,
@@ -1015,9 +1102,19 @@ function DisclosureRow( { disclosure, index, schemes, onChange, onRemove } ) {
 						__nextHasNoMarginBottom
 					/>
 
-					{ schemes.length ? (
+					{ /* Incomplete rows (still being filled in) never reach
+						the file — offering them would add a blank option. */ }
+					{ completeSchemes.length ? (
 						<SelectControl
-							label={ __( 'Certification scheme', 'carbon-txt' ) }
+							label={
+								<>
+									{ __(
+										'Certification scheme',
+										'carbon-txt'
+									) }{ ' ' }
+									<Optional />
+								</>
+							}
 							help={ __(
 								'The certification linked to this disclosure, from the “Do you have an official certification?” section.',
 								'carbon-txt'
@@ -1028,7 +1125,7 @@ function DisclosureRow( { disclosure, index, schemes, onChange, onRemove } ) {
 									value: '',
 									label: __( 'None', 'carbon-txt' ),
 								},
-								...schemes.map( ( scheme ) => ( {
+								...completeSchemes.map( ( scheme ) => ( {
 									value: scheme.id,
 									label: scheme.title || scheme.id,
 								} ) ),
@@ -1051,7 +1148,12 @@ function DisclosureRow( { disclosure, index, schemes, onChange, onRemove } ) {
 					) }
 
 					<ToggleGroupControl
-						label={ __( 'URL source', 'carbon-txt' ) }
+						label={
+							<>
+								{ __( 'URL source', 'carbon-txt' ) }{ ' ' }
+								<Required />
+							</>
+						}
 						value={ mode }
 						onChange={ setMode }
 						isBlock
@@ -1074,7 +1176,12 @@ function DisclosureRow( { disclosure, index, schemes, onChange, onRemove } ) {
 
 					{ 'url' === mode && (
 						<TextControl
-							label={ __( 'Disclosure URL', 'carbon-txt' ) }
+							label={
+								<>
+									{ __( 'Disclosure URL', 'carbon-txt' ) }{ ' ' }
+									<Required />
+								</>
+							}
 							help={ __(
 								'Add a custom URL to point to another place on your site or a page on someone else’s website',
 								'carbon-txt'
@@ -1130,7 +1237,7 @@ function DisclosureRow( { disclosure, index, schemes, onChange, onRemove } ) {
 						} }
 					>
 						<PanelBody
-							title={ __( 'Optional fields', 'carbon-txt' ) }
+							title={ __( 'Advanced fields', 'carbon-txt' ) }
 							initialOpen={ !! hasOptionalFields }
 						>
 							<div
@@ -1146,7 +1253,12 @@ function DisclosureRow( { disclosure, index, schemes, onChange, onRemove } ) {
 								} }
 							>
 								<TextControl
-									label={ __( 'Title', 'carbon-txt' ) }
+									label={
+										<>
+											{ __( 'Title', 'carbon-txt' ) }{ ' ' }
+											<Optional />
+										</>
+									}
 									value={ disclosure.title || '' }
 									onChange={ ( title ) =>
 										onChange( { title } )
@@ -1163,10 +1275,15 @@ function DisclosureRow( { disclosure, index, schemes, onChange, onRemove } ) {
 									} }
 								>
 									<TextControl
-										label={ __(
-											'Valid until',
-											'carbon-txt'
-										) }
+										label={
+											<>
+												{ __(
+													'Valid until',
+													'carbon-txt'
+												) }{ ' ' }
+												<Optional />
+											</>
+										}
 										type="date"
 										value={ disclosure.valid_until || '' }
 										onChange={ ( valid_until ) =>
@@ -1192,10 +1309,15 @@ function DisclosureRow( { disclosure, index, schemes, onChange, onRemove } ) {
 
 								<div style={ { gridColumn: '1 / -1' } }>
 									<TextareaControl
-										label={ __(
-											'Description',
-											'carbon-txt'
-										) }
+										label={
+											<>
+												{ __(
+													'Description',
+													'carbon-txt'
+												) }{ ' ' }
+												<Optional />
+											</>
+										}
 										value={ disclosure.description || '' }
 										onChange={ ( description ) =>
 											onChange( { description } )
@@ -1206,7 +1328,12 @@ function DisclosureRow( { disclosure, index, schemes, onChange, onRemove } ) {
 
 								<div style={ { gridColumn: '1 / -1' } }>
 									<TextControl
-										label={ __( 'Domain', 'carbon-txt' ) }
+										label={
+											<>
+												{ __( 'Domain', 'carbon-txt' ) }{ ' ' }
+												<Optional />
+											</>
+										}
 										help={ __(
 											'If your disclosure also applies to another website domain, you can add that here.',
 											'carbon-txt'
@@ -1531,7 +1658,12 @@ function App() {
 									variant="secondary"
 									onClick={ addDisclosure }
 								>
-									{ __( 'Add disclosure', 'carbon-txt' ) }
+									{ disclosures.length
+										? __(
+												'Add another disclosure',
+												'carbon-txt'
+										  )
+										: __( 'Add disclosure', 'carbon-txt' ) }
 								</Button>
 							</FlexItem>
 						</Flex>

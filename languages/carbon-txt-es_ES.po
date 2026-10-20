@@ -279,10 +279,6 @@ msgstr "Esquema de certificación %d"
 msgid "Remove"
 msgstr "Eliminar"
 
-#: build/index.js:7 src/index.js:888
-msgid "Title (required)"
-msgstr "Título (obligatorio)"
-
 #: build/index.js:7 src/index.js:892
 msgid "A short name for the scheme, e.g. B Corp. Used as its unique identifier in carbon.txt."
 msgstr "Un nombre corto para el esquema, p. ej. B Corp. Se usa como su identificador único en carbon.txt."
@@ -296,14 +292,14 @@ msgid "Where the certification’s requirements and verifying organisation are d
 msgstr "Donde se describen los requisitos de la certificación y la organización verificadora."
 
 #: build/index.js:7 src/index.js:920
-msgid "Description (optional)"
-msgstr "Descripción (opcional)"
+msgid "Optional"
+msgstr "Opcional"
 
-#: build/index.js:7 src/index.js:936
-msgid "This scheme needs a title and a URL to be included in your carbon.txt."
-msgstr "Este esquema necesita un título y una URL para incluirse en tu carbon.txt."
+#: build/index.js:7 src/index.js:1009
+msgid "Add another scheme"
+msgstr "Añadir otro esquema"
 
-#: build/index.js:7 src/index.js:950
+#: build/index.js:7 src/index.js:1009
 msgid "Add scheme"
 msgstr "Añadir esquema"
 
@@ -311,10 +307,6 @@ msgstr "Añadir esquema"
 #: build/index.js:8 src/index.js:983
 msgid "Disclosure %d"
 msgstr "Divulgación %d"
-
-#: build/index.js:8 src/index.js:1000
-msgid "This disclosure needs a URL, page, or file to be included in your carbon.txt."
-msgstr "Esta divulgación necesita una URL, página o archivo para incluirse en tu carbon.txt."
 
 #: build/index.js:8 src/index.js:1008
 msgid "Document type"
@@ -361,8 +353,12 @@ msgid "Find a file in your site’s media library. It’s best to link to pdfs o
 msgstr "Busca un archivo en la biblioteca de medios de tu sitio. Lo ideal es vincular a archivos PDF o de datos estructurados"
 
 #: build/index.js:8 src/index.js:1134
-msgid "Optional fields"
-msgstr "Campos opcionales"
+msgid "Required"
+msgstr "Obligatorio"
+
+#: build/index.js:8 src/index.js:1134
+msgid "Advanced fields"
+msgstr "Campos avanzados"
 
 #: build/index.js:8 src/index.js:1150
 msgid "Title"
@@ -400,7 +396,11 @@ msgstr "carbon.txt"
 msgid "No disclosures yet. Add your first document link to get started."
 msgstr "Aún no hay divulgaciones. Añade tu primer enlace de documento para empezar."
 
-#: build/index.js:8 src/index.js:1524
+#: build/index.js:8 src/index.js:1603
+msgid "Add another disclosure"
+msgstr "Añadir otra divulgación"
+
+#: build/index.js:8 src/index.js:1603
 msgid "Add disclosure"
 msgstr "Añadir divulgación"
 
