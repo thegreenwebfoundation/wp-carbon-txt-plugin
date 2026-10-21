@@ -74,6 +74,22 @@ npm run build
 Activate **Carbon.txt**, then go to **Settings → Carbon.txt** to add your
 disclosures.
 
+## External validation
+
+When saving changes to your carbon.txt file, if you have the "Validate with
+Green Web Foundation after saving" option checked, the plugin will submit the
+fully-qualified domain name of your wordpress site to the [carbon.txt validator API](https://carbon-txt-api.greenweb.org/),
+operated by [The Green Web Foundation](https://thegreenwebfoundation.org) on save.
+
+We do this for two reasons. First, by ensuring the external validator can read and parse
+your carbon.txt file we make sure that it's visible to anyone who might want to access it, and
+no firewalls, CAPTCHAs or CDNs prevent access to it. Secondly, it allows us (The Green Web Foundation)
+to monitor agregate usage of the plugin and the carbon.txt standard, for future improvements, and to
+track our progress in making the web fossil-fuel free. Only your domain name is sent as part of this process,
+and no personally identifying information is transmitted or retained.
+
+If you want to opt out of this check, simply uncheck the "Validate after saving" checkbox before hitting the save button.
+
 ## Development
 
 Requirements: Node.js and PHP with [Composer](https://getcomposer.org/).
