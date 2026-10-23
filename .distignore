@@ -1,0 +1,18 @@
+# Files that belong in the repository, not in a release build.
+/.git
+/.github
+/node_modules
+/vendor
+/dist
+/.distignore
+/.gitignore
+/.eslintrc.json
+/.DS_Store
+*.zip
+*.log
+composer.json
+composer.lock
+package.json
+package-lock.json
+phpcs.xml.dist
+README.md
