@@ -12,7 +12,7 @@ import { useEntityProp, store as coreStore } from '@wordpress/core-data';
 import { useSelect, useDispatch, select as dataSelect } from '@wordpress/data';
 import { useDebounce } from '@wordpress/compose';
 import apiFetch from '@wordpress/api-fetch';
-import { __, sprintf } from '@wordpress/i18n';
+import { __, _n, sprintf } from '@wordpress/i18n';
 import {
 	Card,
 	CardBody,
@@ -91,9 +91,10 @@ const FILE_LOCATIONS = {
 // "web-page" is still valid in the carbon.txt syntax but deprecated by the
 // Green Web Foundation in favour of "sustainability-page", so it isn't
 // offered in the picker (see Settings::doc_types_ui()). The label is kept
-// only so legacy disclosures that already use it display correctly.
+// — marked as deprecated — so legacy disclosures that already use it show
+// what they are and that they should be moved on.
 const DOC_TYPE_LABELS = {
-	'web-page': __( 'Web page', 'carbon-txt' ),
+	'web-page': __( 'Web page (deprecated)', 'carbon-txt' ),
 	'annual-report': __( 'Annual report', 'carbon-txt' ),
 	'sustainability-page': __( 'Sustainability page', 'carbon-txt' ),
 	certificate: __( 'Certificate', 'carbon-txt' ),
@@ -174,7 +175,9 @@ const tomlDate = ( value ) => {
  */
 const renderDisclosure = ( disclosure ) => {
 	const pairs = [
-		`doc_type = ${ tomlString( disclosure.doc_type || 'sustainability-page' ) }`,
+		`doc_type = ${ tomlString(
+			disclosure.doc_type || 'sustainability-page'
+		) }`,
 		`url = ${ tomlString( disclosure.url ) }`,
 	];
 	if ( disclosure.title ) {
@@ -288,6 +291,75 @@ const uniqueSchemeId = ( title, schemes, selfIndex ) => {
  */
 const isCompleteScheme = ( scheme ) =>
 	!! ( scheme.id && scheme.id.trim() && scheme.url && scheme.url.trim() );
+
+/**
+ * Describe the entries the server's sanitizer will drop on the next save,
+ * and why.
+ *
+ * Mirrors the PHP rules: a disclosure needs a URL, a certification needs a
+ * title and a URL. Counted before saving, so the notice can name the
+ * reason instead of just reporting a shorter list afterwards.
+ *
+ * @param {Array} disclosures Disclosure list.
+ * @param {Array} schemes     Certification scheme list.
+ * @return {string|null} Message, or null when nothing will be dropped.
+ */
+const skippedEntriesMessage = ( disclosures, schemes ) => {
+	const missingDisclosure = disclosures.filter(
+		( disclosure ) => ! ( disclosure.url || '' ).trim()
+	).length;
+	const missingScheme = schemes.filter(
+		( scheme ) =>
+			! ( scheme.title || '' ).trim() || ! ( scheme.url || '' ).trim()
+	).length;
+
+	if ( ! missingDisclosure && ! missingScheme ) {
+		return null;
+	}
+
+	const parts = [];
+
+	if ( missingDisclosure ) {
+		parts.push(
+			sprintf(
+				/* translators: %d: number of disclosures. */
+				_n(
+					'%d disclosure needs a URL',
+					'%d disclosures need a URL',
+					missingDisclosure,
+					'carbon-txt'
+				),
+				missingDisclosure
+			)
+		);
+	}
+
+	if ( missingScheme ) {
+		parts.push(
+			sprintf(
+				/* translators: %d: number of certifications. */
+				_n(
+					'%d certification needs a title and a URL',
+					'%d certifications need a title and a URL',
+					missingScheme,
+					'carbon-txt'
+				),
+				missingScheme
+			)
+		);
+	}
+
+	return sprintf(
+		/* translators: %s: the entries left out of the published file. */
+		_n(
+			'%s was skipped and is not published.',
+			'%s were skipped and are not published.',
+			missingDisclosure + missingScheme,
+			'carbon-txt'
+		),
+		parts.join( ', ' )
+	);
+};
 
 /**
  * Render a single certification scheme as a TOML inline table.
@@ -1036,7 +1108,7 @@ function SchemesSection( { schemes, onChange } ) {
 						<Button variant="secondary" onClick={ addScheme }>
 							{ schemes.length
 								? __( 'Add another scheme', 'carbon-txt' )
-								: __( 'Add another scheme', 'carbon-txt' ) }
+								: __( 'Add scheme', 'carbon-txt' ) }
 						</Button>
 					</FlexItem>
 				</Flex>
@@ -1067,6 +1139,43 @@ function DisclosureRow( { disclosure, index, schemes, onChange, onRemove } ) {
 	// generated file, so they must not appear as selectable options here —
 	// otherwise a blank row shows up as a blank dropdown entry.
 	const completeSchemes = schemes.filter( isCompleteScheme );
+
+	// The linked scheme can have been left incomplete — or removed —
+	// since it was chosen. Keep it in the list, marked with its state,
+	// rather than showing an empty select that reads as "the link was
+	// lost": it also makes clear that it won't be published.
+	const schemeOptions = [
+		{
+			value: '',
+			label: __( 'None', 'carbon-txt' ),
+		},
+		...completeSchemes.map( ( scheme ) => ( {
+			value: scheme.id,
+			label: scheme.title || scheme.id,
+		} ) ),
+	];
+
+	if (
+		schemeId &&
+		! completeSchemes.some( ( scheme ) => scheme.id === schemeId )
+	) {
+		const linked = schemes.find( ( scheme ) => scheme.id === schemeId );
+
+		schemeOptions.push( {
+			value: schemeId,
+			label: linked
+				? sprintf(
+						/* translators: %s: title of the certification. */
+						__( '%s (incomplete — not published)', 'carbon-txt' ),
+						linked.title || schemeId
+				  )
+				: sprintf(
+						/* translators: %s: title of the certification. */
+						__( '%s (removed — not published)', 'carbon-txt' ),
+						schemeId
+				  ),
+		} );
+	}
 
 	return (
 		<Card>
@@ -1102,11 +1211,10 @@ function DisclosureRow( { disclosure, index, schemes, onChange, onRemove } ) {
 							// (e.g. the deprecated "web-page"); surface it so
 							// the select keeps matching its value instead of
 							// showing an empty first option.
-							(
-								! disclosure.doc_type ||
-								docTypes.includes( disclosure.doc_type )
-									? docTypes
-									: [ disclosure.doc_type, ...docTypes ]
+							( ! disclosure.doc_type ||
+							docTypes.includes( disclosure.doc_type )
+								? docTypes
+								: [ disclosure.doc_type, ...docTypes ]
 							).map( ( type ) => ( {
 								value: type,
 								label: DOC_TYPE_LABELS[ type ] || type,
@@ -1119,7 +1227,7 @@ function DisclosureRow( { disclosure, index, schemes, onChange, onRemove } ) {
 
 					{ /* Incomplete rows (still being filled in) never reach
 						the file — offering them would add a blank option. */ }
-					{ completeSchemes.length ? (
+					{ completeSchemes.length || schemeId ? (
 						<SelectControl
 							label={
 								<>
@@ -1135,16 +1243,7 @@ function DisclosureRow( { disclosure, index, schemes, onChange, onRemove } ) {
 								'carbon-txt'
 							) }
 							value={ schemeId }
-							options={ [
-								{
-									value: '',
-									label: __( 'None', 'carbon-txt' ),
-								},
-								...completeSchemes.map( ( scheme ) => ( {
-									value: scheme.id,
-									label: scheme.title || scheme.id,
-								} ) ),
-							] }
+							options={ schemeOptions }
 							onChange={ ( id ) =>
 								onChange( {
 									certification_schemes: id ? [ id ] : [],
@@ -1381,6 +1480,9 @@ function App() {
 		optionName
 	);
 	const [ notice, setNotice ] = useState( null );
+	// Entries the server's sanitizer will drop on the next save, reported
+	// back so a row that vanishes doesn't look like a bug.
+	const [ skipped, setSkipped ] = useState( null );
 	// A counter rather than a boolean: ExistingFileNotice needs to know
 	// whether a save happened *after* a given import, not just whether
 	// any save has ever succeeded.
@@ -1542,6 +1644,10 @@ function App() {
 
 	const save = async () => {
 		setNotice( null );
+		setSkipped( null );
+		// Counted before the save: the server drops these rows, so
+		// afterwards they are simply gone.
+		const skippedMessage = skippedEntriesMessage( disclosures, schemes );
 		const saved = await saveEditedEntityRecord( 'root', 'site' );
 
 		if ( saved ) {
@@ -1553,6 +1659,10 @@ function App() {
 					'carbon-txt'
 				),
 			} );
+
+			if ( skippedMessage ) {
+				setSkipped( skippedMessage );
+			}
 
 			if ( validateOnSave ) {
 				validateDomain();
@@ -1607,6 +1717,17 @@ function App() {
 						onRemove={ () => setNotice( null ) }
 					>
 						{ notice.text }
+					</Notice>
+				</div>
+			) }
+
+			{ skipped && (
+				<div style={ { margin: '16px 0' } }>
+					<Notice
+						status="warning"
+						onRemove={ () => setSkipped( null ) }
+					>
+						{ skipped }
 					</Notice>
 				</div>
 			) }
@@ -1678,10 +1799,7 @@ function App() {
 												'Add another disclosure',
 												'carbon-txt'
 										  )
-										: __(
-												'Add another disclosure',
-												'carbon-txt'
-										  ) }
+										: __( 'Add disclosure', 'carbon-txt' ) }
 								</Button>
 							</FlexItem>
 						</Flex>
