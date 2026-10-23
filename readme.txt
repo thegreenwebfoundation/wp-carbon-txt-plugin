@@ -12,58 +12,87 @@ Publish a carbon.txt file with your organisational sustainability disclosures.
 
 == Description ==
 
-Carbon.txt lets you publish a carbon.txt file at your site root
-(https://your-site.com/carbon.txt) following the carbon.txt v0.6 syntax.
+`carbon.txt` is a single, recognisable place on your website, at
+https://your-site.com/carbon.txt, where anyone can find out what your
+organisation publishes about its own environmental impact.
 
-You can declare one or more organisational disclosures. For each one,
-choose a document type and point to it by pasting a URL, selecting an
-existing published page, or choosing a file from your media library —
-plus an optional title, description, valid-until date, and domain (for
-disclosures that apply to more than one domain), and references to the
-certification schemes you hold. A live preview shows the exact file
-that will be served.
+This plugin builds that file for you. You describe your disclosures (the
+public documents where you report your sustainability data) and the plugin
+turns them into a valid `carbon.txt`, served straight from your site.
 
-The document type picker offers the types the carbon.txt syntax defines.
-The "web page" type is deprecated by the Green Web Foundation, so it is no
-longer offered and new disclosures start at "sustainability page" —
-disclosures that already use "web page" keep working and are labelled as
-deprecated in the editor.
+**What you can do with it:**
 
-Entries still missing a required field are skipped when you save: a
-disclosure needs a URL, and a certification needs a title and a URL. The
-editor marks every field as required or optional, and tells you what was
-skipped after each save.
+* **Add your disclosures.** One or more links to the documents that back
+  up your claims: your annual report, your sustainability page, a
+  certificate, and so on. Each one gets a document type, so readers know
+  what they are looking at.
+* **Point at any document.** Paste a URL, pick one of your published pages,
+  or choose a file from your media library.
+* **Record your certifications.** If your organisation holds a
+  certification (a B Corp, an ecolabel, an ISO standard), list it once and
+  link your disclosures to it.
+* **Preview before you publish.** The settings screen shows the exact file
+  that will be served, so you always know what visitors will get.
+* **Start from what you already have.** If a `carbon.txt` already exists on
+  your server, the plugin can read it and offer to import what it finds.
+* **Keep a copy.** Your disclosures stay saved when you deactivate the
+  plugin, and you can copy or download them at any time.
 
-At the org level you can also list the certification schemes your
-organisation holds — each with a title, a URL, and an optional
-description, with ids generated for you. Every save re-stamps the
-org-level last_updated date.
+== Installation ==
 
-If a carbon.txt file already exists on your server — at the domain root or
-the well-known location — the settings screen warns you about it and
-offers to import any disclosures found in it. Once imported and saved,
-the old file is permanently deleted so this plugin's own output is what
-gets served.
+1. Upload the plugin to `/wp-content/plugins/carbon-txt/`, or install the
+   zip from **Plugins > Add New > Upload Plugin** in your dashboard.
+2. Activate the plugin.
+3. Go to **Settings > Carbon.txt** and add your first disclosure.
+4. Press **Save and publish**. Your `carbon.txt` is now live at
+   https://your-site.com/carbon.txt.
 
-Removing the plugin also removes its saved settings, so it offers to copy
-or download your disclosures before you deactivate it — and a "Keep a
-copy" section is always available, collapsed, on the settings screen.
+== How it works ==
 
-Every save asks the Green Web Foundation's hosted validator to validate
-your domain — no key or setup required. Their validator fetches your live
-carbon.txt from the web, so this needs a publicly reachable site — local
-and staging domains are skipped — and a passing domain is registered in
-your Green Web Foundation dashboard. Validation can be turned off per site
-from a toggle on the settings screen. See "External validation" below for
-exactly what is sent.
+**Document types.** The picker offers the document types the `carbon.txt`
+syntax defines. The Green Web Foundation has deprecated the "web page"
+type in favour of "sustainability page", so it is no longer offered, and
+new disclosures start at "sustainability page". Disclosures that already
+use "web page" keep working. They are labelled as deprecated in the editor,
+so you can move them on when you get the chance.
 
-The settings screen also checks your domain for a `carbon-txt-location`
-DNS TXT record (see https://carbontxt.org/faq). If one is set, it takes
-priority over any file this plugin generates, so you're warned about it
-rather than left wondering why your settings don't seem to take effect.
+**Required fields.** A disclosure needs a URL, and a certification needs a
+title and a URL. Anything still missing one of those is skipped when you
+save. The editor marks every field as required or optional, and tells you
+what was left out.
 
-The file is generated on request from your saved settings and cached, so
-there is no physical file to manage and it survives deploys.
+**Certifications.** Each certification you list gets an id generated from
+its title, and your disclosures reference that id. Only complete
+certifications appear in the list you can choose from, so a half-finished
+one never shows up as a blank entry.
+
+**The file itself.** It is generated on request from your settings and
+cached, so there is no physical file to manage and it survives deploys. It
+is served from your site root even with plain permalinks. Every save
+re-stamps the `last_updated` date.
+
+**An existing file on your server.** If a `carbon.txt` already exists at
+your domain root or at `/.well-known/carbon.txt`, the settings screen
+warns you: your web server may keep serving that file instead of the one
+this plugin generates. You can import the disclosures it finds, and the old
+file is then permanently deleted once you save.
+
+**DNS delegation.** If your domain has a `carbon-txt-location` TXT record
+(see https://carbontxt.org/faq), that takes priority over any file this
+plugin generates. The settings screen warns you when it finds one, so you
+are not left wondering why your changes seem to have no effect.
+
+**Validation.** After each save, the plugin asks the Green Web Foundation's
+hosted validator to check your domain. Their validator fetches your live
+`carbon.txt` from the web, so this needs a publicly reachable site. Local
+and staging domains are skipped. A domain that passes is registered in your
+Green Web Foundation dashboard. No key or setup is required, and validation
+can be switched off from the settings screen. See "External validation"
+below for exactly what is sent.
+
+**Removing the plugin.** Deactivating keeps your disclosures and settings.
+Deleting the plugin removes them, so the plugin offers to copy or download
+your file first.
 
 == External validation ==
 
@@ -83,6 +112,26 @@ sent as part of this process, and no personally identifying information is
 transmitted or retained.
 
 If you want to opt out, uncheck the validation checkbox before saving.
+
+== Frequently Asked Questions ==
+
+### Does this plugin create a file on my server?
+
+No. The file is generated when a visitor requests it, and served from your
+site root. There is nothing to upload and nothing to clean up.
+
+### Why is my carbon.txt not the one I just saved?
+
+Usually one of three things. A `carbon.txt` file already sitting on your
+server is being served directly, a `carbon-txt-location` DNS record is
+delegating discovery elsewhere, or you are on a local or staging domain
+that isn't publicly reachable. The settings screen warns you about the
+first two.
+
+### What happens to my disclosures if I delete the plugin?
+
+They are removed with it. Deactivating keeps them, and you can copy or
+download your file from the settings screen at any time.
 
 == Development ==
 
