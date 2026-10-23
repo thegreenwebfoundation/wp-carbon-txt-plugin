@@ -125,7 +125,7 @@ without depending on a source-path hash.
 
 This plugin is developed in the open and contributions are welcome. Please
 open an issue or pull request on
-[GitHub](https://github.com/thegreenwebfoundation/carbon-txt). Run
+[GitHub](https://github.com/thegreenwebfoundation/wp-carbon-txt-plugin). Run
 the linters above before submitting.
 
 ## License

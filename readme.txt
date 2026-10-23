@@ -135,7 +135,11 @@ download your file from the settings screen at any time.
 
 == Development ==
 
-Source lives in `src/`. Build the admin app with:
+This plugin is developed in the open on
+[GitHub](https://github.com/thegreenwebfoundation/wp-carbon-txt-plugin).
+Bug reports, questions and pull requests are welcome there.
+
+The admin app's source lives in `src/`. Build it with:
 
 `npm install && npm run build`
 
